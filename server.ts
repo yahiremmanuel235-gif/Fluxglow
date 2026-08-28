@@ -34,7 +34,7 @@ async function startServer() {
   });
 
   // Flux AI Conversational endpoint
-  app.post("/api/gemini/chat", async (req, res) => {
+  app.post(["/api/chat", "/api/gemini/chat"], async (req, res) => {
     try {
       const { message, history = [], userMood, context } = req.body;
       if (!message) {

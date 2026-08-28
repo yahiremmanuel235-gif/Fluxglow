@@ -17,7 +17,7 @@ const DEFAULT_USER_PROFILE: UserProfileData = {
   email: 'yahiremmanuel235@gmail.com',
   ageGroup: '19 - 24 años',
   memberSince: '27 de Agosto, 2026',
-  avatarUrl: '', // Default neutral classic silhouette
+  avatarUrl: '/User.png', // Official user profile image
   goals: [
     { id: 'stress', label: 'Gestión del Estrés', checked: true },
     { id: 'mindfulness', label: 'Atención Plena', checked: true },
@@ -37,13 +37,33 @@ export default function App() {
     try {
       const saved = localStorage.getItem('fluxglow_user_profile');
       if (saved) {
-        return { ...DEFAULT_USER_PROFILE, ...JSON.parse(saved) };
+        const parsed = JSON.parse(saved);
+        // Replace legacy unsplash or missing avatars with official User.png
+        if (!parsed.avatarUrl || parsed.avatarUrl.includes('unsplash.com') || parsed.avatarUrl === '') {
+          parsed.avatarUrl = '/User.png';
+        }
+        return { ...DEFAULT_USER_PROFILE, ...parsed };
       }
     } catch (e) {
       console.error('Error loading saved profile:', e);
     }
     return DEFAULT_USER_PROFILE;
   });
+
+  // Ensure legacy cached unsplash avatar in localStorage is migrated to /User.png
+  useEffect(() => {
+    if (!userProfile.avatarUrl || userProfile.avatarUrl.includes('unsplash.com')) {
+      setUserProfile(prev => {
+        const next = { ...prev, avatarUrl: '/User.png' };
+        try {
+          localStorage.setItem('fluxglow_user_profile', JSON.stringify(next));
+        } catch (e) {
+          console.error('Error updating profile storage:', e);
+        }
+        return next;
+      });
+    }
+  }, []);
 
   // Scroll to top when changing views
   useEffect(() => {

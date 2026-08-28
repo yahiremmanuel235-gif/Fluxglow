@@ -1,6 +1,7 @@
 import React from 'react';
 import { ViewMode } from '../../types';
-import { Sparkles, Mail, Phone, Instagram, Facebook, ShieldCheck, Heart, ArrowUp } from 'lucide-react';
+import { FluxGlowLogo } from '../common/FluxGlowLogo';
+import { Mail, Phone, Instagram, Facebook, ShieldCheck, Heart, ArrowUp } from 'lucide-react';
 
 interface FooterProps {
   onNavigate: (view: ViewMode) => void;
@@ -18,15 +19,12 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           
           {/* Col 1: Brand & Slogan */}
           <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#8DB596] via-[#D8C97B] to-[#E89A6B] p-0.5 flex items-center justify-center">
-                <div className="w-full h-full bg-[#1b231e] rounded-[10px] flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-[#E89A6B]" />
-                </div>
-              </div>
-              <span className="font-extrabold text-2xl tracking-tight text-white">
-                FLUXGLOW
-              </span>
+            <div 
+              className="cursor-pointer inline-block" 
+              onClick={() => { onNavigate('landing'); scrollToTop(); }}
+              title="Ir a Inicio"
+            >
+              <FluxGlowLogo size="md" variant="light" showText={true} />
             </div>
             
             <p className="text-stone-400 text-sm leading-relaxed italic">

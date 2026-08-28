@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { FluxGlowLogo } from '../common/FluxGlowLogo';
 import { 
   Sparkles, 
   Settings, 
@@ -143,14 +144,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
         {/* Top Header with Brand Logo & Account Settings Button */}
         <div className="flex items-center justify-between py-2 border-b border-[#ece4d9] mb-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#5a8c72] to-[#e07a52] p-0.5 flex items-center justify-center shadow-xs">
-              <div className="w-full h-full bg-white rounded-full flex items-center justify-center">
-                <Sparkles className="w-4 h-4 text-[#e07a52]" />
-              </div>
-            </div>
-            <span className="font-extrabold text-lg tracking-tight text-stone-800">
-              FluxGlow
-            </span>
+            <FluxGlowLogo size="sm" showText={true} />
           </div>
 
           {/* Right Button from Image 7: Configuración de Cuenta y Seguridad */}
@@ -189,34 +183,36 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
 
               <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
                 
-                {/* Avatar with Camera edit badge & classic WhatsApp/Facebook default silhouette */}
+                {/* Avatar with Camera edit badge & official user avatar */}
                 <div className="relative shrink-0">
                   <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden border-4 border-stone-200 shadow-sm bg-[#dfe5e8] flex items-center justify-center">
-                    {userProfile?.avatarUrl ? (
-                      <img
-                        src={userProfile.avatarUrl}
-                        alt={userName}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          // Fallback if custom image fails to load
-                          (e.target as HTMLElement).style.display = 'none';
-                        }}
-                      />
-                    ) : (
-                      /* Classic neutral silhouette (WhatsApp / Facebook style) */
-                      <div className="w-full h-full bg-[#dfe5e8] flex items-end justify-center overflow-hidden">
-                        <svg viewBox="0 0 128 128" className="w-full h-full text-[#b0bec5]" fill="currentColor">
-                          <circle cx="64" cy="46" r="26" />
-                          <path d="M64 80 c-30 0 -50 17 -54 44 h108 c-4 -27 -24 -44 -54 -44 z" />
-                        </svg>
-                      </div>
-                    )}
+                    {(() => {
+                      const avatarSrc = (userProfile?.avatarUrl && !userProfile.avatarUrl.includes('unsplash.com'))
+                        ? userProfile.avatarUrl 
+                        : '/User.png';
+
+                      return (
+                        <img
+                          src={avatarSrc}
+                          alt={userName}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.currentTarget;
+                            if (target.src.endsWith('/User.png')) {
+                              target.src = '/user.png';
+                            } else {
+                              target.style.display = 'none';
+                            }
+                          }}
+                        />
+                      );
+                    })()}
                   </div>
                   <button 
                     onClick={() => {
-                      const newUrl = prompt('Ingresa la URL de tu foto de perfil (o déjalo vacío para usar la silueta clásica):', userProfile?.avatarUrl || '');
+                      const newUrl = prompt('Ingresa la URL de tu foto de perfil (o déjalo vacío para usar la foto oficial /User.png):', userProfile?.avatarUrl || '');
                       if (newUrl !== null) {
-                        onUpdateProfile?.({ avatarUrl: newUrl.trim() });
+                        onUpdateProfile?.({ avatarUrl: newUrl.trim() || '/User.png' });
                         triggerSaveFeedback();
                       }
                     }}

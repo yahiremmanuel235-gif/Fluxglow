@@ -1,0 +1,84 @@
+<svg viewBox="0 0 460 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Star Gradient -->
+    <linearGradient id="fluxglow_star_grad" x1="50" y1="10" x2="50" y2="105" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#DE7853" />
+      <stop offset="45%" stop-color="#C28766" />
+      <stop offset="100%" stop-color="#1E4D43" />
+    </linearGradient>
+    <!-- Ray Gradients -->
+    <linearGradient id="fluxglow_rays_grad" x1="10" y1="10" x2="100" y2="105" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#DE7853" />
+      <stop offset="50%" stop-color="#699784" />
+      <stop offset="100%" stop-color="#1B463D" />
+    </linearGradient>
+  </defs>
+
+  <!-- ==================== LEFT EMBLEM: RADIANT STAR ==================== -->
+  <g transform="translate(10, 5)">
+    <!-- 8 Radiating Glow Rays (Pill/Capsule style) -->
+    <!-- Top -->
+    <line x1="55" y1="10" x2="55" y2="24" stroke="#DE7853" stroke-width="7" stroke-linecap="round" />
+    <!-- Top-Right -->
+    <line x1="88" y1="24" x2="78" y2="34" stroke="#DE7F5B" stroke-width="7" stroke-linecap="round" />
+    <!-- Right -->
+    <line x1="100" y1="57" x2="86" y2="57" stroke="#DE8B6B" stroke-width="7" stroke-linecap="round" />
+    <!-- Bottom-Right -->
+    <line x1="88" y1="90" x2="78" y2="80" stroke="#5C8A79" stroke-width="7" stroke-linecap="round" />
+    <!-- Bottom -->
+    <line x1="55" y1="104" x2="55" y2="90" stroke="#1E4D43" stroke-width="7" stroke-linecap="round" />
+    <!-- Bottom-Left -->
+    <line x1="22" y1="90" x2="32" y2="80" stroke="#255449" stroke-width="7" stroke-linecap="round" />
+    <!-- Left -->
+    <line x1="10" y1="57" x2="24" y2="57" stroke="#608E7D" stroke-width="7" stroke-linecap="round" />
+    <!-- Top-Left -->
+    <line x1="22" y1="24" x2="32" y2="34" stroke="#DE7853" stroke-width="7" stroke-linecap="round" />
+
+    <!-- Central 4-pointed hollow glowing star -->
+    <path
+      d="M 55 28 
+         C 55 43, 43 55, 28 57
+         C 43 59, 55 71, 55 86
+         C 55 71, 67 59, 82 57
+         C 67 55, 55 43, 55 28 Z"
+      fill="none"
+      stroke="url(#fluxglow_star_grad)"
+      stroke-width="7"
+      stroke-linejoin="round"
+      stroke-linecap="round"
+    />
+  </g>
+
+  <!-- ==================== RIGHT WORDMARK: FluxGlow ==================== -->
+  <text 
+    x="135" 
+    y="78" 
+    font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" 
+    font-size="62" 
+    font-weight="800" 
+    letter-spacing="-0.03em" 
+    fill="#1B443B"
+  >FluxGlow</text>
+
+  <!-- Sprout Seedling above the 'w' -->
+  <g transform="translate(393, 20)">
+    <!-- Stem -->
+    <path 
+      d="M 22 55 Q 22 38 24 25" 
+      stroke="#6E9A82" 
+      stroke-width="3.5" 
+      stroke-linecap="round" 
+      fill="none" 
+    />
+    <!-- Left Leaf -->
+    <path 
+      d="M 23 35 C 10 32 0 20 6 6 C 18 10 24 22 23 35 Z" 
+      fill="#6E9A82" 
+    />
+    <!-- Right Leaf -->
+    <path 
+      d="M 24 28 C 30 14 42 6 54 8 C 56 22 42 32 24 28 Z" 
+      fill="#7BA48E" 
+    />
+  </g>
+</svg>

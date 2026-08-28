@@ -606,7 +606,7 @@ export const TEAM_MEMBERS: TeamMember[] = [
     name: 'Gabriela',
     role: 'Directora General (CEO)',
     subtitle: 'Líder Estratégica & Coordinación General',
-    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80',
+    avatar: '/integrante1.png',
     bio: 'Gabriela es la encargada de dirigir y coordinar el desarrollo general de FLUXGLOW. Su liderazgo permite que todas las áreas trabajen de manera organizada para alcanzar los objetivos del proyecto.',
     functions: [
       'Supervisar todas las áreas de la empresa.',
@@ -622,7 +622,7 @@ export const TEAM_MEMBERS: TeamMember[] = [
     name: 'Moisés',
     role: 'Director de Tecnología (CTO)',
     subtitle: 'Arquitectura & Desarrollo de Software',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+    avatar: '/integrante2.png',
     bio: 'Moisés lidera el desarrollo tecnológico de FLUXGLOW, asegurando que la plataforma funcione de manera eficiente, segura e innovadora para todos los usuarios.',
     functions: [
       'Gestionar el desarrollo de la página web y aplicaciones.',
@@ -638,7 +638,7 @@ export const TEAM_MEMBERS: TeamMember[] = [
     name: 'Yahir',
     role: 'Director de Diseño y UX/UI',
     subtitle: 'Experiencia de Usuario e Identidad Visual',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
+    avatar: '/integrante3.png',
     bio: 'Yahir es responsable de la imagen visual de FLUXGLOW. Su trabajo busca que la plataforma sea atractiva, intuitiva, accesible y fácil de utilizar para todos los usuarios.',
     functions: [
       'Diseñar la identidad visual de la marca.',
@@ -654,7 +654,7 @@ export const TEAM_MEMBERS: TeamMember[] = [
     name: 'Génesis',
     role: 'Directora de Marketing y RP',
     subtitle: 'Relaciones Públicas & Comunidad',
-    avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=400&q=80',
+    avatar: '/integrante4.png',
     bio: 'Génesis se encarga de dar a conocer FLUXGLOW y conectar la plataforma con la comunidad. Su labor fortalece la presencia de la marca y fomenta el crecimiento del proyecto.',
     functions: [
       'Diseñar y ejecutar estrategias de marketing digital.',
