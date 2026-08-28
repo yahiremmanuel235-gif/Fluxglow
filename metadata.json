@@ -1,0 +1,6 @@
+{
+  "name": "FluxGlow - Plataforma de Bienestar Emocional Inteligente",
+  "description": "Plataforma digital inteligente para el monitoreo, gestión, análisis predictivo y fortalecimiento de la salud emocional con IA.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
