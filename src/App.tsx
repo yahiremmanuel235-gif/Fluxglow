@@ -13,11 +13,11 @@ import { CommunityModule } from './components/modules/CommunityModule';
 import { soundEngine } from './utils/audioSynth';
 
 const DEFAULT_USER_PROFILE: UserProfileData = {
-  name: 'Yahir Consuegra',
-  email: 'yahiremmanuel235@gmail.com',
+  name: 'Usuario FluxGlow',
+  email: 'usuario@fluxglow.com',
   ageGroup: '19 - 24 años',
-  memberSince: '27 de Agosto, 2026',
-  avatarUrl: '/User.png', // Official user profile image
+  memberSince: '28 de Agosto, 2026',
+  avatarUrl: '/user.png', // Official user profile image
   goals: [
     { id: 'stress', label: 'Gestión del Estrés', checked: true },
     { id: 'mindfulness', label: 'Atención Plena', checked: true },
@@ -38,9 +38,12 @@ export default function App() {
       const saved = localStorage.getItem('fluxglow_user_profile');
       if (saved) {
         const parsed = JSON.parse(saved);
-        // Replace legacy unsplash or missing avatars with official User.png
+        // Replace legacy unsplash, old test credentials, or missing avatars with clean official defaults
         if (!parsed.avatarUrl || parsed.avatarUrl.includes('unsplash.com') || parsed.avatarUrl === '') {
-          parsed.avatarUrl = '/User.png';
+          parsed.avatarUrl = '/user.png';
+        }
+        if (parsed.email === 'yahiremmanuel235@gmail.com') {
+          parsed.email = 'usuario@fluxglow.com';
         }
         return { ...DEFAULT_USER_PROFILE, ...parsed };
       }
@@ -50,11 +53,15 @@ export default function App() {
     return DEFAULT_USER_PROFILE;
   });
 
-  // Ensure legacy cached unsplash avatar in localStorage is migrated to /User.png
+  // Ensure legacy cached avatars or emails in localStorage are migrated
   useEffect(() => {
-    if (!userProfile.avatarUrl || userProfile.avatarUrl.includes('unsplash.com')) {
+    if (!userProfile.avatarUrl || userProfile.avatarUrl.includes('unsplash.com') || userProfile.email === 'yahiremmanuel235@gmail.com') {
       setUserProfile(prev => {
-        const next = { ...prev, avatarUrl: '/User.png' };
+        const next = { 
+          ...prev, 
+          avatarUrl: '/user.png',
+          email: prev.email === 'yahiremmanuel235@gmail.com' ? 'usuario@fluxglow.com' : prev.email
+        };
         try {
           localStorage.setItem('fluxglow_user_profile', JSON.stringify(next));
         } catch (e) {

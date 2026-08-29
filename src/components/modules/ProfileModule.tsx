@@ -38,9 +38,9 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
   userProfile, 
   onUpdateProfile 
 }) => {
-  const [userName, setUserName] = useState(userProfile?.name || 'Yahir Consuegra');
-  const [userEmail, setUserEmail] = useState(userProfile?.email || 'yahiremmanuel235@gmail.com');
-  const [memberSinceDate, setMemberSinceDate] = useState(userProfile?.memberSince || '27 de Agosto, 2026');
+  const [userName, setUserName] = useState(userProfile?.name || 'Usuario FluxGlow');
+  const [userEmail, setUserEmail] = useState(userProfile?.email || 'usuario@fluxglow.com');
+  const [memberSinceDate, setMemberSinceDate] = useState(userProfile?.memberSince || '28 de Agosto, 2026');
   const [isEditingName, setIsEditingName] = useState(false);
   const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
@@ -80,7 +80,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
   };
 
   const handleSaveName = () => {
-    const finalName = userName.trim() || 'Yahir Consuegra';
+    const finalName = userName.trim() || 'Usuario FluxGlow';
     setUserName(finalName);
     setIsEditingName(false);
     onUpdateProfile?.({ name: finalName });

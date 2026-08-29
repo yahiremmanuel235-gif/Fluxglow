@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ViewMode, UserProfileData } from '../../types';
 import { TeamSection } from './TeamSection';
 import { InterfacesShowcase } from './InterfacesShowcase';
 import { ContactSection } from './ContactSection';
 import { FluxGlowLogo } from '../common/FluxGlowLogo';
 import { AuthModals } from '../common/AuthModals';
+import { soundEngine } from '../../utils/audioSynth';
 import { 
   Sparkles, 
   ArrowRight, 
@@ -18,7 +19,21 @@ import {
   Info,
   User,
   Layers,
-  ChevronDown
+  ChevronDown,
+  Volume2,
+  VolumeX,
+  Play,
+  Pause,
+  Smile,
+  Frown,
+  Meh,
+  Flame,
+  BatteryCharging,
+  Heart,
+  BookOpen,
+  MessageSquare,
+  HelpCircle,
+  ChevronUp
 } from 'lucide-react';
 
 interface LandingPageProps {
@@ -34,11 +49,61 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 }) => {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('register');
+  const [selectedQuickMood, setSelectedQuickMood] = useState<string | null>(null);
+  const [ambientPlaying, setAmbientPlaying] = useState(false);
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
+
+  // Mini breathing pacer state
+  const [isBreathingActive, setIsBreathingActive] = useState(false);
+  const [breathingPhase, setBreathingPhase] = useState<'Inhala' | 'Sostén' | 'Exhala'>('Inhala');
+  const [breathingSeconds, setBreathingSeconds] = useState(4);
 
   const openAuth = (mode: 'login' | 'register') => {
     setAuthMode(mode);
     setAuthModalOpen(true);
   };
+
+  const toggleSound = () => {
+    const isNowPlaying = soundEngine.toggleAmbient('zen');
+    setAmbientPlaying(isNowPlaying);
+    if (isNowPlaying) {
+      soundEngine.playBell(528, 2.0);
+    }
+  };
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (isBreathingActive) {
+      if (breathingPhase === 'Inhala') {
+        soundEngine.playBreathingCue('inhale');
+        timer = setTimeout(() => {
+          setBreathingPhase('Sostén');
+          setBreathingSeconds(4);
+        }, 4000);
+      } else if (breathingPhase === 'Sostén') {
+        soundEngine.playBreathingCue('hold');
+        timer = setTimeout(() => {
+          setBreathingPhase('Exhala');
+          setBreathingSeconds(4);
+        }, 4000);
+      } else if (breathingPhase === 'Exhala') {
+        soundEngine.playBreathingCue('exhale');
+        timer = setTimeout(() => {
+          setBreathingPhase('Inhala');
+          setBreathingSeconds(4);
+        }, 4000);
+      }
+    }
+    return () => clearTimeout(timer);
+  }, [isBreathingActive, breathingPhase]);
+
+  const quickMoods = [
+    { id: 'calm', label: 'En Calma', icon: Smile, color: 'text-[#5a8c72]', bg: 'bg-[#5a8c72]/10', tip: '¡Excelente! Mantén este estado con una breve reflexión o diario de gratitud.', targetView: 'journal' as ViewMode },
+    { id: 'stressed', label: 'Estresado/a', icon: Flame, color: 'text-[#e07a52]', bg: 'bg-[#e07a52]/10', tip: 'Hagamos una pausa de 2 minutos. Te recomendamos el módulo SOS o la respiración guiada.', targetView: 'sos' as ViewMode },
+    { id: 'tired', label: 'Cansado/a', icon: BatteryCharging, color: 'text-amber-600', bg: 'bg-amber-100', tip: 'La fatiga mental es una señal de tu cuerpo. Prueba nuestros podcasts de descanso mental.', targetView: 'learn' as ViewMode },
+    { id: 'anxious', label: 'Con Ansiedad', icon: Meh, color: 'text-purple-600', bg: 'bg-purple-100', tip: 'Respira conmigo. Escribe tus pensamientos en el Diario o platica con Flux AI.', targetView: 'flux-ai' as ViewMode },
+    { id: 'motivated', label: 'Motivado/a', icon: Heart, color: 'text-rose-600', bg: 'bg-rose-100', tip: '¡Aprovecha esta energía para fijar tus metas en el perfil y aprender algo nuevo!', targetView: 'profile' as ViewMode },
+  ];
 
   const combinedFeatures = [
     { title: 'Educación emocional', desc: 'Recursos interactivos para comprender la mente y el cuerpo.' },
@@ -58,6 +123,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     'Reducir el estrés y la ansiedad académica y cotidiana.',
     'Facilitar el acceso inmediato a recursos de apoyo psicológico.',
     'Utilizar inteligencia artificial para personalizar la experiencia de cada usuario.'
+  ];
+
+  const faqs = [
+    {
+      q: '¿FluxGlow es gratuito para estudiantes y jóvenes?',
+      a: 'Sí, el acceso a las guías educativas, tests orientativos, diario emocional y soporte de Flux AI está completamente abierto y diseñado para acompañarte sin costo.'
+    },
+    {
+      q: '¿Cómo protege FluxGlow mi privacidad?',
+      a: 'Toda tu información de diario y registro de estado de ánimo se almacena de forma segura y confidencial. No compartimos tus reflexiones privadas con terceros.'
+    },
+    {
+      q: '¿Qué hago si estoy pasando por una crisis emocional grave?',
+      a: 'FluxGlow cuenta con el Apartado #5 (Alerta Emocional & SOS) con líneas directas de ayuda psicológica gratuita 24/7 (como Línea de la Vida 800 911 2000 y SAPTEL) y ejercicios inmediatos de grounding.'
+    },
+    {
+      q: '¿Puedo usar la plataforma sin registrarme?',
+      a: '¡Por supuesto! Puedes explorar los 7 apartados interactivos en modo invitado con un solo clic.'
+    }
   ];
 
   return (
@@ -83,12 +167,26 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <a href="#equipo" className="hover:text-[#4a7c59] transition-colors">Equipo</a>
             </div>
 
-            {/* Right actions matching screenshot: (i) Regístrate | 👤 Iniciar sesión */}
-            <div className="flex items-center gap-3 sm:gap-6">
+            {/* Right actions matching screenshot: Soundscape | (i) Regístrate | 👤 Iniciar sesión */}
+            <div className="flex items-center gap-2.5 sm:gap-4">
+              <button
+                id="header-sound-btn"
+                onClick={toggleSound}
+                className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
+                  ambientPlaying 
+                    ? 'bg-amber-100/80 border-amber-300 text-amber-900 shadow-xs animate-pulse' 
+                    : 'bg-stone-50 border-stone-200 text-stone-600 hover:bg-stone-100'
+                }`}
+                title="Sonido ambiental relajante (Cuencos Tibetanos)"
+              >
+                {ambientPlaying ? <Volume2 className="w-3.5 h-3.5 text-amber-700" /> : <VolumeX className="w-3.5 h-3.5" />}
+                <span className="hidden sm:inline">{ambientPlaying ? 'Sonido Zen Activo' : 'Música Zen'}</span>
+              </button>
+
               <button
                 id="top-nav-register-btn"
                 onClick={() => openAuth('register')}
-                className="flex items-center gap-1.5 text-stone-800 hover:text-[#4a7c59] text-sm sm:text-base font-semibold transition-colors py-1 px-2 rounded-lg"
+                className="flex items-center gap-1.5 text-stone-800 hover:text-[#4a7c59] text-sm sm:text-base font-semibold transition-colors py-1 px-2 rounded-lg cursor-pointer"
               >
                 <div className="w-5 h-5 rounded-full border border-stone-400 flex items-center justify-center text-xs font-serif text-stone-600">
                   i
@@ -99,7 +197,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <button
                 id="top-nav-login-btn"
                 onClick={() => openAuth('login')}
-                className="flex items-center gap-1.5 text-stone-800 hover:text-[#d4622a] text-sm sm:text-base font-semibold transition-colors py-1 px-2 rounded-lg"
+                className="flex items-center gap-1.5 text-stone-800 hover:text-[#d4622a] text-sm sm:text-base font-semibold transition-colors py-1 px-2 rounded-lg cursor-pointer"
               >
                 <User className="w-4 h-4 sm:w-5 sm:h-5 text-stone-600" />
                 <span>Iniciar sesión</span>
@@ -161,11 +259,89 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <button
               id="hero-guest-explore-btn"
               onClick={() => onNavigate('learn')}
-              className="text-xs sm:text-sm font-semibold text-[#4a7c59] hover:text-[#2d5a3f] flex items-center gap-1.5 underline underline-offset-4 py-1"
+              className="text-xs sm:text-sm font-semibold text-[#4a7c59] hover:text-[#2d5a3f] flex items-center gap-1.5 underline underline-offset-4 py-1 cursor-pointer"
             >
               <span>O explora la aplicación interactiva de inmediato</span>
               <ArrowRight className="w-4 h-4" />
             </button>
+          </div>
+
+          {/* Interactive Instant Mood Check Bar */}
+          <div className="mt-12 max-w-2xl mx-auto bg-[#faf7f2] border border-stone-200/90 rounded-3xl p-5 sm:p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-bold text-stone-700 uppercase tracking-wider flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-[#e07a52]" />
+                <span>¿Cómo te sientes en este instante?</span>
+              </span>
+              <span className="text-[11px] text-stone-400">Prueba interactiva</span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+              {quickMoods.map((m) => {
+                const IconComponent = m.icon;
+                const isSelected = selectedQuickMood === m.id;
+                return (
+                  <button
+                    key={m.id}
+                    onClick={() => {
+                      setSelectedQuickMood(m.id);
+                      soundEngine.playBell(528, 1.0);
+                    }}
+                    className={`flex flex-col items-center gap-1.5 p-2.5 rounded-2xl border transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-white border-[#5a8c72] shadow-sm scale-105 ring-2 ring-[#5a8c72]/20'
+                        : 'bg-white/60 border-stone-200/70 hover:bg-white hover:border-stone-300'
+                    }`}
+                  >
+                    <div className={`p-2 rounded-xl ${m.bg}`}>
+                      <IconComponent className={`w-4 h-4 ${m.color}`} />
+                    </div>
+                    <span className="text-[11px] font-bold text-stone-800">{m.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {selectedQuickMood && (
+              <div className="mt-4 pt-3 border-t border-stone-200/80 flex flex-col sm:flex-row items-center justify-between gap-3 animate-fadeIn text-left">
+                <p className="text-xs text-stone-700 font-medium">
+                  💡 {quickMoods.find(m => m.id === selectedQuickMood)?.tip}
+                </p>
+                <button
+                  onClick={() => {
+                    const mood = quickMoods.find(m => m.id === selectedQuickMood);
+                    if (mood) onNavigate(mood.targetView);
+                  }}
+                  className="shrink-0 bg-[#5a8c72] hover:bg-[#48725c] text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-1.5 shadow-xs transition-transform hover:scale-105 cursor-pointer"
+                >
+                  <span>Ir al módulo sugerido</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* High quality Hero Graphic Banner */}
+          <div className="mt-14 relative rounded-3xl overflow-hidden shadow-2xl border border-stone-200 group">
+            <img 
+              src="/src/assets/images/mental_health_hero_1787964175044.jpg" 
+              alt="Jóvenes en bienestar emocional y mindfulness - FluxGlow"
+              referrerPolicy="no-referrer"
+              className="w-full h-64 sm:h-96 object-cover transition-transform duration-700 group-hover:scale-[1.02]"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex flex-col justify-end p-6 sm:p-8 text-left text-white">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="px-3 py-1 bg-[#5a8c72] text-white text-[11px] font-extrabold uppercase tracking-wider rounded-full shadow-xs">
+                  Espacio Seguro
+                </span>
+                <span className="px-3 py-1 bg-white/20 backdrop-blur-md text-white text-[11px] font-semibold rounded-full">
+                  Juventud 15-30 Años
+                </span>
+              </div>
+              <h3 className="text-xl sm:text-2xl font-black text-white drop-shadow-md">
+                Un refugio digital donde cada emoción cuenta y cada día floreces.
+              </h3>
+            </div>
           </div>
 
           {/* Scroll Down Hint */}
@@ -275,7 +451,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
             
             {/* Card 1: FLUJO */}
             <div className="bg-[#faf7f2] p-8 rounded-3xl border border-orange-200/80 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
@@ -319,6 +495,110 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
           </div>
 
+          {/* Visual illustration of Claridad Mental & Wellness */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-[#faf7f2] rounded-3xl p-6 sm:p-10 border border-stone-200">
+            <div className="lg:col-span-6 rounded-2xl overflow-hidden shadow-lg border border-stone-200">
+              <img
+                src="/src/assets/images/calm_mind_wellness_1787964189019.jpg"
+                alt="Claridad mental y bienestar emocional - FluxGlow"
+                referrerPolicy="no-referrer"
+                className="w-full h-72 sm:h-80 object-cover"
+              />
+            </div>
+            <div className="lg:col-span-6 space-y-4">
+              <span className="px-3 py-1 bg-[#5a8c72]/10 text-[#5a8c72] text-xs font-bold uppercase tracking-wider rounded-full">
+                Ciencia & Consciencia
+              </span>
+              <h3 className="text-2xl sm:text-3xl font-extrabold text-stone-900 leading-tight">
+                El balance emocional no es ausencia de emociones, sino saber fluir con ellas.
+              </h3>
+              <p className="text-stone-600 text-sm sm:text-base leading-relaxed">
+                A través de algoritmos éticos y herramientas basadas en la psicología cognitivo-conductual, FluxGlow te ofrece un espacio diario de descompresión para tus estudios, metas y vida personal.
+              </p>
+              <div className="pt-2">
+                <button
+                  onClick={() => onNavigate('learn')}
+                  className="bg-[#e07a52] hover:bg-[#c8633c] text-white font-bold text-xs sm:text-sm px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-xs transition-all cursor-pointer"
+                >
+                  <span>Explora guías y podcasts</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* SECCIÓN INTERACTIVA: OASIS DE RESPIRACIÓN Y CALMA RÁPIDA */}
+      <section className="py-16 bg-[#faf7f2] border-b border-stone-200">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#5a8c72]/15 text-[#4a7c59] text-xs font-bold uppercase tracking-wider mb-3">
+            <Waves className="w-3.5 h-3.5" />
+            <span>Herramienta Interactiva en Vivo</span>
+          </div>
+
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-stone-900 mb-3">
+            Oasis de Respiración Rápida
+          </h2>
+          <p className="text-stone-600 text-sm sm:text-base max-w-xl mx-auto mb-8">
+            Tómate 60 segundos para sincronizar tu ritmo cardíaco y liberar tensión acumulada.
+          </p>
+
+          <div className="bg-white rounded-3xl p-8 sm:p-12 border border-stone-200/90 shadow-sm flex flex-col items-center justify-center">
+            {/* Animated Sphere */}
+            <div className="relative w-44 h-44 sm:w-52 sm:h-52 flex items-center justify-center mb-6">
+              <div 
+                className={`absolute inset-0 rounded-full transition-all duration-4000 ease-in-out ${
+                  isBreathingActive && breathingPhase === 'Inhala' 
+                    ? 'scale-110 bg-[#8DB596]/30 shadow-2xl' 
+                    : isBreathingActive && breathingPhase === 'Sostén'
+                    ? 'scale-110 bg-[#D8C97B]/30'
+                    : isBreathingActive && breathingPhase === 'Exhala'
+                    ? 'scale-75 bg-[#E89A6B]/30'
+                    : 'scale-90 bg-stone-100'
+                }`}
+              />
+              <div 
+                className={`w-32 h-32 sm:w-36 sm:h-36 rounded-full flex flex-col items-center justify-center text-white transition-all duration-4000 shadow-md ${
+                  isBreathingActive && breathingPhase === 'Inhala'
+                    ? 'bg-[#5a8c72] scale-105'
+                    : isBreathingActive && breathingPhase === 'Sostén'
+                    ? 'bg-[#b8860b] scale-105'
+                    : isBreathingActive && breathingPhase === 'Exhala'
+                    ? 'bg-[#e07a52] scale-90'
+                    : 'bg-stone-400'
+                }`}
+              >
+                <span className="font-extrabold text-lg sm:text-xl">
+                  {isBreathingActive ? breathingPhase : 'Listo'}
+                </span>
+                <span className="text-xs text-white/90 mt-0.5">
+                  {isBreathingActive ? '4 segundos' : 'Toca Iniciar'}
+                </span>
+              </div>
+            </div>
+
+            {/* Controls */}
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => {
+                  if (!isBreathingActive) {
+                    soundEngine.playBell(528, 2.0);
+                  }
+                  setIsBreathingActive(!isBreathingActive);
+                }}
+                className={`px-6 py-3 rounded-full text-sm font-extrabold flex items-center gap-2 transition-all cursor-pointer ${
+                  isBreathingActive
+                    ? 'bg-stone-200 text-stone-800 hover:bg-stone-300'
+                    : 'bg-[#5a8c72] text-white hover:bg-[#4a7c59] shadow-md hover:scale-105'
+                }`}
+              >
+                {isBreathingActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-current" />}
+                <span>{isBreathingActive ? 'Pausar Ejercicio' : 'Iniciar Respiración Guiada'}</span>
+              </button>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -425,6 +705,53 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
       {/* SECCIÓN DISEÑO: INTERFACES DE LA PLATAFORMA (7 APARTADOS) */}
       <InterfacesShowcase onNavigate={onNavigate} />
+
+      {/* SECCIÓN PREGUNTAS FRECUENTES (FAQ) */}
+      <section className="py-20 bg-white border-b border-stone-200" id="faq">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#5a8c72]/10 text-[#5a8c72] text-xs font-bold uppercase tracking-wider mb-3">
+              <HelpCircle className="w-3.5 h-3.5" />
+              <span>Dudas Comunes</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-stone-900 tracking-tight">
+              Preguntas Frecuentes
+            </h2>
+            <p className="text-stone-600 text-sm sm:text-base mt-2">
+              Todo lo que necesitas saber para comenzar a cuidar tu bienestar con FluxGlow.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            {faqs.map((faq, index) => {
+              const isOpen = openFaqIndex === index;
+              return (
+                <div
+                  key={index}
+                  className="bg-[#faf7f2] rounded-2xl border border-stone-200/90 overflow-hidden transition-all shadow-xs"
+                >
+                  <button
+                    onClick={() => setOpenFaqIndex(isOpen ? null : index)}
+                    className="w-full px-6 py-4.5 text-left flex items-center justify-between gap-4 font-bold text-stone-900 hover:text-[#5a8c72] transition-colors cursor-pointer"
+                  >
+                    <span className="text-base sm:text-lg">{faq.q}</span>
+                    {isOpen ? (
+                      <ChevronUp className="w-5 h-5 text-[#5a8c72] shrink-0" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5 text-stone-400 shrink-0" />
+                    )}
+                  </button>
+                  {isOpen && (
+                    <div className="px-6 pb-5 pt-1 text-sm sm:text-base text-stone-600 leading-relaxed border-t border-stone-200/50 animate-fadeIn">
+                      {faq.a}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
 
       {/* SECCIÓN CONTACTO */}
       <ContactSection />

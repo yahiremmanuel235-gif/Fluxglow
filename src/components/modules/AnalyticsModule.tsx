@@ -12,6 +12,7 @@ import {
   ChevronRight,
   Info
 } from 'lucide-react';
+import { FluxGlowLogo } from '../common/FluxGlowLogo';
 import { 
   ResponsiveContainer, 
   LineChart, 
@@ -92,14 +93,7 @@ export const AnalyticsModule: React.FC = () => {
         {/* Top Header with Brand Logo */}
         <div className="flex items-center justify-between py-2 border-b border-[#ece4d9] mb-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#5a8c72] to-[#e07a52] p-0.5 flex items-center justify-center shadow-xs">
-              <div className="w-full h-full bg-white rounded-full flex items-center justify-center">
-                <Sparkles className="w-4 h-4 text-[#e07a52]" />
-              </div>
-            </div>
-            <span className="font-extrabold text-lg tracking-tight text-stone-800">
-              FluxGlow
-            </span>
+            <FluxGlowLogo imgSrc="/logo2.png" size="sm" showText={true} />
           </div>
 
           <div className="text-xs font-semibold text-stone-600 bg-white border border-stone-300 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-2xs">

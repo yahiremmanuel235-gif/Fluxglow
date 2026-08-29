@@ -32,10 +32,10 @@ export const AuthModals: React.FC<AuthModalProps> = ({
 }) => {
   const [mode, setMode] = useState<'login' | 'register'>(initialMode);
   const [showPassword, setShowPassword] = useState(false);
-  const [name, setName] = useState(currentUser?.name && currentUser.name !== 'Ana García' ? currentUser.name : '');
-  const [email, setEmail] = useState(currentUser?.email && currentUser.email !== 'Ana.García@gmail.com' ? currentUser.email : '');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [ageGroup, setAgeGroup] = useState(currentUser?.ageGroup || '19 - 24 años');
+  const [ageGroup, setAgeGroup] = useState('19 - 24 años');
   const [selectedGoals, setSelectedGoals] = useState<string[]>([
     'Gestión del Estrés',
     'Atención Plena',
@@ -83,20 +83,16 @@ export const AuthModals: React.FC<AuthModalProps> = ({
     }));
 
     let resolvedName = name.trim();
-    if (!resolvedName && mode === 'login') {
-      if (currentUser?.name && currentUser.name !== 'Ana García') {
-        resolvedName = currentUser.name;
-      } else if (email) {
-        const handle = email.split('@')[0];
+    if (!resolvedName) {
+      if (email.trim()) {
+        const handle = email.trim().split('@')[0];
         resolvedName = handle.charAt(0).toUpperCase() + handle.slice(1).replace(/[\._]/g, ' ');
       } else {
         resolvedName = 'Usuario FluxGlow';
       }
-    } else if (!resolvedName) {
-      resolvedName = '';
     }
 
-    const resolvedEmail = email.trim() || (currentUser?.email || 'usuario@fluxglow.com');
+    const resolvedEmail = email.trim() || 'usuario@fluxglow.com';
 
     const updatedProfile: Partial<UserProfileData> = {
       name: resolvedName,
@@ -105,13 +101,14 @@ export const AuthModals: React.FC<AuthModalProps> = ({
       memberSince: currentUser?.memberSince || formatTodaySpanish(),
       goals: formattedGoals,
       isLoggedIn: true,
+      avatarUrl: currentUser?.avatarUrl || '/user.png'
     };
 
     setTimeout(() => {
       onSuccess('learn', updatedProfile);
       onClose();
       setSubmitted(false);
-    }, 1000);
+    }, 900);
   };
 
   const handleGuestEntry = () => {
@@ -209,7 +206,7 @@ export const AuthModals: React.FC<AuthModalProps> = ({
                         id="reg-input-name"
                         type="text"
                         required
-                        placeholder=""
+                        placeholder="Ej. Tu nombre o apodo"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         className="w-full pl-10 pr-4 py-2.5 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#5a8c72]"

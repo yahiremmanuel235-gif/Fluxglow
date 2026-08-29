@@ -3,9 +3,10 @@ import React, { useState } from 'react';
 interface FluxGlowLogoProps {
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   showText?: boolean;
-  variant?: 'dark' | 'light' | 'auto';
+  variant?: 'dark' | 'light' | 'auto' | 'secondary';
   className?: string;
   imgSrc?: string;
+  alt?: string;
 }
 
 export const FluxGlowLogo: React.FC<FluxGlowLogoProps> = ({ 
@@ -13,7 +14,8 @@ export const FluxGlowLogo: React.FC<FluxGlowLogoProps> = ({
   showText = true,
   variant = 'dark',
   className = '',
-  imgSrc
+  imgSrc,
+  alt = 'FluxGlow'
 }) => {
   const [imgError, setImgError] = useState(false);
 
@@ -26,20 +28,31 @@ export const FluxGlowLogo: React.FC<FluxGlowLogoProps> = ({
   };
 
   const isLight = variant === 'light';
-  const resolvedSrc = imgSrc || (isLight ? '/logo-white.svg' : '/Logo.png');
+  const isSecondary = variant === 'secondary';
+
+  const defaultSrc = isSecondary
+    ? '/logo2.png'
+    : isLight
+      ? '/logo-white.svg'
+      : '/Logo.png';
+
+  const resolvedSrc = imgSrc || defaultSrc;
 
   return (
     <div className={`inline-flex items-center select-none ${className}`}>
       <img
         src={resolvedSrc}
-        alt="FluxGlow Logo Oficial"
+        alt={alt}
         className={`${sizeClasses[size]} object-contain transition-transform duration-200 hover:scale-[1.02]`}
         onError={(e) => {
-          // Si no encuentra Logo.png, intenta con logo.png o con el fallback SVG
           const target = e.currentTarget;
           if (target.src.endsWith('/Logo.png')) {
             target.src = '/logo.png';
           } else if (target.src.endsWith('/logo.png')) {
+            target.src = '/logo2.png';
+          } else if (target.src.endsWith('/logo2.png')) {
+            target.src = '/Logo2.png';
+          } else if (target.src.endsWith('/Logo2.png')) {
             target.src = isLight ? '/logo-white.svg' : '/logo.svg';
           } else {
             setImgError(true);
@@ -49,3 +62,4 @@ export const FluxGlowLogo: React.FC<FluxGlowLogoProps> = ({
     </div>
   );
 };
+
