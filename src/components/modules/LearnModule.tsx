@@ -1,10 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { 
   Search, 
-  Mic, 
+  Sparkles, 
   Heart, 
   MoreVertical, 
-  Sparkles, 
   Play, 
   Pause, 
   X, 
@@ -16,10 +15,12 @@ import {
   Volume2,
   Share2,
   BookmarkCheck,
-  Check
+  Check,
+  Headphones
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { FluxGlowLogo } from '../common/FluxGlowLogo';
+import { useToast } from '../common/Toast';
 import { PSYCHOLOGICAL_TESTS } from '../../data/mockData';
 import { PsychologicalTest } from '../../types';
 
@@ -338,6 +339,7 @@ const CATEGORY_CHIPS = [
 ];
 
 export const LearnModule: React.FC = () => {
+  const { warning, success, info } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('todos');
   const [selectedFormat, setSelectedFormat] = useState<string>('todos');
@@ -364,7 +366,15 @@ export const LearnModule: React.FC = () => {
 
   const toggleFavorite = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setFavorites(prev => ({ ...prev, [id]: !prev[id] }));
+    setFavorites(prev => {
+      const next = !prev[id];
+      if (next) {
+        success('Guardado en favoritos', 'Recurso añadido a tu colección.');
+      } else {
+        info('Eliminado de favoritos', 'Recurso retirado de favoritos.');
+      }
+      return { ...prev, [id]: next };
+    });
   };
 
   // String normalizer for accent-free search
@@ -467,7 +477,7 @@ export const LearnModule: React.FC = () => {
     if (!activeTest) return;
     const answeredCount = Object.keys(testAnswers).length;
     if (answeredCount < activeTest.questions.length) {
-      alert(`Por favor responde las ${activeTest.questions.length} preguntas para obtener un resultado preciso.`);
+      warning('Preguntas incompletas', `Por favor responde las ${activeTest.questions.length} preguntas para obtener un resultado preciso.`);
       return;
     }
 
@@ -499,10 +509,10 @@ export const LearnModule: React.FC = () => {
           <button
             id="filters-btn"
             onClick={() => setShowFiltersModal(true)}
-            className={`px-5 py-2 rounded-full text-sm font-semibold tracking-wide shadow-xs transition-all flex items-center gap-2 cursor-pointer ${
+            className={`px-5 py-2 rounded-full text-sm font-semibold tracking-wide shadow-2xs transition-all flex items-center gap-2 cursor-pointer ${
               selectedFormat !== 'todos' 
-                ? 'bg-[#48725c] ring-2 ring-[#5a8c72]/40 text-white' 
-                : 'bg-[#5a8c72] hover:bg-[#48725c] text-white'
+                ? 'bg-[#43705a] ring-2 ring-[#548c71]/40 text-white' 
+                : 'bg-[#548c71] hover:bg-[#43705a] text-white'
             }`}
           >
             <SlidersHorizontal className="w-4 h-4" />
@@ -521,14 +531,14 @@ export const LearnModule: React.FC = () => {
           <button
             id="categories-btn"
             onClick={() => setShowCategoriesModal(true)}
-            className={`px-5 py-2 rounded-full text-sm font-semibold tracking-wide shadow-xs transition-all flex items-center gap-2 cursor-pointer ${
+            className={`px-5 py-2 rounded-full text-sm font-semibold tracking-wide shadow-2xs transition-all flex items-center gap-2 cursor-pointer ${
               selectedCategory !== 'todos' 
-                ? 'bg-[#c8633c] ring-2 ring-[#e07a52]/40 text-white' 
-                : 'bg-[#e07a52] hover:bg-[#c8633c] text-white'
+                ? 'bg-[#c55835] ring-2 ring-[#de6943]/40 text-white' 
+                : 'bg-[#de6943] hover:bg-[#c55835] text-white'
             }`}
           >
             <FolderOpen className="w-4 h-4" />
-            <span>Categorías</span>
+            <span>Todas las Categorías</span>
             {selectedCategory !== 'todos' && (
               <span className="w-2 h-2 rounded-full bg-yellow-200"></span>
             )}
@@ -538,8 +548,8 @@ export const LearnModule: React.FC = () => {
         {/* Big Display Title: Explora y Aprende */}
         <div className="text-center my-6">
           <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight">
-            <span className="text-[#5a8c72]">Explora y </span>
-            <span className="text-[#e07a52]">Aprende</span>
+            <span className="text-[#548c71]">Explora y </span>
+            <span className="text-[#de6943]">Aprende</span>
           </h1>
           <p className="text-xs sm:text-sm text-stone-500 mt-2 max-w-xl mx-auto">
             Recursos psicoeducativos, guías prácticas y contenido respaldado por profesionales de la salud mental.
@@ -548,7 +558,7 @@ export const LearnModule: React.FC = () => {
 
         {/* Centered Search Pill */}
         <div className="max-w-xl mx-auto mb-4">
-          <div className="relative flex items-center bg-white rounded-full border border-stone-300 shadow-sm px-4 py-2.5 hover:border-stone-400 focus-within:border-[#5a8c72] focus-within:ring-2 focus-within:ring-[#5a8c72]/20 transition-all">
+          <div className="relative flex items-center bg-white rounded-full border border-stone-300 shadow-xs px-4 py-2.5 hover:border-stone-400 focus-within:border-[#548c71] focus-within:ring-2 focus-within:ring-[#548c71]/20 transition-all">
             <Search className="w-5 h-5 text-stone-400 shrink-0 mr-3" />
             <input
               id="search-guides-input"
@@ -573,12 +583,42 @@ export const LearnModule: React.FC = () => {
                 const randomTerm = terms[Math.floor(Math.random() * terms.length)];
                 setSearchQuery(randomTerm);
               }}
-              className="text-stone-400 hover:text-[#5a8c72] p-1 shrink-0 transition-colors cursor-pointer"
-              title="Sugerir tema"
+              className="text-stone-400 hover:text-[#548c71] p-1 shrink-0 transition-colors cursor-pointer"
+              title="Sugerir tema con IA"
             >
-              <Mic className="w-4 h-4" />
+              <Sparkles className="w-4 h-4" />
             </button>
           </div>
+        </div>
+
+        {/* Horizontal Quick Category Chips */}
+        <div className="flex items-center justify-center gap-2 flex-wrap max-w-4xl mx-auto mb-6">
+          <button
+            onClick={() => setSelectedCategory('todos')}
+            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+              selectedCategory === 'todos'
+                ? 'bg-stone-900 text-white shadow-2xs'
+                : 'bg-white border border-stone-200 text-stone-600 hover:bg-stone-50'
+            }`}
+          >
+            Todos
+          </button>
+          {CATEGORY_CHIPS.map((cat) => {
+            const isSelected = selectedCategory.toLowerCase() === cat.toLowerCase();
+            return (
+              <button
+                key={cat}
+                onClick={() => handleCategorySelect(cat)}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                  isSelected
+                    ? 'bg-[#548c71] text-white shadow-2xs ring-2 ring-[#548c71]/30'
+                    : 'bg-white border border-stone-200 text-stone-700 hover:border-stone-300 hover:bg-stone-50'
+                }`}
+              >
+                {cat}
+              </button>
+            );
+          })}
         </div>
 
         {/* Active Filter Indicators Bar */}
@@ -851,9 +891,13 @@ export const LearnModule: React.FC = () => {
                       </p>
                     </div>
                     <button 
-                      onClick={(e) => { e.stopPropagation(); alert(`Compartiendo: ${media.title}`); }}
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        navigator.clipboard?.writeText(window.location.href);
+                        success('Enlace copiado', `Listo para compartir: ${media.title}`); 
+                      }}
                       className="text-stone-400 hover:text-stone-600 p-1 shrink-0 cursor-pointer"
-                      title="Opciones"
+                      title="Compartir recurso"
                     >
                       <MoreVertical className="w-4 h-4" />
                     </button>

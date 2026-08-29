@@ -13,18 +13,23 @@ import {
   Clock, 
   Volume2,
   Trash2,
-  Lock
+  Lock,
+  ChevronDown,
+  ChevronUp,
+  Flame as FireIcon
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { FluxGlowLogo } from '../common/FluxGlowLogo';
 import { MoodType, JournalEntry } from '../../types';
 import { MOCK_JOURNAL_ENTRIES } from '../../data/mockData';
+import { useToast } from '../common/Toast';
 
 interface JournalModuleProps {
   onEntryCreated?: (entry: JournalEntry) => void;
 }
 
 export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated }) => {
+  const { success, warning } = useToast();
   const [entries, setEntries] = useState<JournalEntry[]>(() => {
     const saved = localStorage.getItem('fluxglow_journal_entries');
     return saved ? JSON.parse(saved) : MOCK_JOURNAL_ENTRIES;
@@ -34,6 +39,7 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated }) 
   const [intensity, setIntensity] = useState<number>(8);
   const [noteText, setNoteText] = useState('');
   const [selectedTriggers, setSelectedTriggers] = useState<string[]>(['Productividad']);
+  const [showAllTriggers, setShowAllTriggers] = useState<boolean>(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -50,7 +56,7 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated }) 
 
   const availableTriggers = [
     'Trabajo', 'Estudios', 'Familia', 'Amigos', 'Pareja', 
-    'Salud', 'Sueño', 'Dinero', 'Clima', 'Productividad', 'Descanso'
+    'Salud', 'Sueño', 'Dinero', 'Clima', 'Productividad', 'Descanso', 'Mindfulness'
   ];
 
   // Voice recording simulation
@@ -82,13 +88,14 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated }) 
       // Simulate transcription
       const simulatedText = " Hoy sentí que pude avanzar con mis pendientes y tuve una buena charla con mi equipo. Me sentí más aliviado y con energía positiva.";
       setNoteText((prev) => (prev ? prev + simulatedText : simulatedText.trim()));
+      success('Nota de voz transcrita', 'Se ha añadido el texto a tu reflexión.');
     }
   };
 
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!noteText.trim()) {
-      alert('Por favor escribe unas palabras sobre cómo te sientes antes de guardar.');
+      warning('Nota requerida', 'Por favor escribe unas palabras sobre cómo te sientes antes de guardar.');
       return;
     }
 
@@ -124,7 +131,7 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated }) 
     setTimeout(() => {
       setIsSubmitting(false);
       setNoteText('');
-      alert('¡Tu registro emocional ha sido guardado exitosamente!');
+      success('¡Registro guardado!', 'Tu reflexión y estado emocional se han guardado exitosamente.');
     }, 400);
   };
 
@@ -132,7 +139,25 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated }) 
     const updated = entries.filter(e => e.id !== id);
     setEntries(updated);
     localStorage.setItem('fluxglow_journal_entries', JSON.stringify(updated));
+    success('Registro eliminado', 'La entrada ha sido retirada de tu historial.');
   };
+
+  // Recent 7 days streak preview calculation
+  const recentDays = [
+    { day: 'Lun', mood: '🙂', intensity: 7 },
+    { day: 'Mar', mood: '😄', intensity: 9 },
+    { day: 'Mié', mood: '😐', intensity: 5 },
+    { day: 'Jue', mood: '🙂', intensity: 8 },
+    { day: 'Vie', mood: '😄', intensity: 8 },
+    { day: 'Sáb', mood: '🙂', intensity: 7 },
+    { 
+      day: 'Hoy', 
+      mood: selectedMood === 'feliz' ? '😄' : selectedMood === 'tranquilo' ? '🙂' : selectedMood === 'ansioso' ? '😐' : selectedMood === 'triste' ? '🙁' : '😡', 
+      intensity, 
+      isToday: true 
+    },
+  ];
+
 
   return (
     <div className="w-full bg-[#fbf9f5] min-h-screen pb-20 pt-4 px-4 sm:px-6 lg:px-8">
@@ -154,27 +179,58 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated }) 
         </div>
 
         {/* Big Display Title: Registro Emocional */}
-        <div className="text-center my-6">
+        <div className="text-center my-5">
           <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight">
-            <span className="text-[#5a8c72]">Registro </span>
-            <span className="text-[#e07a52]">Emocional</span>
+            <span className="text-[#548c71]">Registro </span>
+            <span className="text-[#de6943]">Emocional</span>
           </h1>
+          <p className="text-stone-500 text-xs sm:text-sm mt-1">Tu espacio diario de autoconocimiento y descompresión guiada</p>
         </div>
 
-        {/* Main Controls Row from Image 3: [Diario personal] [¿Cómo te sientes hoy? 😡 🙁 😐 🙂 😄] [Enviar] */}
+        {/* RECENT 7-DAYS STREAK ROW (Always Visible) */}
+        <div className="bg-white rounded-2xl border border-stone-200 p-3.5 sm:p-4 mb-6 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center text-amber-700">
+              <FireIcon className="w-4 h-4 fill-amber-500 text-amber-600" />
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-stone-900">Racha de Registro: 7 días seguidos</h4>
+              <p className="text-[11px] text-stone-500">Constancia emocional de la última semana</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 sm:gap-2.5 overflow-x-auto no-scrollbar w-full sm:w-auto justify-between sm:justify-end">
+            {recentDays.map((item, idx) => (
+              <div 
+                key={idx} 
+                className={`flex flex-col items-center justify-center p-1.5 sm:px-2.5 rounded-xl transition-all ${
+                  item.isToday 
+                    ? 'bg-[#e2eee6] border border-[#548c71]/40 ring-1 ring-[#548c71]/20' 
+                    : 'bg-[#faf8f4] border border-stone-200/60'
+                }`}
+              >
+                <span className="text-[10px] font-bold text-stone-500 uppercase">{item.day}</span>
+                <span className="text-base sm:text-lg my-0.5">{item.mood}</span>
+                <span className="text-[9px] font-semibold text-stone-600">{item.intensity}/10</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Main Controls Row: [Diario personal] [¿Cómo te sientes hoy? 😡 🙁 😐 🙂 😄] [Enviar] */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
           
           {/* Left Pill: Diario personal */}
-          <button
+          <div
             id="personal-journal-btn"
-            className="bg-[#5a8c72] hover:bg-[#48725c] text-white px-6 py-2.5 rounded-full text-sm font-bold tracking-wide shadow-xs transition-all flex items-center gap-2 whitespace-nowrap"
+            className="bg-[#548c71] text-white px-6 py-2.5 rounded-full text-sm font-bold tracking-wide shadow-xs flex items-center gap-2 whitespace-nowrap"
           >
             <BookOpen className="w-4 h-4" />
             <span>Diario personal</span>
-          </button>
+          </div>
 
           {/* Center Capsule: ¿Cómo te sientes hoy? + 5 Emojis */}
-          <div className="w-full md:w-auto flex-1 max-w-2xl bg-white border border-stone-300 rounded-full py-2 px-4 sm:px-6 shadow-sm flex items-center justify-between gap-3">
+          <div className="w-full md:w-auto flex-1 max-w-2xl bg-white border border-stone-200 rounded-full py-2 px-4 sm:px-6 shadow-xs flex items-center justify-between gap-3">
             <span className="text-xs sm:text-sm font-semibold text-stone-800 whitespace-nowrap">
               ¿Cómo te sientes hoy?
             </span>
@@ -188,12 +244,13 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated }) 
                     key={m.id}
                     id={`mood-btn-${m.id}`}
                     onClick={() => setSelectedMood(m.id)}
-                    className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xl transition-all ${
+                    className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xl transition-all cursor-pointer ${
                       isSelected
-                        ? 'scale-125 ring-2 ring-[#5a8c72] shadow-md bg-stone-100'
+                        ? 'scale-125 ring-2 ring-[#548c71] shadow-md bg-stone-100'
                         : 'opacity-70 hover:opacity-100 hover:scale-110'
                     }`}
                     title={m.label}
+                    aria-label={m.label}
                   >
                     <span>{m.emoji}</span>
                   </button>
@@ -207,18 +264,18 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated }) 
             id="submit-journal-btn"
             onClick={() => handleSubmit()}
             disabled={isSubmitting}
-            className="bg-[#e07a52] hover:bg-[#c8633c] text-white px-7 py-2.5 rounded-full text-sm font-bold tracking-wide shadow-xs hover:shadow-md transition-all flex items-center gap-2 whitespace-nowrap"
+            className="bg-[#de6943] hover:bg-[#cb512e] text-white px-7 py-2.5 rounded-full text-sm font-bold tracking-wide shadow-xs hover:shadow-md transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer active:scale-95"
           >
             <Send className="w-4 h-4" />
             <span>{isSubmitting ? 'Guardando...' : 'Enviar'}</span>
           </button>
         </div>
 
-        {/* Big White Card Box with Textarea from Image 3 */}
-        <div className="bg-white rounded-3xl border-2 border-stone-300 shadow-sm p-6 sm:p-8 mb-10 transition-all">
+        {/* Big White Card Box with Textarea */}
+        <div className="bg-white rounded-3xl border border-stone-200 shadow-sm p-6 sm:p-8 mb-10 transition-all">
           <div className="flex items-center justify-between pb-3 border-b border-stone-100 mb-4">
             <span className="text-xs font-bold text-stone-500 uppercase tracking-wider flex items-center gap-1.5">
-              <Lock className="w-3.5 h-3.5 text-[#5a8c72]" />
+              <Lock className="w-3.5 h-3.5 text-[#548c71]" />
               Espacio privado y seguro de desahogo
             </span>
 
@@ -232,18 +289,19 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated }) 
                 max="10"
                 value={intensity}
                 onChange={(e) => setIntensity(Number(e.target.value))}
-                className="w-24 accent-[#5a8c72] cursor-pointer"
+                className="w-24 accent-[#548c71] cursor-pointer"
+                aria-label="Selector de intensidad emocional del 1 al 10"
               />
             </div>
           </div>
 
           <textarea
             id="journal-note-textarea"
-            rows={8}
+            rows={7}
             value={noteText}
             onChange={(e) => setNoteText(e.target.value)}
-            placeholder="¿Por qué te sientes así?"
-            className="w-full bg-transparent border-none text-stone-800 placeholder-stone-400 text-base sm:text-lg focus:outline-hidden resize-none leading-relaxed"
+            placeholder="¿Por qué te sientes así hoy? Expresa tus pensamientos sin juzgarte..."
+            className="w-full bg-transparent border-none text-stone-800 placeholder-stone-400 text-base sm:text-lg focus:outline-none resize-none leading-relaxed"
           />
 
           {/* Helper Tools inside the card */}
@@ -252,17 +310,17 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated }) 
             {/* Triggers Tags */}
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="text-xs font-semibold text-stone-500 mr-1 flex items-center gap-1">
-                <Tag className="w-3 h-3" /> Factores:
+                <Tag className="w-3 h-3 text-[#548c71]" /> Factores:
               </span>
-              {availableTriggers.slice(0, 6).map((tag) => {
+              {(showAllTriggers ? availableTriggers : availableTriggers.slice(0, 6)).map((tag) => {
                 const isSelected = selectedTriggers.includes(tag);
                 return (
                   <button
                     key={tag}
                     onClick={() => toggleTrigger(tag)}
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${
                       isSelected
-                        ? 'bg-[#e8f1ec] text-[#2d5a3f] border border-[#5a8c72]'
+                        ? 'bg-[#e2eee6] text-[#253d33] border border-[#548c71]'
                         : 'bg-stone-100 text-stone-600 hover:bg-stone-200 border border-transparent'
                     }`}
                   >
@@ -270,6 +328,14 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated }) 
                   </button>
                 );
               })}
+
+              <button
+                onClick={() => setShowAllTriggers(!showAllTriggers)}
+                className="px-2.5 py-1 rounded-full text-xs font-semibold text-[#548c71] hover:bg-[#e2eee6] border border-[#548c71]/30 transition-all cursor-pointer flex items-center gap-1"
+              >
+                <span>{showAllTriggers ? 'Menos' : `+${availableTriggers.length - 6} más`}</span>
+                {showAllTriggers ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+              </button>
             </div>
 
             {/* Voice Recording Button */}
@@ -278,13 +344,13 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated }) 
                 type="button"
                 id="voice-journal-record-btn"
                 onClick={handleStartVoiceRecord}
-                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                   isRecording 
-                    ? 'bg-red-500 text-white animate-pulse' 
+                    ? 'bg-rose-500 text-white animate-pulse' 
                     : 'bg-stone-100 hover:bg-stone-200 text-stone-700'
                 }`}
               >
-                {isRecording ? <Square className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5 text-[#e07a52]" />}
+                {isRecording ? <Square className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5 text-[#de6943]" />}
                 <span>{isRecording ? `Grabando (${recordingSeconds}s)...` : 'Nota de voz'}</span>
               </button>
             </div>

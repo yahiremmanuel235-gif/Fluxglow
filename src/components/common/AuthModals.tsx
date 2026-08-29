@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { FluxGlowLogo } from './FluxGlowLogo';
 import { ViewMode, UserProfileData } from '../../types';
+import { useToast } from './Toast';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -30,7 +31,9 @@ export const AuthModals: React.FC<AuthModalProps> = ({
   onClose,
   onSuccess,
 }) => {
+  const { info, success } = useToast();
   const [mode, setMode] = useState<'login' | 'register'>(initialMode);
+
   const [showPassword, setShowPassword] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -266,8 +269,8 @@ export const AuthModals: React.FC<AuthModalProps> = ({
                   {mode === 'login' && (
                     <button
                       type="button"
-                      onClick={() => alert('Se ha enviado un enlace de recuperación a tu correo de demostración.')}
-                      className="text-[11px] text-[#d4622a] hover:underline font-semibold"
+                      onClick={() => info('Enlace de recuperación enviado', 'Hemos enviado las instrucciones para restablecer tu contraseña a tu correo electrónico.')}
+                      className="text-[11px] text-[#de6943] hover:underline font-semibold cursor-pointer"
                     >
                       ¿Olvidaste tu contraseña?
                     </button>

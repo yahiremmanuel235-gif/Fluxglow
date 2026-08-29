@@ -12,14 +12,19 @@ import {
   Share2, 
   ShieldCheck, 
   CheckCircle2,
-  X
+  X,
+  ArrowRight,
+  UserCheck,
+  Check
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { FluxGlowLogo } from '../common/FluxGlowLogo';
 import { CommunityPost } from '../../types';
 import { MOCK_COMMUNITY_POSTS } from '../../data/mockData';
+import { useToast } from '../common/Toast';
 
 export const CommunityModule: React.FC = () => {
+  const { success, warning, info } = useToast();
   const [posts, setPosts] = useState<CommunityPost[]>(() => {
     const saved = localStorage.getItem('fluxglow_community_posts');
     return saved ? JSON.parse(saved) : MOCK_COMMUNITY_POSTS;
@@ -27,48 +32,71 @@ export const CommunityModule: React.FC = () => {
 
   const [postText, setPostText] = useState('');
   const [selectedForum, setSelectedForum] = useState('Motivación Personal');
-  const [activeTabModal, setActiveTabModal] = useState<string | null>(null);
+  const [joinedGroups, setJoinedGroups] = useState<string[]>(['Estudiantes Universitarios']);
+  const [enrolledChallenges, setEnrolledChallenges] = useState<string[]>(['Gratitud Diaria']);
 
-  // 1. Foros Moderados matching Image 8
+  // 1. Foros Moderados
   const forums = [
-    { name: 'Estrés Académico', active: false },
-    { name: 'Ansiedad y Bienestar', active: false },
-    { name: 'Motivación Personal', active: true },
-    { name: 'Hábitos Saludables', active: false },
+    { name: 'Estrés Académico', icon: '🎓', count: '142 temas' },
+    { name: 'Ansiedad y Bienestar', icon: '🌿', count: '289 temas' },
+    { name: 'Motivación Personal', icon: '✨', count: '315 temas' },
+    { name: 'Hábitos Saludables', icon: '💧', count: '198 temas' },
   ];
 
-  // 2. Grupos de Apoyo matching Image 8
+  // 2. Grupos de Apoyo
   const supportGroups = [
-    { name: 'Estudiantes Universitarios', members: '120 participantes' },
-    { name: 'Manejo del Estrés', members: '95 participantes' },
-    { name: 'Crecimiento Personal', members: '87 participantes' },
+    { id: 'univ', name: 'Estudiantes Universitarios', icon: '📚', members: '120 participantes' },
+    { id: 'estres', name: 'Manejo del Estrés', icon: '🧘', members: '95 participantes' },
+    { id: 'crec', name: 'Crecimiento Personal', icon: '🌱', members: '87 participantes' },
   ];
 
-  // 3. Retos Emocionales matching Image 8
+  // 3. Retos Emocionales
   const challenges = [
-    { name: 'Gratitud Diaria', duration: '7 días' },
-    { name: 'Dormir 8 Horas', duration: '7 días' },
-    { name: 'Registro Emocional', duration: '14 días' },
+    { id: 'gratitud', name: 'Gratitud Diaria', icon: '🙏', duration: '7 días', activeUsers: 340 },
+    { id: 'sueno', name: 'Dormir 8 Horas', icon: '🌙', duration: '7 días', activeUsers: 210 },
+    { id: 'registro', name: 'Registro Emocional', icon: '✍️', duration: '14 días', activeUsers: 512 },
   ];
 
-  // 4. Reconocimientos matching Image 8
+  // 4. Reconocimientos
   const recognitions = [
-    { badge: 'Miembro Activo', requirement: 'Participar durante 30 días.' },
-    { badge: 'Apoyo Constante', requirement: 'Ayudar a 10 usuarios.' },
-    { badge: 'Comunidad Destacada', requirement: 'Participar en foros y grupos.' },
+    { badge: 'Miembro Activo', icon: '🌟', requirement: 'Participar durante 30 días seguidos' },
+    { badge: 'Apoyo Constante', icon: '🤝', requirement: 'Ayudar a 10 miembros con palabras de ánimo' },
+    { badge: 'Comunidad Destacada', icon: '👑', requirement: 'Participar activamente en foros y grupos' },
   ];
+
+  const handleToggleGroup = (groupName: string) => {
+    if (joinedGroups.includes(groupName)) {
+      setJoinedGroups(joinedGroups.filter((g) => g !== groupName));
+      info('Has salido del grupo', `Ya no recibirás notificaciones de ${groupName}`);
+    } else {
+      setJoinedGroups([...joinedGroups, groupName]);
+      confetti({ particleCount: 25, spread: 45 });
+      success('¡Te has unido al grupo!', `Ahora formas parte de ${groupName}. Puedes conversar con otros miembros.`);
+    }
+  };
+
+  const handleToggleChallenge = (challengeName: string) => {
+    if (enrolledChallenges.includes(challengeName)) {
+      setEnrolledChallenges(enrolledChallenges.filter((c) => c !== challengeName));
+      info('Reto pausado', `Has cancelado tu participación en ${challengeName}.`);
+    } else {
+      setEnrolledChallenges([...enrolledChallenges, challengeName]);
+      confetti({ particleCount: 35, spread: 60 });
+      success('¡Inscrito al reto!', `Has comenzado el reto "${challengeName}". ¡Mucho ánimo!`);
+    }
+  };
 
   const handlePublish = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!postText.trim()) {
-      alert('Por favor escribe tu experiencia antes de publicar.');
+      warning('Mensaje requerido', 'Por favor escribe tu experiencia antes de publicar.');
       return;
     }
 
     const newPost: CommunityPost = {
       id: 'post-' + Date.now(),
       author: 'Tú (Comunidad)',
-      authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80',
+      authorAvatar: '/user.png',
       category: selectedForum,
       content: postText,
       timeAgo: 'Hace un momento',
@@ -89,7 +117,7 @@ export const CommunityModule: React.FC = () => {
       origin: { y: 0.7 }
     });
 
-    alert('¡Tu experiencia ha sido compartida en el espacio seguro de FluxGlow!');
+    success('¡Publicación compartida!', 'Tu experiencia ha sido enviada al espacio seguro de FluxGlow.');
   };
 
   const handleLike = (postId: string) => {
@@ -111,8 +139,8 @@ export const CommunityModule: React.FC = () => {
             <FluxGlowLogo imgSrc="/logo2.png" size="sm" showText={true} />
           </div>
 
-          <div className="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full flex items-center gap-1.5">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+          <div className="text-xs font-semibold text-[#548c71] bg-[#e2eee6] border border-[#548c71]/30 px-3 py-1.5 rounded-full flex items-center gap-1.5">
+            <ShieldCheck className="w-3.5 h-3.5 text-[#548c71]" />
             <span>Espacio 100% Moderado y Seguro</span>
           </div>
         </div>
@@ -120,193 +148,248 @@ export const CommunityModule: React.FC = () => {
         {/* Big Display Title: Comunidad FluxGlow */}
         <div className="text-center my-6">
           <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight">
-            <span className="text-[#5a8c72]">Comunidad </span>
-            <span className="text-[#e07a52]">FluxGlow</span>
+            <span className="text-[#548c71]">Comunidad </span>
+            <span className="text-[#de6943]">FluxGlow</span>
           </h1>
+          <p className="text-stone-500 text-xs sm:text-sm mt-1">Conecta, comparte y avanza en compañía de personas como tú</p>
         </div>
 
-        {/* TOP ROW: 4 Rounded Cards from Image 8 */}
+        {/* TOP ROW: 4 Modern Rounded Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
 
           {/* CARD 1: 💬 Foros moderados */}
-          <div className="bg-white rounded-3xl border-2 border-stone-300 shadow-sm p-5 sm:p-6 flex flex-col justify-between">
+          <div className="bg-white rounded-3xl border border-stone-200 shadow-sm p-5 sm:p-6 flex flex-col justify-between">
             <div>
-              <h2 className="text-base font-bold text-stone-900 mb-3 font-serif flex items-center gap-2">
-                <span className="text-lg">💬</span>
-                Foros moderados
-              </h2>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-bold text-stone-900 font-serif flex items-center gap-2">
+                  <span className="text-base">💬</span>
+                  Foros moderados
+                </h2>
+                <span className="text-[10px] font-semibold text-stone-400">4 activos</span>
+              </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead>
-                    <tr className="border-b border-stone-200 text-stone-900 font-bold">
-                      <th className="pb-2">Foro</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-stone-100">
-                    {forums.map((f, idx) => (
-                      <tr 
-                        key={idx} 
-                        onClick={() => setSelectedForum(f.name)}
-                        className="cursor-pointer hover:bg-stone-50 transition-colors"
-                      >
-                        <td className={`py-2 underline ${f.active ? 'font-bold text-stone-900' : 'text-stone-700'}`}>
-                          {f.name}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="space-y-2">
+                {forums.map((f, idx) => {
+                  const isSelected = selectedForum === f.name;
+                  return (
+                    <div 
+                      key={idx}
+                      onClick={() => {
+                        setSelectedForum(f.name);
+                        info('Foro seleccionado', `Ahora publicarás en "${f.name}"`);
+                      }}
+                      className={`flex items-center justify-between p-2.5 rounded-2xl border transition-all cursor-pointer ${
+                        isSelected 
+                          ? 'bg-[#e2eee6] border-[#548c71]/50 shadow-2xs' 
+                          : 'bg-[#faf8f4] border-stone-200/70 hover:bg-stone-100/70'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-sm shrink-0">{f.icon}</span>
+                        <div className="truncate">
+                          <p className={`text-xs font-semibold truncate ${isSelected ? 'text-[#253d33]' : 'text-stone-800'}`}>
+                            {f.name}
+                          </p>
+                          <span className="text-[10px] text-stone-500">{f.count}</span>
+                        </div>
+                      </div>
+                      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                        isSelected ? 'bg-[#548c71] text-white' : 'text-stone-400'
+                      }`}>
+                        {isSelected ? 'Activo' : 'Ver'}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
 
           {/* CARD 2: 👥 Grupos de apoyo */}
-          <div className="bg-white rounded-3xl border-2 border-stone-300 shadow-sm p-5 sm:p-6 flex flex-col justify-between">
+          <div className="bg-white rounded-3xl border border-stone-200 shadow-sm p-5 sm:p-6 flex flex-col justify-between">
             <div>
-              <h2 className="text-base font-bold text-stone-900 mb-3 font-serif flex items-center gap-2">
-                <span className="text-lg">👥</span>
-                Grupos de apoyo
-              </h2>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-bold text-stone-900 font-serif flex items-center gap-2">
+                  <span className="text-base">👥</span>
+                  Grupos de apoyo
+                </h2>
+                <span className="text-[10px] font-semibold text-stone-400">Compañía</span>
+              </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead>
-                    <tr className="border-b border-stone-200 text-stone-900 font-bold">
-                      <th className="pb-2">Grupo</th>
-                      <th className="pb-2 text-right">Miembros</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-stone-100">
-                    {supportGroups.map((g, idx) => (
-                      <tr 
-                        key={idx}
-                        onClick={() => alert(`Unido al grupo: ${g.name}`)}
-                        className="cursor-pointer hover:bg-stone-50 transition-colors"
+              <div className="space-y-2.5">
+                {supportGroups.map((g) => {
+                  const isJoined = joinedGroups.includes(g.name);
+                  return (
+                    <div 
+                      key={g.id}
+                      className="flex items-center justify-between p-2.5 rounded-2xl bg-[#faf8f4] border border-stone-200/70 hover:border-stone-300 transition-all"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-7 h-7 rounded-full bg-amber-100 flex items-center justify-center text-xs shrink-0">
+                          {g.icon}
+                        </div>
+                        <div className="truncate">
+                          <p className="text-xs font-semibold text-stone-900 truncate">{g.name}</p>
+                          <p className="text-[10px] text-stone-500">{g.members}</p>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => handleToggleGroup(g.name)}
+                        className={`text-[11px] font-bold px-2.5 py-1 rounded-full transition-all shrink-0 cursor-pointer flex items-center gap-1 ${
+                          isJoined
+                            ? 'bg-[#e2eee6] text-[#253d33] border border-[#548c71]/40'
+                            : 'bg-stone-900 hover:bg-stone-800 text-white shadow-2xs'
+                        }`}
                       >
-                        <td className="py-2 underline text-stone-800 font-medium">{g.name}</td>
-                        <td className="py-2 text-stone-500 text-right">{g.members}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                        {isJoined ? (
+                          <>
+                            <Check className="w-3 h-3 text-[#548c71]" />
+                            <span>Unido</span>
+                          </>
+                        ) : (
+                          <span>Unirse</span>
+                        )}
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
 
           {/* CARD 3: 🏆 Retos emocionales */}
-          <div className="bg-white rounded-3xl border-2 border-stone-300 shadow-sm p-5 sm:p-6 flex flex-col justify-between">
+          <div className="bg-white rounded-3xl border border-stone-200 shadow-sm p-5 sm:p-6 flex flex-col justify-between">
             <div>
-              <h2 className="text-base font-bold text-stone-900 mb-3 font-serif flex items-center gap-2">
-                <span className="text-lg">🏆</span>
-                Retos emocionales
-              </h2>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-bold text-stone-900 font-serif flex items-center gap-2">
+                  <span className="text-base">🏆</span>
+                  Retos emocionales
+                </h2>
+                <span className="text-[10px] font-semibold text-stone-400">Hábitos</span>
+              </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead>
-                    <tr className="border-b border-stone-200 text-stone-900 font-bold">
-                      <th className="pb-2">Reto</th>
-                      <th className="pb-2 text-right">Duración</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-stone-100">
-                    {challenges.map((c, idx) => (
-                      <tr 
-                        key={idx}
-                        onClick={() => {
-                          confetti({ particleCount: 30, spread: 50 });
-                          alert(`¡Inscrito al reto: ${c.name}!`);
-                        }}
-                        className="cursor-pointer hover:bg-stone-50 transition-colors"
+              <div className="space-y-2.5">
+                {challenges.map((c) => {
+                  const isEnrolled = enrolledChallenges.includes(c.name);
+                  return (
+                    <div 
+                      key={c.id}
+                      className="flex items-center justify-between p-2.5 rounded-2xl bg-[#faf8f4] border border-stone-200/70 hover:border-stone-300 transition-all"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-7 h-7 rounded-full bg-[#e2eee6] flex items-center justify-center text-xs shrink-0">
+                          {c.icon}
+                        </div>
+                        <div className="truncate">
+                          <p className="text-xs font-semibold text-stone-900 truncate">{c.name}</p>
+                          <p className="text-[10px] text-stone-500">Duración: {c.duration}</p>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => handleToggleChallenge(c.name)}
+                        className={`text-[11px] font-bold px-2.5 py-1 rounded-full transition-all shrink-0 cursor-pointer flex items-center gap-1 ${
+                          isEnrolled
+                            ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                            : 'bg-[#548c71] hover:bg-[#43705a] text-white shadow-2xs'
+                        }`}
                       >
-                        <td className="py-2 text-stone-800 font-medium">{c.name}</td>
-                        <td className="py-2 text-stone-500 text-right font-semibold">{c.duration}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                        {isEnrolled ? (
+                          <>
+                            <Check className="w-3 h-3 text-amber-700" />
+                            <span>Inscrito</span>
+                          </>
+                        ) : (
+                          <span>Aceptar</span>
+                        )}
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
 
           {/* CARD 4: 🏅 Reconocimientos */}
-          <div className="bg-white rounded-3xl border-2 border-stone-300 shadow-sm p-5 sm:p-6 flex flex-col justify-between">
+          <div className="bg-white rounded-3xl border border-stone-200 shadow-sm p-5 sm:p-6 flex flex-col justify-between">
             <div>
-              <h2 className="text-base font-bold text-stone-900 mb-3 font-serif flex items-center gap-2">
-                <span className="text-lg">🏅</span>
-                Reconocimientos
-              </h2>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-bold text-stone-900 font-serif flex items-center gap-2">
+                  <span className="text-base">🏅</span>
+                  Reconocimientos
+                </h2>
+                <span className="text-[10px] font-semibold text-stone-400">Insignias</span>
+              </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead>
-                    <tr className="border-b border-stone-200 text-stone-900 font-bold">
-                      <th className="pb-2">Insignia</th>
-                      <th className="pb-2 text-right">Requisito</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-stone-100">
-                    {recognitions.map((r, idx) => (
-                      <tr key={idx} className="hover:bg-stone-50 transition-colors">
-                        <td className="py-2 text-stone-800 font-bold">{r.badge}</td>
-                        <td className="py-2 text-stone-500 text-right leading-tight text-[11px]">{r.requirement}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="space-y-2">
+                {recognitions.map((r, idx) => (
+                  <div key={idx} className="p-2.5 rounded-2xl bg-[#faf8f4] border border-stone-200/70">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-sm">{r.icon}</span>
+                      <p className="text-xs font-bold text-stone-900">{r.badge}</p>
+                    </div>
+                    <p className="text-[10.5px] text-stone-500 leading-tight pl-6">{r.requirement}</p>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
 
         </div>
 
-        {/* BOTTOM CARD: Compartir experiencias (Green Bordered Container from Image 8) */}
-        <div className="bg-white rounded-3xl border-2 border-[#22c55e] shadow-sm p-6 sm:p-8 mb-10">
+        {/* BOTTOM CARD: Compartir experiencias */}
+        <div className="bg-white rounded-3xl border border-stone-200 shadow-sm p-6 sm:p-8 mb-10">
           
           <h2 className="text-2xl font-bold text-stone-900 mb-1 font-serif">
             Compartir experiencias
           </h2>
-          <p className="text-sm font-semibold text-stone-700 mb-4">
-            ¿Cómo te sientes hoy?
+          <p className="text-sm font-semibold text-stone-700 mb-4 flex items-center gap-2">
+            <span>Foro actual:</span>
+            <span className="bg-[#e2eee6] text-[#253d33] px-2.5 py-0.5 rounded-full text-xs font-bold">
+              {selectedForum}
+            </span>
           </p>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             
             {/* Left Input & Button Area (7 Cols) */}
             <div className="lg:col-span-7 space-y-4">
-              <div className="border-2 border-dashed border-stone-400 rounded-2xl p-4 bg-stone-50/50">
+              <div className="border border-dashed border-stone-300 rounded-2xl p-4 bg-[#faf8f4]">
                 <textarea
                   id="community-experience-textarea"
                   rows={4}
                   value={postText}
                   onChange={(e) => setPostText(e.target.value)}
-                  placeholder="Escribe aquí tu experiencia, lo que sientes o lo que te gustaría compartir"
-                  className="w-full bg-transparent border-none text-stone-800 placeholder-stone-400 text-sm focus:outline-hidden resize-none leading-relaxed"
+                  placeholder="Escribe aquí tu experiencia, tus reflexiones o palabras de aliento para la comunidad..."
+                  className="w-full bg-transparent border-none text-stone-800 placeholder-stone-400 text-sm focus:outline-none resize-none leading-relaxed"
                 />
               </div>
 
-              {/* Solid Green Publish Button from Image 8 */}
-              <button
-                id="publish-experience-btn"
-                onClick={() => handlePublish()}
-                className="bg-[#22c55e] hover:bg-[#16a34a] text-white px-8 py-2.5 rounded-full text-sm font-bold shadow-xs hover:shadow-md transition-all"
-              >
-                Publicar
-              </button>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-stone-500">Tu publicación será visible para todos los miembros</span>
+                <button
+                  id="publish-experience-btn"
+                  onClick={() => handlePublish()}
+                  className="bg-[#548c71] hover:bg-[#43705a] text-white px-8 py-2.5 rounded-full text-sm font-bold shadow-xs hover:shadow-md transition-all cursor-pointer active:scale-95 flex items-center gap-2"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>Publicar</span>
+                </button>
+              </div>
             </div>
 
-            {/* Right Illustration: Colorful hands holding around the globe from Image 8 */}
+            {/* Right Illustration */}
             <div className="lg:col-span-5 flex flex-col items-center justify-center">
-              <div className="w-48 h-48 sm:w-56 sm:h-56 relative flex items-center justify-center">
+              <div className="w-44 h-44 sm:w-52 sm:h-52 relative flex items-center justify-center">
                 <img
-                  src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=600&auto=format&fit=crop&q=80"
+                  src="/logo2.png"
                   alt="Comunidad unida FluxGlow"
-                  className="w-full h-full object-cover rounded-full border-4 border-[#22c55e]/30 shadow-md"
+                  className="w-full h-full object-contain p-4 rounded-3xl bg-[#faf8f4] border border-stone-200 shadow-xs"
                 />
               </div>
               <span className="text-xs font-semibold text-stone-500 mt-2 text-center">
-                Comunidad solidaria de apoyo mutuo
+                Comunidad solidaria de apoyo mutuo en FluxGlow
               </span>
             </div>
 
@@ -320,10 +403,10 @@ export const CommunityModule: React.FC = () => {
 
             <div className="space-y-4">
               {posts.slice(0, 3).map((post) => (
-                <div key={post.id} className="bg-stone-50 rounded-2xl p-4 border border-stone-200">
+                <div key={post.id} className="bg-[#faf8f4] rounded-2xl p-4 border border-stone-200/80">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2.5">
-                      <img src={post.authorAvatar} alt={post.author} className="w-8 h-8 rounded-full object-cover" />
+                      <img src={post.authorAvatar || '/user.png'} alt={post.author} className="w-8 h-8 rounded-full object-cover border border-stone-200" />
                       <div>
                         <p className="text-xs font-bold text-stone-900">{post.author}</p>
                         <span className="text-[10px] text-stone-500">{post.timeAgo} • Foro: {post.category}</span>
@@ -338,14 +421,14 @@ export const CommunityModule: React.FC = () => {
                   <div className="flex items-center gap-4 text-xs font-semibold text-stone-600">
                     <button 
                       onClick={() => handleLike(post.id)}
-                      className="flex items-center gap-1 hover:text-red-500 transition-colors"
+                      className="flex items-center gap-1 hover:text-rose-500 transition-colors cursor-pointer"
                     >
-                      <Heart className="w-3.5 h-3.5 text-red-500" />
+                      <Heart className="w-3.5 h-3.5 text-rose-500" />
                       <span>{post.likes} Me gusta</span>
                     </button>
                     <button 
                       onClick={() => handleHug(post.id)}
-                      className="flex items-center gap-1 hover:text-amber-600 transition-colors"
+                      className="flex items-center gap-1 hover:text-amber-600 transition-colors cursor-pointer"
                     >
                       <span>🤗 {post.hugs} Abrazos</span>
                     </button>
@@ -361,3 +444,4 @@ export const CommunityModule: React.FC = () => {
     </div>
   );
 };
+
