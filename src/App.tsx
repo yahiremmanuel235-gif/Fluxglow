@@ -10,6 +10,8 @@ import { FluxAiModule } from './components/modules/FluxAiModule';
 import { AlertModule } from './components/modules/AlertModule';
 import { ProfileModule } from './components/modules/ProfileModule';
 import { CommunityModule } from './components/modules/CommunityModule';
+import { MissionsModule } from './components/modules/MissionsModule';
+import { OnboardingModal } from './components/common/OnboardingModal';
 import { soundEngine } from './utils/audioSynth';
 
 const DEFAULT_USER_PROFILE: UserProfileData = {
@@ -31,14 +33,15 @@ export default function App() {
   // Starts on the Home / Landing page as requested
   const [currentView, setCurrentView] = useState<ViewMode>('landing');
   const [isAudioPlaying, setIsAudioPlaying] = useState<boolean>(false);
-  
+  const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
+  const [activeGuideId, setActiveGuideId] = useState<string | undefined>(undefined);
+
   // Persistent user profile state connected across register, login & profile personalization
   const [userProfile, setUserProfile] = useState<UserProfileData>(() => {
     try {
       const saved = localStorage.getItem('fluxglow_user_profile');
       if (saved) {
         const parsed = JSON.parse(saved);
-        // Replace legacy unsplash, old test credentials, or missing avatars with clean official defaults
         if (!parsed.avatarUrl || parsed.avatarUrl.includes('unsplash.com') || parsed.avatarUrl === '') {
           parsed.avatarUrl = '/user.png';
         }
@@ -53,32 +56,30 @@ export default function App() {
     return DEFAULT_USER_PROFILE;
   });
 
-  // Ensure legacy cached avatars or emails in localStorage are migrated
-  useEffect(() => {
-    if (!userProfile.avatarUrl || userProfile.avatarUrl.includes('unsplash.com') || userProfile.email === 'yahiremmanuel235@gmail.com') {
-      setUserProfile(prev => {
-        const next = { 
-          ...prev, 
-          avatarUrl: '/user.png',
-          email: prev.email === 'yahiremmanuel235@gmail.com' ? 'usuario@fluxglow.com' : prev.email
-        };
-        try {
-          localStorage.setItem('fluxglow_user_profile', JSON.stringify(next));
-        } catch (e) {
-          console.error('Error updating profile storage:', e);
-        }
-        return next;
-      });
-    }
-  }, []);
-
   // Scroll to top when changing views
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentView]);
 
+  // Auto-launch onboarding check after skipping landing or on initial module entry
+  const triggerOnboardingCheck = () => {
+    const asked = localStorage.getItem('fluxglow_first_time_asked');
+    if (!asked) {
+      setShowOnboarding(true);
+    }
+  };
+
   const handleNavigate = (view: ViewMode) => {
+    // If navigating away from landing for the first time, check tutorial
+    if (currentView === 'landing' && view !== 'landing') {
+      triggerOnboardingCheck();
+    }
     setCurrentView(view);
+  };
+
+  const handleOpenGuideById = (guideId: string) => {
+    setActiveGuideId(guideId);
+    setCurrentView('learn');
   };
 
   const handleAuthSuccess = (targetView: ViewMode, updatedProfile?: Partial<UserProfileData>) => {
@@ -144,15 +145,27 @@ export default function App() {
         )}
 
         {currentView === 'learn' && (
-          <LearnModule />
+          <LearnModule 
+            onNavigate={handleNavigate} 
+            initialGuideId={activeGuideId} 
+          />
         )}
 
         {currentView === 'journal' && (
-          <JournalModule />
+          <JournalModule 
+            onNavigate={handleNavigate} 
+          />
+        )}
+
+        {currentView === 'missions' && (
+          <MissionsModule 
+            onNavigate={handleNavigate} 
+            onOpenGuideById={handleOpenGuideById} 
+          />
         )}
 
         {currentView === 'analytics' && (
-          <AnalyticsModule />
+          <AnalyticsModule onNavigate={handleNavigate} />
         )}
 
         {currentView === 'ai' && (
@@ -177,6 +190,13 @@ export default function App() {
 
       {/* Global Footer */}
       <Footer onNavigate={handleNavigate} />
+
+      {/* Onboarding and Platform Tour Modal */}
+      <OnboardingModal
+        isOpen={showOnboarding}
+        onClose={() => setShowOnboarding(false)}
+        onNavigate={handleNavigate}
+      />
 
     </div>
   );

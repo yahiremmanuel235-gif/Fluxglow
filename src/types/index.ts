@@ -1,6 +1,7 @@
 export type ViewMode = 
   | 'landing'
   | 'learn'
+  | 'missions'
   | 'journal'
   | 'analytics'
   | 'ai'
@@ -67,6 +68,85 @@ export interface EmotionEntry {
     aiInsight: string;
     suggestedAction: string;
   };
+}
+
+export interface GlossaryItem {
+  term: string;
+  definition: string;
+}
+
+export interface GuideExplainedSection {
+  heading: string;
+  text: string;
+  bulletPoints?: string[];
+}
+
+export interface GuideDailyMission {
+  id: string;
+  title: string;
+  description: string;
+  timeEstimate: string;
+  xp: number;
+}
+
+export interface GuideItem {
+  id: string;
+  badge: string;
+  title: string;
+  image: string;
+  isFavorite?: boolean;
+  category: string;
+  author: string;
+  readTime: string;
+  isDemoContent?: boolean;
+  simpleSummary: string;
+  demoNotice?: string;
+  explainedContent: GuideExplainedSection[];
+  glossary?: GlossaryItem[];
+  extraTips: string[];
+  dailyMissions: GuideDailyMission[];
+  content?: string[]; // Legacy fallback
+}
+
+export interface UserDailyMissionRecord {
+  id: string;
+  missionId: string;
+  guideId: string;
+  guideTitle: string;
+  title: string;
+  description: string;
+  category: string;
+  xp: number;
+  timeEstimate: string;
+  status: 'pending' | 'completed' | 'expired';
+  createdAt: string;
+  completedAt?: string;
+}
+
+export interface VideoPodcastItem {
+  id: string;
+  title: string;
+  author: string;
+  duration: string;
+  views: string;
+  timeAgo: string;
+  image: string;
+  type: 'video' | 'podcast';
+  category: string;
+  url?: string;
+  description: string;
+}
+
+export interface InstantPracticeItem {
+  id: string;
+  title: string;
+  shortDesc: string;
+  badge: string;
+  category: string;
+  duration: string;
+  type: 'breathing' | 'focus_timer' | 'grounding' | 'stress_release' | 'gratitude_express';
+  image: string;
+  benefits: string[];
 }
 
 export interface LearnResource {

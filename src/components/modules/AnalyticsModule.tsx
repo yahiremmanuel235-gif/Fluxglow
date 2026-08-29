@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Sparkles, 
   TrendingUp, 
@@ -13,9 +13,24 @@ import {
   Info,
   ShieldCheck,
   Zap,
-  CheckCircle2
+  CheckCircle2,
+  Flame,
+  Target,
+  Clock,
+  Award,
+  BookOpen,
+  Check,
+  Plus
 } from 'lucide-react';
+import confetti from 'canvas-confetti';
 import { FluxGlowLogo } from '../common/FluxGlowLogo';
+import { useToast } from '../common/Toast';
+import { 
+  getStoredMissions, 
+  completeDailyMission, 
+  calculateMissionStreak 
+} from '../../utils/missionsManager';
+import { UserDailyMissionRecord, ViewMode } from '../../types';
 import { 
   ResponsiveContainer, 
   LineChart, 
@@ -30,9 +45,50 @@ import {
   Area 
 } from 'recharts';
 
-export const AnalyticsModule: React.FC = () => {
+interface AnalyticsModuleProps {
+  onNavigate?: (view: ViewMode) => void;
+}
+
+export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) => {
+  const { success } = useToast();
   const [showWeeklySummary, setShowWeeklySummary] = useState(false);
   const [forecastPeriod, setForecastPeriod] = useState<'7d' | '14d' | '30d'>('7d');
+  
+  // Daily Missions State
+  const [missions, setMissions] = useState<UserDailyMissionRecord[]>(() => getStoredMissions());
+  const [missionFilter, setMissionFilter] = useState<'all' | 'pending' | 'completed'>('all');
+
+  useEffect(() => {
+    const handleMissionsUpdate = (e: any) => {
+      if (e.detail) {
+        setMissions(e.detail);
+      } else {
+        setMissions(getStoredMissions());
+      }
+    };
+    window.addEventListener('fluxglow_missions_updated', handleMissionsUpdate);
+    return () => window.removeEventListener('fluxglow_missions_updated', handleMissionsUpdate);
+  }, []);
+
+  const handleCompleteMission = (recordId: string) => {
+    const res = completeDailyMission(recordId);
+    if (res.success) {
+      confetti({
+        particleCount: 75,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+      success('¡Misión completada! Sigue así 🌱', `Sumaste +${res.mission?.xp || 30} XP y reforzaste tu racha diaria.`);
+    }
+  };
+
+  const streakDays = calculateMissionStreak(missions);
+  const completedMissionsCount = missions.filter(m => m.status === 'completed').length;
+  const filteredMissions = missions.filter(m => {
+    if (missionFilter === 'pending') return m.status === 'pending';
+    if (missionFilter === 'completed') return m.status === 'completed';
+    return true;
+  });
 
   // 1. Monthly Learning Growth Data (Ene a Jun)
   const learningMonthlyData = [
@@ -403,6 +459,180 @@ export const AnalyticsModule: React.FC = () => {
               <span className="text-[11px] text-stone-500 font-medium mt-3">Recomendación automatizada</span>
             </div>
           </div>
+        </div>
+
+        {/* SECTION 4: Mis Misiones Diarias (Golden / Warm Amber System) */}
+        <div className="mt-8 bg-amber-50/60 rounded-3xl border border-amber-200/90 shadow-sm p-6 sm:p-8">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-amber-200/70">
+            <div>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-amber-200 text-amber-900 flex items-center justify-center shadow-xs">
+                  <Flame className="w-5 h-5 fill-amber-500 text-amber-600" />
+                </div>
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-bold text-amber-950 font-serif">
+                    Mis Misiones Diarias
+                  </h2>
+                  <p className="text-xs sm:text-sm text-amber-800/90 mt-0.5">
+                    Retos prácticos completados a partir de tus guías de Explora y Aprende.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Streak & Achievements Counter */}
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="bg-white px-4 py-2 rounded-2xl border border-amber-300 shadow-xs flex items-center gap-2">
+                <Flame className="w-5 h-5 text-amber-500 fill-amber-400 animate-pulse" />
+                <div>
+                  <div className="text-xs font-extrabold text-amber-950">
+                    🔥 {streakDays} {streakDays === 1 ? 'día seguido' : 'días seguidos'}
+                  </div>
+                  <span className="text-[10px] text-amber-700 font-medium">
+                    Racha activa de hábitos
+                  </span>
+                </div>
+              </div>
+
+              <div className="bg-white px-4 py-2 rounded-2xl border border-amber-300 shadow-xs flex items-center gap-2">
+                <Award className="w-5 h-5 text-[#548c71]" />
+                <div>
+                  <div className="text-xs font-extrabold text-stone-900">
+                    {completedMissionsCount} completadas
+                  </div>
+                  <span className="text-[10px] text-stone-500 font-medium">
+                    +{completedMissionsCount * 30} XP acumulados
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Filter Tabs & CTA */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-5 pb-4">
+            <div className="flex items-center gap-2">
+              {(['all', 'pending', 'completed'] as const).map((filter) => {
+                const label = filter === 'all' 
+                  ? `Todas (${missions.length})` 
+                  : filter === 'pending' 
+                    ? `Pendientes (${missions.filter(m => m.status === 'pending').length})` 
+                    : `Completadas (${missions.filter(m => m.status === 'completed').length})`;
+                const isActive = missionFilter === filter;
+                return (
+                  <button
+                    key={filter}
+                    onClick={() => setMissionFilter(filter)}
+                    className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                      isActive
+                        ? 'bg-amber-900 text-white shadow-xs'
+                        : 'bg-white/80 border border-amber-200 text-amber-900 hover:bg-white'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {onNavigate && (
+              <button
+                onClick={() => onNavigate('learn')}
+                className="text-xs font-bold text-[#548c71] hover:text-[#43705a] flex items-center gap-1.5 cursor-pointer bg-white px-3.5 py-1.5 rounded-full border border-emerald-200 shadow-2xs self-start sm:self-auto"
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                <span>Explorar más guías y activar misiones</span>
+              </button>
+            )}
+          </div>
+
+          {/* Missions List */}
+          {filteredMissions.length === 0 ? (
+            <div className="bg-white/90 rounded-2xl border border-amber-200 p-8 text-center my-2">
+              <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center mx-auto mb-3">
+                <Target className="w-6 h-6" />
+              </div>
+              <h4 className="font-serif text-base font-bold text-stone-900">
+                No hay misiones en esta sección
+              </h4>
+              <p className="text-xs text-stone-500 max-w-md mx-auto mt-1 mb-4">
+                Visita el módulo de Explora y Aprende, abre cualquier guía interactiva y activa su misión diaria recomendada.
+              </p>
+              {onNavigate && (
+                <button
+                  onClick={() => onNavigate('learn')}
+                  className="bg-[#548c71] hover:bg-[#43705a] text-white px-5 py-2 rounded-full text-xs font-bold transition-all shadow-xs inline-flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Ir a Explora y Aprende</span>
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+              {filteredMissions.map((mission) => {
+                const isDone = mission.status === 'completed';
+                return (
+                  <div
+                    key={mission.id}
+                    id={`mission-card-${mission.id}`}
+                    className={`rounded-2xl p-4.5 border transition-all flex flex-col justify-between ${
+                      isDone
+                        ? 'bg-white/95 border-emerald-200 shadow-2xs'
+                        : 'bg-white border-amber-300/80 shadow-xs hover:shadow-md'
+                    }`}
+                  >
+                    <div>
+                      {/* Top Badges */}
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-stone-100 text-stone-700">
+                          {mission.category}
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] font-medium text-stone-500 flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {mission.timeEstimate}
+                          </span>
+                          <span className="text-[10px] font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded-full">
+                            +{mission.xp} XP
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Title & Description */}
+                      <h4 className="text-sm font-bold text-stone-900 leading-snug">
+                        {mission.title}
+                      </h4>
+                      <p className="text-xs text-stone-600 mt-1 leading-relaxed">
+                        {mission.description}
+                      </p>
+                      
+                      <p className="text-[11px] text-stone-400 mt-2 italic line-clamp-1">
+                        Origen: {mission.guideTitle}
+                      </p>
+                    </div>
+
+                    {/* Bottom Status & Actions */}
+                    <div className="pt-3 mt-3 border-t border-stone-100 flex items-center justify-between">
+                      {isDone ? (
+                        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                          <span>Completada hoy</span>
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => handleCompleteMission(mission.id)}
+                          className="bg-[#de6943] hover:bg-[#c55835] text-white px-4 py-1.5 rounded-full text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer ml-auto"
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                          <span>Marcar como hecha (+{mission.xp} XP)</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
       </div>

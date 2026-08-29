@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ViewMode } from '../../types';
 import { 
   Info, 
@@ -12,10 +12,12 @@ import {
   VolumeX, 
   Home,
   Menu,
-  X
+  X,
+  Target
 } from 'lucide-react';
 import { soundEngine } from '../../utils/audioSynth';
 import { FluxGlowLogo } from '../common/FluxGlowLogo';
+import { getPendingMissionsCount } from '../../utils/missionsManager';
 
 interface NavbarProps {
   currentView: ViewMode;
@@ -32,6 +34,15 @@ export const Navbar: React.FC<NavbarProps> = ({
   onToggleAudio
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [pendingMissions, setPendingMissions] = useState<number>(() => getPendingMissionsCount());
+
+  useEffect(() => {
+    const handleMissionsUpdate = () => {
+      setPendingMissions(getPendingMissionsCount());
+    };
+    window.addEventListener('fluxglow_missions_updated', handleMissionsUpdate);
+    return () => window.removeEventListener('fluxglow_missions_updated', handleMissionsUpdate);
+  }, []);
 
   const handleAudioToggle = () => {
     if (onToggleAudio) {
@@ -51,6 +62,12 @@ export const Navbar: React.FC<NavbarProps> = ({
       id: 'journal', 
       label: 'Diario Emocional', 
       icon: <BookOpen className="w-4 h-4 text-[#548c71]" /> 
+    },
+    { 
+      id: 'missions', 
+      label: 'Misiones diarias', 
+      icon: <Target className="w-4 h-4 text-amber-600" />,
+      badge: pendingMissions > 0 ? `${pendingMissions}` : undefined
     },
     { 
       id: 'analytics', 

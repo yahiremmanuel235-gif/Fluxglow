@@ -49,21 +49,27 @@ async function startServer() {
         return res.json({ response: fallbackResponses, isFallback: true });
       }
 
-      const systemInstruction = `Eres Flux AI, el asistente virtual empático e inteligente de FluxGlow, una plataforma de bienestar emocional diseñada especialmente para jóvenes de 15 a 30 años.
-Tu misión es acompañar, validar emociones con calidez, enseñar técnicas prácticas de regulación emocional (respiración, mindfulness, reestructuración cognitiva suave, autocompasión) y orientar sin juzgar.
-Estado emocional actual del usuario reportado: "${userMood || 'No especificado'}".
-Contexto adicional: "${context || 'Conversación en plataforma FluxGlow'}".
+      const systemInstruction = `Eres Flux AI, el acompañante conversacional experto en bienestar emocional y psicología práctica de FluxGlow (para jóvenes y adultos de 15 a 35 años).
+Tu propósito NO es dar respuestas genéricas o trilladas de autoayuda, sino ofrecer un espacio de comprensión genuina, validación psicológica auténtica y herramientas prácticas fundamentadas en Terapia Cognitivo-Conductual (TCC), Terapia de Aceptación y Compromiso (ACT), regulación somática y neurociencia afectiva.
 
-Pautas clave:
-1. Sé cálido, empático, cercano y claro. Usa un tono comprensivo pero profesional.
-2. Si detectas señales de crisis severa o ideación suicida, proporciona amablemente contención inmediata e invita a contactar a los números de emergencia y apoyo psicológico disponibles en la sección "Alerta Emocional" o al teléfono +503 7801-4680.
-3. Ofrece pasos breves y concretos cuando el usuario exprese ansiedad, sobrepensamiento o estrés.
-4. Responde en español y mantén tus respuestas concisas (2 a 4 párrafos dinámicos con viñetas cuando sea útil).`;
+Estado emocional actual del usuario reportado: "${userMood || 'No especificado'}".
+Modo / Enfoque solicitado: "${context || 'Acompañamiento reflexivo y práctico'}".
+
+Reglas fundamentales de comunicación para Flux AI:
+1. **Empatía Real y Específica**: No digas frases huecas como "Entiendo cómo te sientes". En su lugar, refleja lo que la persona dijo con precisión (ej. "Sentir esa resistencia al iniciar cuando tienes varias fechas límite encima es agotador...").
+2. **Estructura Dinámica y Legible**:
+   - Comienza validando la emoción y desarmando la culpa o la autocrítica.
+   - Ofrece una perspectiva psicológica clara (por qué el cerebro reacciona así).
+   - Brinda 1 o 2 micro-pasos accionables inmediatos (ejercicios de 2 a 5 minutos, preguntas de reencuadre, respiración o división de tareas).
+   - Termina con una pregunta abierta, cálida y reflexiva que invite a continuar si lo desea.
+3. **No sermonees ni abrumes**: Respuestas conversacionales de 2 a 4 párrafos bien formateados con negritas y emojis discretos.
+4. **Seguridad y Contención**: Si detectas riesgo de autolesión, crisis severa o desesperanza aguda, responde con profunda calidez, ofrece contención inmediata y recuerda suavemente que pueden acudir al botón de "Alerta Emocional" o al teléfono de ayuda +503 7801-4680.
+5. **Idioma**: Responde siempre en español natural, cercano y respetuoso.`;
 
       const contents = [
-        ...history.map((h: { role: string; content: string }) => ({
-          role: h.role === 'user' ? 'user' : 'model',
-          parts: [{ text: h.content }]
+        ...history.map((h: { role?: string; sender?: string; content?: string; text?: string }) => ({
+          role: (h.role === 'user' || h.sender === 'user') ? 'user' : 'model',
+          parts: [{ text: h.content || h.text || '' }]
         })),
         {
           role: 'user',
@@ -172,56 +178,86 @@ Genera un breve análisis psicológico positivo y constructivo con formato JSON:
 function generateFallbackAssistantResponse(message: string, mood?: string, _context?: string): string {
   const lower = message.toLowerCase();
   
-  if (lower.includes("ansiedad") || lower.includes("nervios") || lower.includes("ansios")) {
-    return `Comprendo profundamente lo desafiante que es sentir ansiedad en este momento. Recuerda que la ansiedad es una respuesta natural de alerta de tu cuerpo, no un peligro inminente ni algo permanente.
+  if (lower.includes("flojera") || lower.includes("procrastin") || lower.includes("motivo") || lower.includes("empezar mi tarea") || lower.includes("tarea")) {
+    return `Es completamente normal experimentar esa resistencia mental. En psicología sabemos que la mal llamada "flojera" suele ser una respuesta del cerebro a la fatiga, a una tarea percibida como abrumadora o al miedo a no hacerla perfecto.
 
-🌬️ **Ejercicio Rápido de Respiración 4-7-8**:
-1. Inhala suavemente por la nariz contando mentalmente hasta 4.
-2. Sostén el aire con calma contando hasta 7.
-3. Exhala despacio por la boca en 8 tiempos como si soplaras una vela sin apagarla.
+⚡ **Técnica del Micropaso de 2 Minutos**:
+1. **Reduce la meta a lo ridículamente fácil**: No pienses en terminar toda la tarea. Tu único objetivo en este momento es abrir el archivo o colocar el cuaderno en la mesa.
+2. **Quita la fricción ambiental**: Pon tu teléfono fuera de tu vista y sirve un vaso de agua fresca.
+3. **Compromiso mínimo**: Trabaja solo 5 minutos seguidos con cronómetro. El 80% de las veces, romper la inercia inicial es suficiente para continuar.
 
-💡 *Pregúntate*: ¿Hay algo que esté bajo mi control inmediato en este minuto exacto? Si no, permítete soltarlo por hoy. Estoy aquí contigo para lo que necesites expresar.`;
+¿De qué tema o materia es lo que necesitas avanzar hoy? Si me cuentas, te ayudo a desglosarlo en 3 pasos muy pequeños.`;
   }
 
-  if (lower.includes("triste") || lower.includes("llorar") || lower.includes("desánimo") || lower.includes("solo")) {
-    return `Siento mucho que estés pasando por este momento de tristeza. Todas las emociones tienen un propósito, y la tristeza es una invitación amable a cuidarnos, descansar y ser comprensivos con nosotros mismos.
+  if (lower.includes("15 minutos") || lower.includes("plan de acción") || lower.includes("plan")) {
+    return `¡Me parece un excelente plan! Establecer un bloque de tiempo acotado le envía a tu cerebro una señal de alivio porque sabe que el esfuerzo tiene un final inmediato.
 
-✨ **Paso suave para hoy**:
-- No te exijas sentirte al 100% de inmediato; valida lo que sientes.
-- Tómate una pausa, abrígate y toma algo tibio.
-- Escribir lo que tienes en el pecho en nuestro **Diario Emocional** te ayudará a soltar peso mental.
+⏱️ **Protocolo de Enfoque Relámpago de 15 Minutos**:
+- **Minutos 0 a 2 (Claridad)**: Elige solo UN entregable concreto (ej. redactar un párrafo, revisar 5 diapositivas o responder 2 correos urgentes).
+- **Minutos 3 a 12 (Inmersión sin interrupciones)**: Trabaja en modo avión. Si surge una idea dispersa, anótala en un papel al lado y continúa.
+- **Minutos 13 a 15 (Cierre y dopamina)**: Detén el cronómetro, tacha lo avanzado y haz 3 respiraciones profundas.
 
-¿Te gustaría que hagamos una meditación corta de 3 minutos o prefieres contarme más sobre lo que pasó?`;
+¿Cuál es ese primer objetivo específico al que le dedicaremos estos 15 minutos?`;
   }
 
-  if (lower.includes("estrés") || lower.includes("estres") || lower.includes("tarea") || lower.includes("examen") || lower.includes("trabajo")) {
-    return `El estrés acumulado por exigencias académicas o personales puede sentirse abrumador. ¡Vamos a ordenar el flujo mental paso a paso!
+  if (lower.includes("organizar") || lower.includes("pendientes") || lower.includes("no estresarme")) {
+    return `Cuando tenemos muchos pendientes en la cabeza, la memoria de trabajo se satura y se dispara la sensación de agobio. Para recuperar la tranquilidad, necesitamos sacarlo todo de la mente hacia el papel.
 
-📋 **Estrategia anti-sobrecarga FluxGlow**:
-1. **Divide la montaña**: Elige solo UNA sola tarea pequeña para los próximos 20 minutos.
-2. **Desconexión táctica**: Haz pausas de 5 minutos estirando cuello y hombros.
-3. **Perspectiva**: Tu valor personal no depende de una nota ni de un día de alta demanda.
+📋 **Estrategia de Descarga Mental 1-3-5**:
+1. **1 Tarea Crucial**: Aquella que si la terminas hoy, te vas a dormir sintiendo que tu día valió la pena.
+2. **3 Tareas Medias**: Pendientes necesarios pero manejables en 20 minutos cada uno.
+3. **5 Tareas Menores**: Cosas rápidas (enviar un mensaje, pagar algo, ordenar tu mesa).
 
-¿Quieres que armemos una rutina equilibrada para hoy?`;
+Todo lo que no quepa en esta lista queda formalmente programado para mañana sin culpa. ¿Quieres que ordenemos tus pendientes actuales con esta fórmula?`;
   }
 
-  if (lower.includes("medit") || lower.includes("calma") || lower.includes("relaj")) {
-    return `¡Excelente decisión! Tomarte un instante para pausar transforma tu día.
+  if (lower.includes("ansiedad") || lower.includes("nervios") || lower.includes("panico") || lower.includes("pánico") || lower.includes("ansios")) {
+    return `Siento que estés sintiendo esta activación tan intensa en este momento. Lo primero que quiero que recuerdes es: **esto es una respuesta biológica temporal, no estás en peligro real y va a pasar**.
 
-🧘 **Micro-Meditación de Conexión (3 minutos)**:
-- Cierra suavemente los ojos o baja la mirada.
-- Siente los pies firmes sobre el suelo y suelta la tensión en la mandíbula y hombros.
-- Con cada inhalación imagina una luz cálida y serena (*el brillo de FluxGlow*), y con cada exhalación libera cualquier peso.
-- Quédate aquí durante 5 ciclos de respiración consciente.
+🫁 **Hagamos juntos el Suspiro Fisiológico (la técnica neuroquímica más rápida)**:
+1. Inhala profundo por la nariz llenando el abdomen.
+2. Al llegar arriba, toma una segunda inhalación corta por la nariz sin soltar el aire.
+3. Exhala muy despacio por la boca con un suspiro largo y relajado.
+*Repite esto 3 veces ahora mismo mientras me lees.*
 
-¿Cómo sientes tu cuerpo ahora?`;
+🌿 **Anclaje al presente**: Siente el peso de tus pies en el suelo y nombra mentalmente 3 objetos de color verde o azul que veas a tu alrededor. 
+
+¿Cómo sientes tu respiración ahora? Estoy aquí contigo.`;
   }
 
-  return `¡Hola! Gracias por compartirte conmigo. Como tu compañero en FluxGlow, estoy aquí para ayudarte a comprender lo que sientes, estructurar tus pensamientos o simplemente acompañarte en un espacio seguro.
+  if (lower.includes("triste") || lower.includes("llorar") || lower.includes("desánimo") || lower.includes("solo") || lower.includes("soledad") || lower.includes("vacio") || lower.includes("vacío")) {
+    return `Gracias por abrirte y confiar en este espacio. Quiero validar lo que sientes: la tristeza no es una debilidad ni un error que debas arreglar a la fuerza; es una señal de que necesitas ternura, descanso y cuidado hacia ti mismo.
 
-Actualmente registras un estado: **${mood || 'en reflexión'}**. 
+🤍 **Recordatorios suaves para hoy**:
+- No te exijas fingir entusiasmo ni ser productivo si tus reservas de energía están bajas.
+- Abrígate, toma un té o agua caliente y date permiso de pausar.
+- Tu valor como persona sigue intacto, incluso en los días donde todo se siente gris.
 
-¿Te gustaría que hagamos un ejercicio de respiración consciente, exploremos tus detonantes de hoy, o que te recomiende un artículo o podcast de nuestro Centro de Aprendizaje?`;
+Si sientes ganas de contarme qué detonó este sentimiento o qué pesa en tu mente, te leo con total respeto y sin juicios. ¿Prefieres desahogarte o te gustaría que hagamos una práctica de calma?`;
+  }
+
+  if (lower.includes("dormir") || lower.includes("insomnio") || lower.includes("noche") || lower.includes("desvelo")) {
+    return `Tener dificultades para conciliar el sueño suele ocurrir cuando la mente intenta resolver los problemas del día en la oscuridad.
+
+🌙 **Ritual de Apagado Mental para esta noche**:
+1. **Descarga en papel**: Escribe en un cuaderno 3 cosas que te preocupan y añade al lado: *"Lo resolveré mañana a las 10:00 AM"*. Cerrar el cuaderno le dice al cerebro que está a salvo de olvidar.
+2. **Disminuye la luz azul**: Pon tu pantalla en modo noche cálido y baja el brillo.
+3. **Escaneo corporal**: Acuéstate boca arriba y lleva tu atención desde los dedos de los pies hasta la frente, soltando conscientemente la mandíbula y el entrecejo.
+
+¿Te gustaría que te guíe en una respiración lenta para preparar el descanso?`;
+  }
+
+  return `Hola. Es un gusto acompañarte en FluxGlow. Estoy aquí para ofrecerte un espacio de escucha genuina, orden mental y herramientas prácticas sin juicios.
+
+${mood ? `Veo que tu registro anímico reciente es: **${mood}**.` : ''}
+
+💡 **¿En qué te gustaría que enfoquemos nuestra conversación?**
+- 🫁 Regular ansiedad o sobrepensamiento con técnicas somáticas.
+- ⚡ Vencer el bloqueo mental y organizar una tarea específica.
+- 🧠 Reencuadrar un pensamiento que te esté generando malestar.
+- 💬 Simplemente conversar y desahogarte sobre cómo ha ido tu día.
+
+Dime con total libertad qué necesitas en este instante.`;
 }
 
 startServer();
