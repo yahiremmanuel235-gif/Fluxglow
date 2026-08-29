@@ -174,7 +174,7 @@ export interface UserProfile {
   wellnessScore: number;
   goals: WellnessGoal[];
   badges: UserBadge[];
-  aiPersonalityInsight: string;
+  aiPersonalityInsight?: string;
 }
 
 export interface EmergencyContact {

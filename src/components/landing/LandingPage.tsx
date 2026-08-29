@@ -6,6 +6,8 @@ import { ContactSection } from './ContactSection';
 import { FluxGlowLogo } from '../common/FluxGlowLogo';
 import { AuthModals } from '../common/AuthModals';
 import { soundEngine } from '../../utils/audioSynth';
+import heroImg from '../../assets/images/mental_health_hero_1787964175044.jpg';
+import calmMindImg from '../../assets/images/calm_mind_wellness_1787964189019.jpg';
 import { 
   Sparkles, 
   ArrowRight, 
@@ -40,17 +42,20 @@ interface LandingPageProps {
   onNavigate: (view: ViewMode) => void;
   currentUser?: UserProfileData;
   onAuthSuccess?: (targetView: ViewMode, userProfile?: Partial<UserProfileData>) => void;
+  isAudioPlaying?: boolean;
+  onToggleAudio?: () => void;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ 
   onNavigate,
   currentUser,
-  onAuthSuccess 
+  onAuthSuccess,
+  isAudioPlaying = false,
+  onToggleAudio
 }) => {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('register');
   const [selectedQuickMood, setSelectedQuickMood] = useState<string | null>(null);
-  const [ambientPlaying, setAmbientPlaying] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
 
   // Mini breathing pacer state
@@ -63,11 +68,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     setAuthModalOpen(true);
   };
 
-  const toggleSound = () => {
-    const isNowPlaying = soundEngine.toggleAmbient('zen');
-    setAmbientPlaying(isNowPlaying);
-    if (isNowPlaying) {
-      soundEngine.playBell(528, 2.0);
+  const handleAudioToggle = () => {
+    if (onToggleAudio) {
+      onToggleAudio();
+    } else {
+      soundEngine.toggleAmbient('zen');
     }
   };
 
@@ -98,10 +103,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   }, [isBreathingActive, breathingPhase]);
 
   const quickMoods = [
-    { id: 'calm', label: 'En Calma', icon: Smile, color: 'text-[#5a8c72]', bg: 'bg-[#5a8c72]/10', tip: '¡Excelente! Mantén este estado con una breve reflexión o diario de gratitud.', targetView: 'journal' as ViewMode },
-    { id: 'stressed', label: 'Estresado/a', icon: Flame, color: 'text-[#e07a52]', bg: 'bg-[#e07a52]/10', tip: 'Hagamos una pausa de 2 minutos. Te recomendamos el módulo SOS o la respiración guiada.', targetView: 'sos' as ViewMode },
+    { id: 'calm', label: 'En Calma', icon: Smile, color: 'text-[#548c71]', bg: 'bg-[#e2eee6]', tip: '¡Excelente! Mantén este estado con una breve reflexión o diario de gratitud.', targetView: 'journal' as ViewMode },
+    { id: 'stressed', label: 'Estresado/a', icon: Flame, color: 'text-[#de6943]', bg: 'bg-[#fbeae2]', tip: 'Hagamos una pausa de 2 minutos. Te recomendamos la respiración guiada o el módulo de alerta emocional.', targetView: 'alert' as ViewMode },
     { id: 'tired', label: 'Cansado/a', icon: BatteryCharging, color: 'text-amber-600', bg: 'bg-amber-100', tip: 'La fatiga mental es una señal de tu cuerpo. Prueba nuestros podcasts de descanso mental.', targetView: 'learn' as ViewMode },
-    { id: 'anxious', label: 'Con Ansiedad', icon: Meh, color: 'text-purple-600', bg: 'bg-purple-100', tip: 'Respira conmigo. Escribe tus pensamientos en el Diario o platica con Flux AI.', targetView: 'flux-ai' as ViewMode },
+    { id: 'anxious', label: 'Con Ansiedad', icon: Meh, color: 'text-purple-600', bg: 'bg-purple-100', tip: 'Respira conmigo. Escribe tus pensamientos en el Diario o platica con Flux AI.', targetView: 'ai' as ViewMode },
     { id: 'motivated', label: 'Motivado/a', icon: Heart, color: 'text-rose-600', bg: 'bg-rose-100', tip: '¡Aprovecha esta energía para fijar tus metas en el perfil y aprender algo nuevo!', targetView: 'profile' as ViewMode },
   ];
 
@@ -171,16 +176,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <div className="flex items-center gap-2.5 sm:gap-4">
               <button
                 id="header-sound-btn"
-                onClick={toggleSound}
+                onClick={handleAudioToggle}
                 className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
-                  ambientPlaying 
+                  isAudioPlaying 
                     ? 'bg-amber-100/80 border-amber-300 text-amber-900 shadow-xs animate-pulse' 
                     : 'bg-stone-50 border-stone-200 text-stone-600 hover:bg-stone-100'
                 }`}
-                title="Sonido ambiental relajante (Cuencos Tibetanos)"
+                title={isAudioPlaying ? 'Silenciar música relajante' : 'Sonido ambiental relajante (Cuencos Tibetanos)'}
+                aria-label={isAudioPlaying ? 'Silenciar música relajante' : 'Activar sonido ambiental relajante'}
               >
-                {ambientPlaying ? <Volume2 className="w-3.5 h-3.5 text-amber-700" /> : <VolumeX className="w-3.5 h-3.5" />}
-                <span className="hidden sm:inline">{ambientPlaying ? 'Sonido Zen Activo' : 'Música Zen'}</span>
+                {isAudioPlaying ? <Volume2 className="w-3.5 h-3.5 text-amber-700" /> : <VolumeX className="w-3.5 h-3.5" />}
+                <span className="hidden sm:inline">{isAudioPlaying ? 'Sonido Zen Activo' : 'Música Zen'}</span>
               </button>
 
               <button
@@ -197,7 +203,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <button
                 id="top-nav-login-btn"
                 onClick={() => openAuth('login')}
-                className="flex items-center gap-1.5 text-stone-800 hover:text-[#d4622a] text-sm sm:text-base font-semibold transition-colors py-1 px-2 rounded-lg cursor-pointer"
+                className="flex items-center gap-1.5 text-stone-800 hover:text-[#de6943] text-sm sm:text-base font-semibold transition-colors py-1 px-2 rounded-lg cursor-pointer"
               >
                 <User className="w-4 h-4 sm:w-5 sm:h-5 text-stone-600" />
                 <span>Iniciar sesión</span>
@@ -211,8 +217,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       {/* SECCIÓN HERO PRINCIPAL RECREADA EXACTAMENTE COMO LA CAPTURA */}
       <section className="relative pt-12 pb-20 sm:pt-20 sm:pb-28 bg-white border-b border-stone-200/80 overflow-hidden" id="inicio">
         
-        {/* Soft background ambient glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-gradient-to-r from-[#8DB596]/15 via-[#D8C97B]/15 to-[#E89A6B]/15 blur-3xl rounded-full pointer-events-none"></div>
+        {/* Soft background ambient glow (Organic FluxGlow Halo) */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[380px] bg-gradient-to-tr from-[#548c71]/20 via-[#d4b439]/15 to-[#de6943]/20 blur-3xl rounded-full pointer-events-none animate-pulseGlow"></div>
 
         <div className="max-w-4xl mx-auto px-4 sm:px-6 relative z-10 text-center">
           
@@ -222,7 +228,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
 
           {/* Main Headline exact text: "Inteligente y a tu alcance" */}
-          <h1 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tight text-black mb-5 font-sans leading-tight">
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tight text-stone-950 mb-5 font-sans leading-tight">
             Inteligente y a tu alcance
           </h1>
 
@@ -231,14 +237,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             Transforma tu salud emocional con una plataforma que te entiende. Centraliza tu aprendizaje, registra tu progreso y recibe apoyo personalizado, todo en un solo lugar.
           </p>
 
-          {/* Two Pill Buttons matching reference screenshot */}
+          {/* Two Pill Buttons with pristine text-white contrast */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 max-w-xl mx-auto">
             
             {/* Green / Sage Pill Button: Regístrate */}
             <button
               id="hero-pill-register"
               onClick={() => openAuth('register')}
-              className="w-full sm:w-60 py-3.5 px-8 rounded-full bg-[#5a8c72] hover:bg-[#4d7962] text-black font-extrabold text-base shadow-sm hover:shadow-md transition-all duration-200 text-center transform hover:-translate-y-0.5"
+              className="w-full sm:w-60 py-3.5 px-8 rounded-full bg-[#548c71] hover:bg-[#42715b] text-white font-extrabold text-base shadow-sm hover:shadow-md transition-all duration-200 text-center transform hover:-translate-y-0.5 cursor-pointer"
             >
               Regístrate
             </button>
@@ -247,7 +253,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <button
               id="hero-pill-login"
               onClick={() => openAuth('login')}
-              className="w-full sm:w-60 py-3.5 px-8 rounded-full bg-[#e07a52] hover:bg-[#cf6b45] text-black font-extrabold text-base shadow-sm hover:shadow-md transition-all duration-200 text-center transform hover:-translate-y-0.5"
+              className="w-full sm:w-60 py-3.5 px-8 rounded-full bg-[#de6943] hover:bg-[#cb512e] text-white font-extrabold text-base shadow-sm hover:shadow-md transition-all duration-200 text-center transform hover:-translate-y-0.5 cursor-pointer"
             >
               Iniciar sesión
             </button>
@@ -259,7 +265,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <button
               id="hero-guest-explore-btn"
               onClick={() => onNavigate('learn')}
-              className="text-xs sm:text-sm font-semibold text-[#4a7c59] hover:text-[#2d5a3f] flex items-center gap-1.5 underline underline-offset-4 py-1 cursor-pointer"
+              className="text-xs sm:text-sm font-semibold text-[#548c71] hover:text-[#253d33] flex items-center gap-1.5 underline underline-offset-4 py-1 cursor-pointer"
             >
               <span>O explora la aplicación interactiva de inmediato</span>
               <ArrowRight className="w-4 h-4" />
@@ -270,7 +276,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="mt-12 max-w-2xl mx-auto bg-[#faf7f2] border border-stone-200/90 rounded-3xl p-5 sm:p-6 shadow-sm">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-bold text-stone-700 uppercase tracking-wider flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-[#e07a52]" />
+                <Sparkles className="w-3.5 h-3.5 text-[#de6943]" />
                 <span>¿Cómo te sientes en este instante?</span>
               </span>
               <span className="text-[11px] text-stone-400">Prueba interactiva</span>
@@ -289,7 +295,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     }}
                     className={`flex flex-col items-center gap-1.5 p-2.5 rounded-2xl border transition-all cursor-pointer ${
                       isSelected
-                        ? 'bg-white border-[#5a8c72] shadow-sm scale-105 ring-2 ring-[#5a8c72]/20'
+                        ? 'bg-white border-[#548c71] shadow-sm scale-105 ring-2 ring-[#548c71]/20'
                         : 'bg-white/60 border-stone-200/70 hover:bg-white hover:border-stone-300'
                     }`}
                   >
@@ -312,7 +318,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     const mood = quickMoods.find(m => m.id === selectedQuickMood);
                     if (mood) onNavigate(mood.targetView);
                   }}
-                  className="shrink-0 bg-[#5a8c72] hover:bg-[#48725c] text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-1.5 shadow-xs transition-transform hover:scale-105 cursor-pointer"
+                  className="shrink-0 bg-[#548c71] hover:bg-[#42715b] text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-1.5 shadow-xs transition-transform hover:scale-105 cursor-pointer"
                 >
                   <span>Ir al módulo sugerido</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -324,14 +330,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           {/* High quality Hero Graphic Banner */}
           <div className="mt-14 relative rounded-3xl overflow-hidden shadow-2xl border border-stone-200 group">
             <img 
-              src="/src/assets/images/mental_health_hero_1787964175044.jpg" 
+              src={heroImg} 
               alt="Jóvenes en bienestar emocional y mindfulness - FluxGlow"
               referrerPolicy="no-referrer"
               className="w-full h-64 sm:h-96 object-cover transition-transform duration-700 group-hover:scale-[1.02]"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex flex-col justify-end p-6 sm:p-8 text-left text-white">
               <div className="flex items-center gap-2 mb-2">
-                <span className="px-3 py-1 bg-[#5a8c72] text-white text-[11px] font-extrabold uppercase tracking-wider rounded-full shadow-xs">
+                <span className="px-3 py-1 bg-[#548c71] text-white text-[11px] font-extrabold uppercase tracking-wider rounded-full shadow-xs">
                   Espacio Seguro
                 </span>
                 <span className="px-3 py-1 bg-white/20 backdrop-blur-md text-white text-[11px] font-semibold rounded-full">
@@ -499,7 +505,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-[#faf7f2] rounded-3xl p-6 sm:p-10 border border-stone-200">
             <div className="lg:col-span-6 rounded-2xl overflow-hidden shadow-lg border border-stone-200">
               <img
-                src="/src/assets/images/calm_mind_wellness_1787964189019.jpg"
+                src={calmMindImg}
                 alt="Claridad mental y bienestar emocional - FluxGlow"
                 referrerPolicy="no-referrer"
                 className="w-full h-72 sm:h-80 object-cover"

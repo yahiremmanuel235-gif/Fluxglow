@@ -1,32 +1,218 @@
 @import "tailwindcss";
 
+@theme {
+  /* Brand Sage Palette (Wellness & Balance) */
+  --color-brand-sage-50: #f2f7f4;
+  --color-brand-sage-100: #e2eee6;
+  --color-brand-sage-200: #c5ddd0;
+  --color-brand-sage-300: #9ec4b0;
+  --color-brand-sage-400: #74a78d;
+  --color-brand-sage-500: #548c71;
+  --color-brand-sage-600: #42715b;
+  --color-brand-sage-700: #365b4a;
+  --color-brand-sage-800: #2d493c;
+  --color-brand-sage-900: #253d33;
+
+  /* Brand Terracotta Palette (Warmth & Action) */
+  --color-brand-terracotta-50: #fdf5f2;
+  --color-brand-terracotta-100: #fbeae2;
+  --color-brand-terracotta-200: #f7d3c3;
+  --color-brand-terracotta-300: #f0b39a;
+  --color-brand-terracotta-400: #e78c6b;
+  --color-brand-terracotta-500: #de6943;
+  --color-brand-terracotta-600: #cb512e;
+  --color-brand-terracotta-700: #aa3f23;
+  --color-brand-terracotta-800: #8b3520;
+  --color-brand-terracotta-900: #722f1f;
+
+  /* Brand Sand & Cream (Refined Warm Neutral Canvas) */
+  --color-brand-sand-50: #fdfbf7;
+  --color-brand-sand-100: #faf7f2;
+  --color-brand-sand-200: #f2ece1;
+  --color-brand-sand-300: #e7ddcd;
+  --color-brand-sand-400: #d3c4ad;
+  --color-brand-sand-500: #b9a589;
+  --color-brand-sand-600: #9e896d;
+  --color-brand-sand-700: #806e57;
+  --color-brand-sand-800: #695a48;
+  --color-brand-sand-900: #574b3d;
+
+  /* Warm Gold Accents */
+  --color-brand-gold-100: #fdf9e2;
+  --color-brand-gold-300: #f5e48e;
+  --color-brand-gold-500: #d4b439;
+  --color-brand-gold-700: #997a17;
+
+  /* Typography */
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
-    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-    background-color: #fbf9f5;
+    font-family: var(--font-sans);
+    background-color: var(--color-brand-sand-100);
     color: #292524;
+    overflow-x: hidden;
   }
 
   h1, h2, h3, .font-serif {
-    font-family: 'Playfair Display', Georgia, serif;
+    font-family: var(--font-serif);
   }
 }
 
-/* Custom scrollbars */
+/* Keyframes for smooth animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes floatGentle {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 1;
+    filter: drop-shadow(0 0 12px rgba(222, 105, 67, 0.35));
+  }
+  50% {
+    opacity: 0.85;
+    filter: drop-shadow(0 0 4px rgba(84, 140, 113, 0.25));
+  }
+}
+
+@keyframes breatheLoop {
+  0%, 100% {
+    transform: scale(0.88);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+}
+
+/* Custom animation utility classes */
+.animate-fadeIn {
+  animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-scaleUp {
+  animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slideDown {
+  animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-float {
+  animation: floatGentle 4s ease-in-out infinite;
+}
+
+.animate-pulseGlow {
+  animation: pulseGlow 3s ease-in-out infinite;
+}
+
+.animate-breathe {
+  animation: breatheLoop 8s ease-in-out infinite;
+}
+
+/* Compatibility classes for shadcn / tailwindcss-animate equivalents */
+.animate-in {
+  animation-duration: 0.25s;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: both;
+}
+
+.fade-in {
+  animation-name: fadeIn;
+}
+
+.zoom-in-95 {
+  animation-name: scaleUp;
+}
+
+.slide-in-from-top-2 {
+  animation-name: slideDown;
+}
+
+/* Custom refined scrollbars */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1ede6;
+  background: var(--color-brand-sand-200);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c8bfb4;
+  background: var(--color-brand-sand-400);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a89f94;
+  background: var(--color-brand-sand-500);
+}
+
+/* Utilities for hiding scrollbars while keeping scroll functionality */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
