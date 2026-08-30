@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { 
   Sparkles, 
   Send, 
-  Mic, 
+  Wand2, 
   History, 
   Volume2, 
   VolumeX, 
@@ -24,7 +24,8 @@ import {
   HeartHandshake,
   Download,
   AlertCircle,
-  HelpCircle
+  HelpCircle,
+  Compass
 } from 'lucide-react';
 import { ChatMessage, UserProfileData, InstantPracticeItem } from '../../types';
 import { FluxGlowLogo } from '../common/FluxGlowLogo';
@@ -379,58 +380,68 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
           </div>
         </div>
 
-        {/* AI Modes Selector Bar */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-4 scrollbar-none">
-          <span className="text-xs font-bold text-stone-500 uppercase tracking-wider shrink-0 mr-1">
-            Enfoque:
-          </span>
-          {AI_MODES.map((mode) => (
-            <button
-              key={mode.id}
-              onClick={() => setSelectedMode(mode.id)}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
-                selectedMode === mode.id
-                  ? 'bg-[#5a8c72] text-white shadow-xs ring-2 ring-[#5a8c72]/30'
-                  : 'bg-white border border-stone-200 text-stone-700 hover:border-stone-300 hover:bg-stone-50'
-              }`}
-              title={mode.desc}
-            >
-              <span>{mode.label}</span>
-            </button>
-          ))}
+        {/* AI Modes Selector Bar with clear descriptive micro-labels */}
+        <div className="bg-white/80 rounded-2xl border border-brand-sand-300 p-2.5 mb-4 shadow-2xs">
+          <div className="flex items-center justify-between gap-2 mb-2 px-1">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-stone-700">
+              <Compass className="w-3.5 h-3.5 text-brand-sage-600" />
+              <span>Modalidad de Acompañamiento</span>
+            </div>
+            <span className="text-[11px] text-stone-500 hidden sm:inline">Elige el estilo de respuesta de Flux AI</span>
+          </div>
+
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+            {AI_MODES.map((mode) => {
+              const isSelected = selectedMode === mode.id;
+              return (
+                <button
+                  key={mode.id}
+                  onClick={() => setSelectedMode(mode.id)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
+                    isSelected
+                      ? 'bg-brand-sage-500 text-white font-bold shadow-xs'
+                      : 'bg-brand-sand-100 hover:bg-brand-sand-200 text-stone-700 border border-brand-sand-300'
+                  }`}
+                  title={mode.desc}
+                >
+                  <span>{mode.label}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        {/* If no active chat conversation: Show Exact Image 5 Layout with enriched mood chips */}
+        {/* If no active chat conversation: Show clean layout */}
         {messages.length === 0 ? (
-          <div className="py-6 sm:py-10 flex flex-col items-center justify-center text-center">
+          <div className="py-6 sm:py-8 flex flex-col items-center justify-center text-center">
             
             {/* Center Logo Icon & Brand */}
-            <div className="flex items-center gap-3.5 mb-4 group cursor-pointer">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#5a8c72] via-[#D8C97B] to-[#e07a52] p-[2.5px] shadow-lg shadow-[#e07a52]/20 flex items-center justify-center transition-all duration-300 group-hover:scale-105">
-                <div className="w-full h-full bg-[#faf7f2] rounded-[13px] flex items-center justify-center shadow-inner">
-                  <Sparkles className="w-7 h-7 text-[#e07a52] animate-pulse" />
+            <div className="flex items-center gap-3 mb-3 group cursor-pointer">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-sage-500 to-brand-terracotta-500 p-[2px] shadow-sm flex items-center justify-center transition-all duration-300 group-hover:scale-105">
+                <div className="w-full h-full bg-brand-sand-50 rounded-[14px] flex items-center justify-center">
+                  <Sparkles className="w-6 h-6 text-brand-terracotta-500" />
                 </div>
               </div>
               <div className="text-left">
-                <span className="font-black text-3xl sm:text-4xl text-stone-900 tracking-tight block leading-none">
-                  Flux <span className="bg-gradient-to-r from-[#e07a52] to-[#c8633c] bg-clip-text text-transparent">AI</span>
+                <span className="font-black text-2xl sm:text-3xl text-stone-900 tracking-tight block leading-none">
+                  Flux <span className="text-brand-terracotta-600">AI</span>
                 </span>
-                <span className="text-[11px] font-semibold text-[#5a8c72] uppercase tracking-widest block mt-0.5">
-                  Acompañamiento Empático 24/7
+                <span className="text-[10px] font-semibold text-brand-sage-700 uppercase tracking-widest block mt-0.5">
+                  Acompañamiento Empático
                 </span>
               </div>
             </div>
 
             {/* Display Subtitle: ¿Cómo puedo ayudarte? */}
-            <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-4">
-              <span className="text-[#5a8c72]">¿Cómo puedo </span>
-              <span className="text-[#e07a52]">ayudarte?</span>
+            <h2 className="font-serif text-3xl sm:text-4xl font-bold tracking-tight mb-3">
+              <span className="text-brand-sage-700">¿Cómo puedo </span>
+              <span className="text-brand-terracotta-600">ayudarte?</span>
             </h2>
 
-            {/* Mood Context Fast Pills */}
-            <div className="max-w-2xl mb-6">
-              <p className="text-xs text-stone-500 mb-2">Cuéntame cómo te sientes ahora para personalizar la respuesta:</p>
-              <div className="flex items-center justify-center gap-2 flex-wrap">
+            {/* Quick Context Pills */}
+            <div className="max-w-2xl mb-5">
+              <p className="text-xs text-stone-500 mb-2">Cuéntame cómo te sientes para personalizar la respuesta:</p>
+              <div className="flex items-center justify-center gap-1.5 flex-wrap">
                 {QUICK_MOODS.map((mood) => (
                   <button
                     key={mood}
@@ -440,8 +451,8 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
                     }}
                     className={`text-xs px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
                       selectedMoodContext === mood
-                        ? 'bg-emerald-100 border-emerald-400 text-emerald-900 font-bold'
-                        : 'bg-white border-stone-200 text-stone-700 hover:bg-stone-50'
+                        ? 'bg-brand-sage-100 border-brand-sage-400 text-brand-sage-900 font-bold'
+                        : 'bg-white border-brand-sand-300 text-stone-700 hover:bg-brand-sand-100'
                     }`}
                   >
                     {mood}
@@ -451,61 +462,63 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
             </div>
 
             {/* Centered Search/Prompt Input Pill */}
-            <div className="w-full max-w-2xl mb-8">
+            <div className="w-full max-w-2xl mb-6">
               <form 
                 onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }}
-                className="relative flex items-center bg-white rounded-full border-2 border-stone-300 shadow-sm px-5 py-3 hover:border-stone-400 focus-within:border-[#5a8c72] focus-within:ring-2 focus-within:ring-[#5a8c72]/20 transition-all"
+                className="relative flex items-center bg-white rounded-full border border-brand-sand-300 shadow-xs px-4 py-2.5 hover:border-brand-sand-400 focus-within:border-brand-sage-500 focus-within:ring-2 focus-within:ring-brand-sage-500/20 transition-all"
               >
                 <input
                   id="flux-ai-main-input"
                   type="text"
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
-                  placeholder="Pregunta lo que quieras..."
+                  placeholder="Pregunta lo que quieras sobre tus emociones o bienestar..."
                   className="w-full bg-transparent border-none text-stone-800 placeholder-stone-400 text-sm sm:text-base focus:outline-hidden pr-2"
                 />
 
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-1.5 shrink-0">
                   <button
                     type="button"
                     onClick={() => {
                       setInputText('Hola Flux AI, me siento un poco abrumado hoy y necesito orientación para calmarme.');
                     }}
-                    className="p-1.5 text-stone-400 hover:text-[#5a8c72] rounded-full transition-colors cursor-pointer"
-                    title="Ejemplo rápido"
+                    className="p-1.5 text-stone-400 hover:text-brand-sage-600 rounded-full transition-colors cursor-pointer"
+                    title="💡 Usar sugerencia rápida con IA"
+                    aria-label="Sugerencia rápida"
                   >
-                    <Mic className="w-5 h-5" />
+                    <Wand2 className="w-4 h-4" />
                   </button>
 
                   <button
                     type="submit"
                     id="flux-ai-send-btn"
                     disabled={!inputText.trim()}
-                    className="w-9 h-9 rounded-full bg-[#e07a52] hover:bg-[#c8633c] disabled:opacity-50 text-white flex items-center justify-center shadow-xs transition-transform hover:scale-105 cursor-pointer"
+                    className="w-8 h-8 rounded-full bg-brand-terracotta-500 hover:bg-brand-terracotta-600 disabled:opacity-40 text-white flex items-center justify-center shadow-xs transition-transform hover:scale-105 cursor-pointer"
+                    aria-label="Enviar mensaje a Flux AI"
                   >
-                    <Send className="w-4 h-4 ml-0.5" />
+                    <Send className="w-3.5 h-3.5 ml-0.5" />
                   </button>
                 </div>
               </form>
             </div>
 
-            {/* Suggested Prompts Section from Image 5 */}
-            <div className="w-full max-w-2xl mb-10 text-left">
-              <p className="text-sm font-semibold text-stone-700 mb-3 px-2 flex items-center justify-between">
+            {/* Suggested Prompts Section */}
+            <div className="w-full max-w-2xl mb-8 text-left">
+              <p className="text-xs font-semibold text-stone-700 mb-2 px-2 flex items-center justify-between">
                 <span>Sugerencias de conversación:</span>
-                <span className="text-xs text-stone-400 font-normal">Haz clic para enviar</span>
+                <span className="text-[11px] text-stone-400 font-normal">Haz clic para enviar</span>
               </p>
 
-              <div className="space-y-2.5">
+              <div className="space-y-2">
                 {suggestions.map((sug, idx) => (
                   <button
                     key={idx}
                     id={`suggestion-btn-${idx}`}
                     onClick={() => handleSendMessage(sug)}
-                    className="w-full text-left bg-[#a5d6a7]/60 hover:bg-[#81c784]/80 text-stone-900 font-medium text-xs sm:text-sm px-5 py-3.5 rounded-full border border-[#81c784] shadow-2xs transition-all hover:scale-[1.01] cursor-pointer flex items-center justify-between group"
+                    className="w-full text-left bg-brand-sand-100 hover:bg-brand-sand-200 text-stone-900 font-medium text-xs sm:text-sm px-4 py-3 rounded-2xl border border-brand-sand-300 shadow-2xs transition-all hover:scale-[1.005] cursor-pointer flex items-center justify-between group"
                   >
                     <span>{sug}</span>
-                    <Send className="w-3.5 h-3.5 text-[#5a8c72] opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-2" />
+                    <Send className="w-3.5 h-3.5 text-brand-sage-600 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-2" />
                   </button>
                 ))}
               </div>
@@ -513,8 +526,8 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
 
             {/* Bottom Disclaimer */}
             <div className="max-w-2xl text-center">
-              <p className="text-[11px] sm:text-xs text-stone-500 leading-relaxed bg-[#f3ede4] p-3.5 rounded-2xl border border-stone-200">
-                Las respuestas de la IA son informativas y de apoyo práctico. Si experimentas una crisis o necesitas un diagnóstico, consulta siempre con un profesional de la salud mental.
+              <p className="text-[11px] text-stone-500 leading-relaxed bg-brand-sand-100 p-3 rounded-2xl border border-brand-sand-300">
+                Las respuestas de Flux AI son orientativas y prácticas. Si experimentas una crisis o necesitas atención clínica, consulta siempre con un profesional de la salud mental.
               </p>
             </div>
 

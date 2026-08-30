@@ -302,22 +302,22 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
       <div className="max-w-[1360px] mx-auto">
         
         {/* Top Header Row with Pill Buttons & Center Logo */}
-        <div className="flex items-center justify-between py-2 border-b border-[#ece4d9] mb-4">
+        <div className="flex items-center justify-between py-2 border-b border-brand-sand-300 mb-4">
           
           {/* Left Pill: Filtros */}
           <button
             id="filters-btn"
             onClick={() => setShowFiltersModal(true)}
-            className={`px-5 py-2 rounded-full text-sm font-semibold tracking-wide shadow-2xs transition-all flex items-center gap-2 cursor-pointer ${
+            className={`px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-semibold tracking-wide shadow-2xs transition-all flex items-center gap-2 cursor-pointer ${
               selectedFormat !== 'todos' 
-                ? 'bg-[#43705a] ring-2 ring-[#548c71]/40 text-white' 
-                : 'bg-[#548c71] hover:bg-[#43705a] text-white'
+                ? 'bg-brand-sage-600 ring-2 ring-brand-sage-400/40 text-white' 
+                : 'bg-brand-sage-500 hover:bg-brand-sage-600 text-white'
             }`}
           >
             <SlidersHorizontal className="w-4 h-4" />
             <span>Filtros</span>
             {selectedFormat !== 'todos' && (
-              <span className="w-2 h-2 rounded-full bg-amber-300"></span>
+              <span className="w-2 h-2 rounded-full bg-brand-gold-300"></span>
             )}
           </button>
 
@@ -330,16 +330,17 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
           <button
             id="categories-btn"
             onClick={() => setShowCategoriesModal(true)}
-            className={`px-5 py-2 rounded-full text-sm font-semibold tracking-wide shadow-2xs transition-all flex items-center gap-2 cursor-pointer ${
+            className={`px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-semibold tracking-wide shadow-2xs transition-all flex items-center gap-2 cursor-pointer ${
               selectedCategory !== 'todos' 
-                ? 'bg-[#c55835] ring-2 ring-[#de6943]/40 text-white' 
-                : 'bg-[#de6943] hover:bg-[#c55835] text-white'
+                ? 'bg-brand-terracotta-600 ring-2 ring-brand-terracotta-400/40 text-white' 
+                : 'bg-brand-terracotta-500 hover:bg-brand-terracotta-600 text-white'
             }`}
           >
             <FolderOpen className="w-4 h-4" />
-            <span>Todas las Categorías</span>
+            <span className="hidden sm:inline">Todas las Categorías</span>
+            <span className="sm:hidden">Categorías</span>
             {selectedCategory !== 'todos' && (
-              <span className="w-2 h-2 rounded-full bg-yellow-200"></span>
+              <span className="w-2 h-2 rounded-full bg-brand-gold-200"></span>
             )}
           </button>
         </div>
@@ -347,8 +348,8 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
         {/* Big Display Title: Explora y Aprende */}
         <div className="text-center my-6">
           <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight">
-            <span className="text-[#548c71]">Explora y </span>
-            <span className="text-[#de6943]">Aprende</span>
+            <span className="text-brand-sage-700">Explora y </span>
+            <span className="text-brand-terracotta-600">Aprende</span>
           </h1>
           <p className="text-xs sm:text-sm text-stone-500 mt-2 max-w-xl mx-auto">
             Guías prácticas, aprendizaje emocional y contenido respaldado por psicología científica.
@@ -356,21 +357,21 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
         </div>
 
         {/* Global Learning Banner */}
-        <div className="max-w-4xl mx-auto mb-6 p-3.5 sm:p-4 rounded-2xl bg-amber-50/90 border border-amber-200/80 text-amber-950 text-xs sm:text-sm flex items-center gap-3 shadow-2xs">
-          <div className="w-8 h-8 rounded-xl bg-amber-200/70 text-amber-800 flex items-center justify-center shrink-0">
+        <div className="max-w-4xl mx-auto mb-6 p-3.5 sm:p-4 rounded-2xl bg-brand-sand-100 border border-brand-sand-300 text-stone-800 text-xs sm:text-sm flex items-center gap-3 shadow-2xs">
+          <div className="w-8 h-8 rounded-xl bg-brand-terracotta-100 text-brand-terracotta-700 flex items-center justify-center shrink-0">
             <Sparkles className="w-4 h-4" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-medium leading-relaxed">
-              <strong className="font-bold text-amber-900">💡 Centro de Aprendizaje Emocional:</strong> Guías interactivas, prácticas en tiempo real y recursos de bienestar mental enriquecidos con IA y respaldados por principios de psicología cognitiva.
+              <strong className="font-bold text-brand-terracotta-800">💡 Centro de Aprendizaje Emocional:</strong> Guías interactivas, prácticas en tiempo real y recursos de bienestar mental enriquecidos con IA y respaldados por principios de psicología cognitiva.
             </p>
           </div>
         </div>
 
         {/* Centered Search Pill */}
         <div className="max-w-xl mx-auto mb-4">
-          <div className="relative flex items-center bg-white rounded-full border border-stone-300 shadow-xs px-4 py-2.5 hover:border-stone-400 focus-within:border-[#548c71] focus-within:ring-2 focus-within:ring-[#548c71]/20 transition-all">
-            <Search className="w-5 h-5 text-stone-400 shrink-0 mr-3" />
+          <div className="relative flex items-center bg-white rounded-full border border-brand-sand-300 shadow-xs px-4 py-2.5 hover:border-brand-sand-400 focus-within:border-brand-sage-500 focus-within:ring-2 focus-within:ring-brand-sage-500/20 transition-all">
+            <Search className="w-4 h-4 text-stone-400 shrink-0 mr-3" />
             <input
               id="search-guides-input"
               type="text"
@@ -394,8 +395,9 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                 const randomTerm = terms[Math.floor(Math.random() * terms.length)];
                 setSearchQuery(randomTerm);
               }}
-              className="text-stone-400 hover:text-[#548c71] p-1 shrink-0 transition-colors cursor-pointer"
-              title="Sugerir tema con IA"
+              className="text-stone-400 hover:text-brand-sage-600 p-1 shrink-0 transition-colors cursor-pointer"
+              title="💡 Sugerir tema con IA"
+              aria-label="Sugerir tema"
             >
               <Sparkles className="w-4 h-4" />
             </button>
@@ -403,13 +405,13 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
         </div>
 
         {/* Horizontal Quick Category Chips */}
-        <div className="flex items-center justify-center gap-2 flex-wrap max-w-4xl mx-auto mb-6">
+        <div className="flex items-center justify-center gap-1.5 sm:gap-2 flex-wrap max-w-4xl mx-auto mb-6">
           <button
             onClick={() => setSelectedCategory('todos')}
             className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
               selectedCategory === 'todos'
-                ? 'bg-stone-900 text-white shadow-2xs'
-                : 'bg-white border border-stone-200 text-stone-600 hover:bg-stone-50'
+                ? 'bg-brand-sage-600 text-white shadow-2xs'
+                : 'bg-white border border-brand-sand-300 text-stone-700 hover:bg-brand-sand-100'
             }`}
           >
             Todos
@@ -422,8 +424,8 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                 onClick={() => handleCategorySelect(cat)}
                 className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                   isSelected
-                    ? 'bg-[#548c71] text-white shadow-2xs ring-2 ring-[#548c71]/30'
-                    : 'bg-white border border-stone-200 text-stone-700 hover:border-stone-300 hover:bg-stone-50'
+                    ? 'bg-brand-sage-500 text-white shadow-2xs font-bold'
+                    : 'bg-white border border-brand-sand-300 text-stone-700 hover:border-brand-sand-400 hover:bg-brand-sand-100'
                 }`}
               >
                 {cat}

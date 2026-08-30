@@ -245,13 +245,13 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
       <div className="bg-white rounded-3xl max-w-3xl w-full overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 border border-stone-200 flex flex-col max-h-[94vh]">
         
         {/* Header Bar */}
-        <div className="flex items-center justify-between px-6 py-3.5 border-b border-stone-100 bg-[#fbf9f5]">
+        <div className="flex items-center justify-between px-6 py-3.5 border-b border-brand-sand-300 bg-[#fbf9f5]">
           <div className="flex items-center gap-2">
             <FluxGlowLogo imgSrc="/logo2.png" size="sm" showText={true} />
             <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full ml-2 border ${
               modalState === 'update_notes' 
-                ? 'text-[#e07a52] bg-orange-50 border-orange-200/60' 
-                : 'text-[#548c71] bg-emerald-50 border-emerald-200/60'
+                ? 'text-brand-terracotta-700 bg-brand-terracotta-50 border-brand-terracotta-200/60' 
+                : 'text-brand-sage-700 bg-brand-sage-50 border-brand-sage-200/60'
             }`}>
               {modalState === 'update_notes' ? '🎉 Novedades' : 'Guía de Interfaces'}
             </span>
@@ -259,7 +259,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
 
           <button
             onClick={modalState === 'update_notes' ? handleComplete : handleSkipOrFinishTutorial}
-            className="text-xs font-semibold text-stone-400 hover:text-stone-700 transition-colors cursor-pointer px-2 py-1"
+            className="text-xs font-semibold text-stone-500 hover:text-stone-800 transition-colors cursor-pointer px-2 py-1"
           >
             {modalState === 'update_notes' ? 'Cerrar' : 'Saltar y ver novedades'}
           </button>
@@ -268,8 +268,12 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         {/* SCREEN 1: PREGUNTA INICIAL "¿ES TU PRIMERA VEZ USANDO FLUXGLOW?" */}
         {modalState === 'ask_first_time' && (
           <div className="p-8 sm:p-12 text-center flex-1 flex flex-col justify-center items-center">
-            <div className="w-16 h-16 rounded-3xl bg-[#eaf4ef] text-[#548c71] flex items-center justify-center mb-5 shadow-xs">
+            <div className="w-16 h-16 rounded-3xl bg-brand-sage-100 text-brand-sage-700 flex items-center justify-center mb-4 shadow-xs">
               <Sparkles className="w-8 h-8" />
+            </div>
+
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-sand-200 text-stone-700 text-xs font-semibold mb-3">
+              <span>⏱️ Recorrido interactivo de ~2 min</span>
             </div>
 
             <h2 className="font-serif text-2xl sm:text-3xl font-bold text-stone-900 mb-3">
@@ -282,7 +286,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 w-full max-w-md">
               <button
                 onClick={() => handleFirstTimeResponse(true)}
-                className="bg-[#548c71] hover:bg-[#43705a] text-white py-3.5 px-6 rounded-2xl font-bold text-sm shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="bg-brand-sage-500 hover:bg-brand-sage-600 text-white py-3.5 px-6 rounded-2xl font-bold text-sm shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Check className="w-4 h-4 stroke-[3]" />
                 <span>Sí, es mi primera vez</span>

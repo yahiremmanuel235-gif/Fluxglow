@@ -15,7 +15,8 @@ import {
   RefreshCw,
   Check,
   Tag,
-  AlertCircle
+  AlertCircle,
+  RotateCcw
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { FluxGlowLogo } from '../common/FluxGlowLogo';
@@ -43,6 +44,35 @@ export const MissionsModule: React.FC<MissionsModuleProps> = ({
   const [filterTab, setFilterTab] = useState<'all' | 'pending' | 'completed'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('todos');
+
+  // Format relative completion date accurately
+  const formatCompletionDate = (dateStr?: string): string => {
+    if (!dateStr) return '';
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return 'Completada';
+      const now = new Date();
+      const isSameDay = date.getDate() === now.getDate() && 
+                        date.getMonth() === now.getMonth() && 
+                        date.getFullYear() === now.getFullYear();
+      if (isSameDay) return 'Completada hoy';
+      
+      const yesterday = new Date();
+      yesterday.setDate(now.getDate() - 1);
+      const isYesterday = date.getDate() === yesterday.getDate() && 
+                          date.getMonth() === yesterday.getMonth() && 
+                          date.getFullYear() === yesterday.getFullYear();
+      if (isYesterday) return 'Completada ayer';
+
+      const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+      if (diffDays > 1 && diffDays < 7) {
+        return `Completada hace ${diffDays} días`;
+      }
+      return `Completada el ${date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}`;
+    } catch {
+      return 'Completada';
+    }
+  };
 
   // Sync state on external updates
   useEffect(() => {
@@ -361,27 +391,25 @@ export const MissionsModule: React.FC<MissionsModuleProps> = ({
                       {/* Content */}
                       <div className="flex-1">
                         
-                        {/* Origin Guide & Category Badges */}
+                        {/* Origin Guide Pill */}
                         <div className="flex items-center gap-2 flex-wrap mb-1.5">
-                          
-                          {/* Origin Guide Pill */}
                           <button
                             onClick={() => handleGoToGuide(m.guideId)}
-                            className="bg-stone-100 hover:bg-stone-200 text-stone-700 text-[11px] font-semibold px-2.5 py-0.5 rounded-full flex items-center gap-1 border border-stone-200 transition-colors cursor-pointer group"
+                            className="bg-brand-sand-100 hover:bg-brand-sand-200 text-stone-700 text-[11px] font-semibold px-2.5 py-0.5 rounded-full flex items-center gap-1 border border-brand-sand-300 transition-colors cursor-pointer group"
                             title="Ver guía de origen"
                           >
-                            <BookOpen className="w-3 h-3 text-[#548c71] group-hover:scale-110 transition-transform" />
+                            <BookOpen className="w-3 h-3 text-brand-sage-600 group-hover:scale-110 transition-transform" />
                             <span className="line-clamp-1 max-w-[200px] sm:max-w-none">Guía: {m.guideTitle}</span>
                           </button>
 
-                          {/* Category */}
-                          <span className="text-[10px] font-bold text-amber-900 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md uppercase tracking-wider">
+                          {/* Category Badge */}
+                          <span className="text-[10px] font-bold text-brand-terracotta-800 bg-brand-terracotta-50 border border-brand-terracotta-200 px-2 py-0.5 rounded-md uppercase tracking-wider">
                             {m.category}
                           </span>
 
                           {/* Status Badge */}
                           {isDone ? (
-                            <span className="text-[10px] font-bold text-[#548c71] bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md flex items-center gap-1">
+                            <span className="text-[10px] font-bold text-brand-sage-700 bg-brand-sage-50 border border-brand-sage-200 px-2 py-0.5 rounded-md flex items-center gap-1">
                               <CheckCircle2 className="w-3 h-3" />
                               <span>Completada</span>
                             </span>
@@ -407,21 +435,22 @@ export const MissionsModule: React.FC<MissionsModuleProps> = ({
                           {m.description}
                         </p>
 
-                        {/* Time and XP Badges */}
-                        <div className="flex items-center gap-3 mt-3 text-xs text-stone-500">
+                        {/* Time, XP and Real Relative Date Badges */}
+                        <div className="flex items-center gap-3 mt-3 text-xs text-stone-500 flex-wrap">
                           <span className="flex items-center gap-1 font-medium">
                             <Clock className="w-3.5 h-3.5 text-stone-400" />
                             <span>{m.timeEstimate || '5 min'}</span>
                           </span>
 
-                          <span className="flex items-center gap-1 font-bold text-amber-800 bg-amber-100/80 px-2 py-0.5 rounded-full">
-                            <Sparkles className="w-3 h-3 text-amber-600" />
+                          <span className="flex items-center gap-1 font-bold text-brand-terracotta-800 bg-brand-terracotta-100/80 px-2 py-0.5 rounded-full">
+                            <Sparkles className="w-3 h-3 text-brand-terracotta-600" />
                             <span>+{m.xp || 30} XP</span>
                           </span>
 
                           {m.completedAt && (
-                            <span className="text-[11px] text-stone-400">
-                              Realizada hoy
+                            <span className="text-[11px] font-medium text-brand-sage-700 bg-brand-sage-50 border border-brand-sage-200 px-2 py-0.5 rounded-md flex items-center gap-1">
+                              <CheckCircle2 className="w-3 h-3 text-brand-sage-600" />
+                              <span>{formatCompletionDate(m.completedAt)}</span>
                             </span>
                           )}
                         </div>
@@ -432,26 +461,30 @@ export const MissionsModule: React.FC<MissionsModuleProps> = ({
 
                     {/* Right: Action Button */}
                     <div className="w-full md:w-auto flex md:flex-col items-center justify-end gap-2 pt-2 md:pt-0 border-t md:border-t-0 border-stone-100">
-                      <button
-                        onClick={() => handleToggleComplete(m.id, m.status)}
-                        className={`w-full md:w-auto px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer ${
-                          isDone
-                            ? 'bg-stone-100 hover:bg-stone-200 text-stone-700'
-                            : 'bg-gradient-to-r from-[#de6943] to-[#c55835] hover:opacity-95 text-white'
-                        }`}
-                      >
-                        {isDone ? (
-                          <>
-                            <CheckCircle2 className="w-4 h-4 text-[#548c71]" />
-                            <span>Hecha hoy</span>
-                          </>
-                        ) : (
-                          <>
-                            <Check className="w-4 h-4" />
-                            <span>Completar misión</span>
-                          </>
-                        )}
-                      </button>
+                      {isDone ? (
+                        <div className="w-full md:w-auto flex items-center gap-2">
+                          <span className="flex-1 md:flex-initial text-xs font-bold text-brand-sage-800 bg-brand-sage-100 border border-brand-sage-200 px-3.5 py-2 rounded-xl flex items-center justify-center gap-1.5">
+                            <CheckCircle2 className="w-4 h-4 text-brand-sage-600" />
+                            <span>Completada</span>
+                          </span>
+                          <button
+                            onClick={() => handleToggleComplete(m.id, m.status)}
+                            className="p-2 rounded-xl text-stone-500 hover:text-stone-800 hover:bg-stone-100 border border-stone-200 transition-colors cursor-pointer"
+                            title="Deshacer y marcar como pendiente"
+                            aria-label="Deshacer completado"
+                          >
+                            <RotateCcw className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleToggleComplete(m.id, m.status)}
+                          className="w-full md:w-auto px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer bg-gradient-to-r from-brand-terracotta-500 to-brand-terracotta-600 hover:opacity-95 text-white"
+                        >
+                          <Check className="w-4 h-4" />
+                          <span>Completar misión</span>
+                        </button>
+                      )}
                     </div>
 
                   </div>

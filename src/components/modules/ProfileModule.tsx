@@ -17,7 +17,10 @@ import {
   Plus,
   Save,
   CheckCircle2,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Flame,
+  HelpCircle,
+  BookOpen
 } from 'lucide-react';
 import { 
   ResponsiveContainer, 
@@ -28,25 +31,29 @@ import {
   Tooltip 
 } from 'recharts';
 import confetti from 'canvas-confetti';
-import { UserProfileData } from '../../types';
+import { UserProfileData, ViewMode } from '../../types';
 import { useToast } from '../common/Toast';
+import { getStoredMissions, calculateMissionStreak, getTotalMissionsXP } from '../../utils/missionsManager';
 
 interface ProfileModuleProps {
   userProfile?: UserProfileData;
   onUpdateProfile?: (updated: Partial<UserProfileData>) => void;
+  onNavigate?: (view: ViewMode) => void;
 }
 
 const PRESET_AVATARS = [
-  { id: 'default', label: 'Predeterminado', url: '/user.png' },
-  { id: 'logo', label: 'FluxGlow Glow', url: '/logo2.png' },
+  { id: 'default', label: 'Estándar', url: '/user.png' },
+  { id: 'logo', label: 'FluxGlow', url: '/logo2.png' },
   { id: 'calm', label: 'Serenidad', url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80' },
   { id: 'mindful', label: 'Mindful', url: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200&auto=format&fit=crop&q=80' },
   { id: 'nature', label: 'Armonía', url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80' },
+  { id: 'zen', label: 'Zen', url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&auto=format&fit=crop&q=80' },
 ];
 
 export const ProfileModule: React.FC<ProfileModuleProps> = ({ 
   userProfile, 
-  onUpdateProfile 
+  onUpdateProfile,
+  onNavigate
 }) => {
   const { success, info } = useToast();
   const [userName, setUserName] = useState(userProfile?.name || 'Usuario FluxGlow');
@@ -61,6 +68,20 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
   const [customAvatarInput, setCustomAvatarInput] = useState('');
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showMoreGoalsModal, setShowMoreGoalsModal] = useState(false);
+
+  // Dynamic Gamification data
+  const [storedMissions, setStoredMissions] = useState(() => getStoredMissions());
+  const activeStreak = calculateMissionStreak(storedMissions) || 1;
+  const totalXP = getTotalMissionsXP() || 120;
+  const currentLevel = Math.floor(totalXP / 100) + 1;
+
+  useEffect(() => {
+    const handleMissionsUpdate = () => {
+      setStoredMissions(getStoredMissions());
+    };
+    window.addEventListener('fluxglow_missions_updated', handleMissionsUpdate);
+    return () => window.removeEventListener('fluxglow_missions_updated', handleMissionsUpdate);
+  }, []);
 
   // Sync if prop changes
   useEffect(() => {
@@ -167,31 +188,78 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
       <div className="max-w-[1360px] mx-auto">
 
         {/* Top Header with Brand Logo & Account Settings Button */}
-        <div className="flex items-center justify-between py-2 border-b border-[#ece4d9] mb-4">
+        <div className="flex items-center justify-between py-2 border-b border-brand-sand-300 mb-4">
           <div className="flex items-center gap-2">
             <FluxGlowLogo size="sm" showText={true} />
           </div>
 
-          {/* Right Button: Configuración de Cuenta y Seguridad */}
-          <button
-            id="account-settings-btn"
-            onClick={() => setShowSettingsModal(true)}
-            className="bg-white hover:bg-stone-50 text-stone-800 px-4 py-2 rounded-full text-xs font-semibold border border-stone-300 shadow-2xs transition-all flex items-center gap-2 cursor-pointer"
-          >
-            <Settings className="w-3.5 h-3.5 text-[#548c71]" />
-            <span>Configuración de Cuenta y Seguridad</span>
-          </button>
+          <div className="flex items-center gap-2">
+            {onNavigate && (
+              <button
+                onClick={() => onNavigate('learn')}
+                className="bg-brand-sand-100 hover:bg-brand-sand-200 text-stone-800 px-3.5 py-1.5 rounded-full text-xs font-semibold border border-brand-sand-300 shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer"
+                title="Ver centro de guías"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-brand-sage-600" />
+                <span className="hidden sm:inline">Explorar Guías</span>
+              </button>
+            )}
+
+            {/* Right Button: Configuración de Cuenta y Seguridad */}
+            <button
+              id="account-settings-btn"
+              onClick={() => setShowSettingsModal(true)}
+              className="bg-white hover:bg-brand-sand-50 text-stone-800 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-semibold border border-brand-sand-300 shadow-2xs transition-all flex items-center gap-1.5 sm:gap-2 cursor-pointer"
+            >
+              <Settings className="w-3.5 h-3.5 text-brand-sage-600" />
+              <span>Configuración</span>
+            </button>
+          </div>
         </div>
 
         {/* Big Display Title: Perfil y Personalización */}
         <div className="text-center my-6">
           <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight">
-            <span className="text-[#548c71]">Perfil y </span>
-            <span className="text-[#de6943]">Personalización</span>
+            <span className="text-brand-sage-700">Perfil y </span>
+            <span className="text-brand-terracotta-600">Personalización</span>
           </h1>
           <p className="text-xs sm:text-sm text-stone-600 mt-2">
             Espacio personalizado para <strong className="text-stone-900">{userName}</strong>
           </p>
+        </div>
+
+        {/* Consolidated Gamification Header Banner */}
+        <div className="max-w-4xl mx-auto mb-8 bg-white rounded-3xl border border-brand-sand-300 p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-brand-terracotta-100 text-brand-terracotta-600 flex items-center justify-center font-black text-xl shadow-2xs">
+              <Flame className="w-6 h-6 fill-brand-terracotta-500 text-brand-terracotta-600" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-stone-500 uppercase tracking-wider">Racha Activa</span>
+                <span className="text-[10px] font-bold text-brand-sage-800 bg-brand-sage-100 px-2 py-0.5 rounded-full">Nivel {currentLevel}</span>
+              </div>
+              <p className="text-base sm:text-lg font-bold text-stone-900">
+                {activeStreak} {activeStreak === 1 ? 'día consecutivo' : 'días consecutivos'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 sm:gap-6 border-t sm:border-t-0 sm:border-l border-brand-sand-300 pt-3 sm:pt-0 sm:pl-6 w-full sm:w-auto justify-around sm:justify-end">
+            <div className="text-center sm:text-left">
+              <span className="text-xs text-stone-500 block font-medium">Experiencia Total</span>
+              <span className="text-base sm:text-lg font-bold text-brand-terracotta-600 flex items-center gap-1 justify-center sm:justify-start">
+                <Sparkles className="w-4 h-4 text-brand-terracotta-500" />
+                {totalXP} XP
+              </span>
+            </div>
+            <div className="text-center sm:text-left">
+              <span className="text-xs text-stone-500 block font-medium">Estado de Cuenta</span>
+              <span className="text-xs font-bold text-brand-sage-700 bg-brand-sage-50 border border-brand-sage-200 px-2.5 py-1 rounded-full inline-block mt-0.5">
+                🌱 Miembro Activo
+              </span>
+            </div>
+          </div>
         </div>
 
         {/* Main 2-Column Grid Layout */}
