@@ -3,35 +3,7 @@ import { UserDailyMissionRecord, GuideItem } from '../types';
 const MISSIONS_STORAGE_KEY = 'fluxglow_daily_missions';
 const STREAK_STORAGE_KEY = 'fluxglow_missions_streak';
 
-export const INITIAL_SEED_MISSIONS: UserDailyMissionRecord[] = [
-  {
-    id: 'mission-rec-1-seed',
-    missionId: 'mission-stress-1',
-    guideId: 'guide-stress-1',
-    guideTitle: '5 estrategias infalibles para regular el estrés antes de que te controle',
-    title: 'Práctica del Suspiro Fisiológico',
-    description: 'Realiza 3 ciclos de doble inhalación nasal y exhalación lenta al mediodía para reiniciar tu ritmo cardíaco.',
-    category: 'Estrés',
-    xp: 30,
-    timeEstimate: '3 min',
-    status: 'completed',
-    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-    completedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-  },
-  {
-    id: 'mission-rec-2-seed',
-    missionId: 'mission-anxiety-1',
-    guideId: 'guide-anxiety-2',
-    guideTitle: 'Cómo transformar la ansiedad en tu mayor motor de enfoque y acción',
-    title: 'Anclaje Sensorial 5-4-3-2-1',
-    description: 'Detente en tu próxima pausa y nombra en voz baja 5 objetos, 4 texturas, 3 sonidos, 2 olores y 1 sabor.',
-    category: 'Ansiedad',
-    xp: 35,
-    timeEstimate: '4 min',
-    status: 'pending',
-    createdAt: new Date().toISOString()
-  }
-];
+export const INITIAL_SEED_MISSIONS: UserDailyMissionRecord[] = [];
 
 export function getStoredMissions(): UserDailyMissionRecord[] {
   try {
@@ -42,9 +14,7 @@ export function getStoredMissions(): UserDailyMissionRecord[] {
   } catch (e) {
     console.error('Error loading missions from localStorage:', e);
   }
-  // Initialize with initial seed missions
-  saveStoredMissions(INITIAL_SEED_MISSIONS);
-  return INITIAL_SEED_MISSIONS;
+  return [];
 }
 
 export function saveStoredMissions(missions: UserDailyMissionRecord[]): void {
