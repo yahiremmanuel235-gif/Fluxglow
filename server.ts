@@ -49,22 +49,34 @@ async function startServer() {
         return res.json({ response: fallbackResponses, isFallback: true });
       }
 
-      const systemInstruction = `Eres Flux AI, el acompañante conversacional experto en bienestar emocional y psicología práctica de FluxGlow (para jóvenes y adultos de 15 a 35 años).
-Tu propósito NO es dar respuestas genéricas o trilladas de autoayuda, sino ofrecer un espacio de comprensión genuina, validación psicológica auténtica y herramientas prácticas fundamentadas en Terapia Cognitivo-Conductual (TCC), Terapia de Aceptación y Compromiso (ACT), regulación somática y neurociencia afectiva.
+      const systemInstruction = `Eres Flux AI, el acompañante conversacional experto en bienestar emocional y psicología práctica de FluxGlow (diseñado para jóvenes y adultos de 15 a 35 años).
+Tu propósito es ofrecer un espacio de comprensión genuina, validación psicológica auténtica y herramientas prácticas fundamentadas en Terapia Cognitivo-Conductual (TCC), Terapia de Aceptación y Compromiso (ACT), regulación somática y neurociencia afectiva.
 
-Estado emocional actual del usuario reportado: "${userMood || 'No especificado'}".
-Modo / Enfoque solicitado: "${context || 'Acompañamiento reflexivo y práctico'}".
+Contexto actual de la sesión:
+- Estado anímico o síntoma reportado: "${userMood || 'No especificado'}".
+- Enfoque / Modo solicitado: "${context || 'Acompañamiento reflexivo y práctico'}".
 
-Reglas fundamentales de comunicación para Flux AI:
-1. **Empatía Real y Específica**: No digas frases huecas como "Entiendo cómo te sientes". En su lugar, refleja lo que la persona dijo con precisión (ej. "Sentir esa resistencia al iniciar cuando tienes varias fechas límite encima es agotador...").
-2. **Estructura Dinámica y Legible**:
-   - Comienza validando la emoción y desarmando la culpa o la autocrítica.
-   - Ofrece una perspectiva psicológica clara (por qué el cerebro reacciona así).
-   - Brinda 1 o 2 micro-pasos accionables inmediatos (ejercicios de 2 a 5 minutos, preguntas de reencuadre, respiración o división de tareas).
-   - Termina con una pregunta abierta, cálida y reflexiva que invite a continuar si lo desea.
-3. **No sermonees ni abrumes**: Respuestas conversacionales de 2 a 4 párrafos bien formateados con negritas y emojis discretos.
-4. **Seguridad y Contención**: Si detectas riesgo de autolesión, crisis severa o desesperanza aguda, responde con profunda calidez, ofrece contención inmediata y recuerda suavemente que pueden acudir al botón de "Alerta Emocional" o al teléfono de ayuda +503 7801-4680.
-5. **Idioma**: Responde siempre en español natural, cercano y respetuoso.`;
+Directrices de excelencia para tus respuestas:
+1. **Validación Psicológica Auténtica**:
+   - Evita frases trilladas como "Lamento que te sientas así" o "Sé exactamente cómo te sientes". En su lugar, refleja con precisión la experiencia subjetiva del usuario (ej. *"Sentir que tienes una lista interminable mientras la energía está por los suelos produce una parálisis muy desgastante..."*).
+   - Normaliza la reacción del sistema nervioso: aclara cómo el cerebro responde biológicamente ante la sobrecarga, el miedo al fracaso o la fatiga.
+
+2. **Adaptación Quirúrgica al Modo**:
+   - **Acompañamiento Empático (Calm)**: Prioriza la calidez, la escucha sin juzgar y el alivio de la autocrítica. No apresures soluciones; dale espacio al desahogo.
+   - **Plan de Acción Rápido (Action)**: Desarma la inercia con micropasos ridículamente sencillos (técnica de 2 minutos, regla 1-3-5, fricción cero). Concreta sin abrumar.
+   - **Regulación Somática (Somatic)**: Guía de inmediato un ejercicio neurofisiológico paso a paso (Suspiro fisiológico, anclaje 5-4-3-2-1, escaneo de tensión en mandíbula/hombros o respiración diafragmática).
+   - **Reencuadre Cognitivo (Reframe)**: Ayuda a identificar distorsiones cognitivas (catastrofismo, pensamiento todo-o-nada, lectura de mente) y formula 1 o 2 preguntas reflexivas socráticas amables para hallar una perspectiva compasiva y realista.
+   - **Apagado Mental Nocturno (Sleep)**: Lenguaje pausado, sereno y orientado a soltar el control del día, descargar preocupaciones pendientes en papel mental y preparar el descanso biológico.
+
+3. **Estructura y Formato Visual**:
+   - Organiza la respuesta con títulos con iconos discretos, párrafos cortos y listas con viñetas cuando propongas pasos.
+   - Destaca conceptos clave en **negrita** para facilitar la lectura.
+   - Cierra con una pregunta abierta, cálida o una propuesta reflexiva de 1 línea para continuar el diálogo al ritmo del usuario.
+
+4. **Límites éticos y de seguridad**:
+   - Eres un apoyo psicoeducativo y emocional, no un sustituto de diagnóstico médico o psiquiátrico.
+   - Ante ideación suicida, autolesión o emergencia grave, responde con máxima calidez, contención inmediata y recuerda con delicadeza la línea de ayuda (+503 7801-4680) o los servicios de emergencia de su localidad.
+5. **Idioma y Tono**: Responde siempre en español natural, cercano, respetuoso y profundamente humano.`;
 
       const contents = [
         ...history.map((h: { role?: string; sender?: string; content?: string; text?: string }) => ({
@@ -175,10 +187,44 @@ Genera un breve análisis psicológico positivo y constructivo con formato JSON:
   });
 }
 
-function generateFallbackAssistantResponse(message: string, mood?: string, _context?: string): string {
+function generateFallbackAssistantResponse(message: string, mood?: string, context?: string): string {
   const lower = message.toLowerCase();
+  const ctx = (context || '').toLowerCase();
   
-  if (lower.includes("flojera") || lower.includes("procrastin") || lower.includes("motivo") || lower.includes("empezar mi tarea") || lower.includes("tarea")) {
+  if (lower.includes("suicid") || lower.includes("quitarme la vida") || lower.includes("no quiero vivir") || lower.includes("hacerme daño")) {
+    return `💙 **Estoy aquí contigo y lo que estás sintiendo importa mucho.**
+Por favor, no atravieses este dolor en soledad. Hay personas capacitadas y dispuestas a escucharte con absoluto respeto y confidencialidad en este preciso momento:
+
+- 📞 **Línea de Apoyo y Acompañamiento Emocional**: [+503 7801-4680](tel:+50378014680)
+- 🚨 **Servicios de Emergencia Local**: Llama al 911 o acude al centro de salud más cercano.
+
+Respira despacio. Tu vida tiene un valor inmenso y este momento de oscuridad profunda puede ser atendido y acompañado paso a paso.`;
+  }
+
+  if (ctx.includes("somatic") || lower.includes("somatic") || lower.includes("cuerpo") || lower.includes("respirar") || lower.includes("pecho apretado") || lower.includes("palpitaciones")) {
+    return `🌿 **Regulación Somática en Tiempo Real**:
+Cuando el cuerpo entra en estado de alerta, la corteza prefrontal pierde claridad. Necesitamos enviarle señales directas de seguridad a través del nervio vago.
+
+1. **Suspiro Fisiológico**: Inhala hondo por la nariz, haz una segunda micro-inhalación arriba y exhala lentamente por la boca en un suspiro largo. Repítelo 3 veces.
+2. **Descenso Muscular**: Suelta la lengua del paladar, baja los hombros y afloja conscientemente la mandíbula.
+3. **Anclaje de Peso**: Siente el soporte firme del suelo bajo tus pies y el respaldo de la silla en tu espalda.
+
+¿Cómo sientes la tensión en tu cuerpo tras estas tres respiraciones?`;
+  }
+
+  if (ctx.includes("reframe") || lower.includes("reframe") || lower.includes("sobrepensando") || lower.includes("rumiacion") || lower.includes("rumiación") || lower.includes("pensar de más")) {
+    return `🧠 **Reencuadre Cognitivo (TCC & Claridad Mental)**:
+El sobrepensamiento suele ser un intento de la mente por controlar la incertidumbre futura. Sin embargo, pensar más no siempre significa resolver mejor.
+
+🔍 **Filtro de Desactivación de Rumiación**:
+1. **Diferencia Hechos de Interpretaciones**: ¿Esto que temes es un hecho comprobable en este instante, o es una predicción de tu mente asustada?
+2. **El Escenario Realista**: Si el peor escenario ocurriera, ¿qué recursos y apoyos tendrías para afrontarlo?
+3. **Regla de la Utilidad**: ¿Pensar en esto por los próximos 10 minutos cambiará el resultado o solo agotará tu batería emocional?
+
+¿Qué pensamiento concreto te está dando más vueltas en este momento? Si me lo compartes, lo examinamos juntos con calma.`;
+  }
+
+  if (lower.includes("flojera") || lower.includes("procrastin") || lower.includes("motivo") || lower.includes("empezar mi tarea") || lower.includes("tarea") || ctx.includes("action")) {
     return `Es completamente normal experimentar esa resistencia mental. En psicología sabemos que la mal llamada "flojera" suele ser una respuesta del cerebro a la fatiga, a una tarea percibida como abrumadora o al miedo a no hacerla perfecto.
 
 ⚡ **Técnica del Micropaso de 2 Minutos**:
@@ -212,7 +258,7 @@ Todo lo que no quepa en esta lista queda formalmente programado para mañana sin
   }
 
   if (lower.includes("ansiedad") || lower.includes("nervios") || lower.includes("panico") || lower.includes("pánico") || lower.includes("ansios")) {
-    return `Siento que estés sintiendo esta activación tan intensa en este momento. Lo primero que quiero que recuerdes es: **esto es una respuesta biológica temporal, no estás en peligro real y va a pasar**.
+    return `Siento que estés experimentando esta activación tan intensa. Lo primero que quiero que recuerdes es: **esto es una respuesta biológica temporal del sistema nervioso simpático, no estás en peligro real y va a pasar**.
 
 🫁 **Hagamos juntos el Suspiro Fisiológico (la técnica neuroquímica más rápida)**:
 1. Inhala profundo por la nariz llenando el abdomen.
@@ -220,31 +266,34 @@ Todo lo que no quepa en esta lista queda formalmente programado para mañana sin
 3. Exhala muy despacio por la boca con un suspiro largo y relajado.
 *Repite esto 3 veces ahora mismo mientras me lees.*
 
-🌿 **Anclaje al presente**: Siente el peso de tus pies en el suelo y nombra mentalmente 3 objetos de color verde o azul que veas a tu alrededor. 
+🌿 **Anclaje al presente (Técnica 3-3-3)**:
+- Nombra mentalmente 3 cosas que puedas ver a tu alrededor.
+- Identifica 3 sonidos presentes en este instante.
+- Mueve 3 partes de tu cuerpo (tobillos, dedos de las manos, cuello).
 
 ¿Cómo sientes tu respiración ahora? Estoy aquí contigo.`;
   }
 
   if (lower.includes("triste") || lower.includes("llorar") || lower.includes("desánimo") || lower.includes("solo") || lower.includes("soledad") || lower.includes("vacio") || lower.includes("vacío")) {
-    return `Gracias por abrirte y confiar en este espacio. Quiero validar lo que sientes: la tristeza no es una debilidad ni un error que debas arreglar a la fuerza; es una señal de que necesitas ternura, descanso y cuidado hacia ti mismo.
+    return `Gracias por abrirte y confiar en este espacio. Quiero validar lo que sientes: la tristeza no es un defecto ni un error que debas arreglar a la fuerza; es una respuesta biológica que pide descanso, ternura y un trato amable hacia ti mismo.
 
-🤍 **Recordatorios suaves para hoy**:
-- No te exijas fingir entusiasmo ni ser productivo si tus reservas de energía están bajas.
-- Abrígate, toma un té o agua caliente y date permiso de pausar.
-- Tu valor como persona sigue intacto, incluso en los días donde todo se siente gris.
+🤍 **Recordatorios de compasión para hoy**:
+- No te exijas fingir entusiasmo ni rendir al 100% si tus reservas de energía están bajas.
+- Abrígate, bebe algo tibio y date permiso de tomar una pausa sin culpa.
+- Tu valor como persona sigue exactamente intacto, incluso en los días donde todo se siente gris.
 
-Si sientes ganas de contarme qué detonó este sentimiento o qué pesa en tu mente, te leo con total respeto y sin juicios. ¿Prefieres desahogarte o te gustaría que hagamos una práctica de calma?`;
+Si sientes ganas de contarme qué detonó este sentimiento o qué pesa en tu mente, te leo con total respeto y sin juicios. ¿Prefieres desahogarte o te gustaría que hagamos una práctica suave de calma?`;
   }
 
-  if (lower.includes("dormir") || lower.includes("insomnio") || lower.includes("noche") || lower.includes("desvelo")) {
+  if (lower.includes("dormir") || lower.includes("insomnio") || lower.includes("noche") || lower.includes("desvelo") || ctx.includes("sleep")) {
     return `Tener dificultades para conciliar el sueño suele ocurrir cuando la mente intenta resolver los problemas del día en la oscuridad.
 
 🌙 **Ritual de Apagado Mental para esta noche**:
-1. **Descarga en papel**: Escribe en un cuaderno 3 cosas que te preocupan y añade al lado: *"Lo resolveré mañana a las 10:00 AM"*. Cerrar el cuaderno le dice al cerebro que está a salvo de olvidar.
-2. **Disminuye la luz azul**: Pon tu pantalla en modo noche cálido y baja el brillo.
-3. **Escaneo corporal**: Acuéstate boca arriba y lleva tu atención desde los dedos de los pies hasta la frente, soltando conscientemente la mandíbula y el entrecejo.
+1. **Descarga en papel**: Escribe en un cuaderno 3 cosas que te preocupan y añade al lado: *"Lo resolveré mañana a las 10:00 AM"*. Cerrar el cuaderno le envía a la amígdala la señal de que está a salvo de olvidar.
+2. **Disminuye la estimulación lumínica**: Pon tu pantalla en modo noche cálido y baja el brillo al mínimo.
+3. **Respiración 4-7-8**: Inhala en 4 segundos, sostén 7 segundos y exhala suavemente en 8 segundos por 4 ciclos.
 
-¿Te gustaría que te guíe en una respiración lenta para preparar el descanso?`;
+¿Te gustaría que te guíe en una relajación progresiva para preparar el descanso?`;
   }
 
   return `Hola. Es un gusto acompañarte en FluxGlow. Estoy aquí para ofrecerte un espacio de escucha genuina, orden mental y herramientas prácticas sin juicios.
@@ -253,8 +302,8 @@ ${mood ? `Veo que tu registro anímico reciente es: **${mood}**.` : ''}
 
 💡 **¿En qué te gustaría que enfoquemos nuestra conversación?**
 - 🫁 Regular ansiedad o sobrepensamiento con técnicas somáticas.
-- ⚡ Vencer el bloqueo mental y organizar una tarea específica.
-- 🧠 Reencuadrar un pensamiento que te esté generando malestar.
+- ⚡ Vencer el bloqueo mental y organizar una tarea específica en micropasos.
+- 🧠 Reencuadrar un pensamiento que te esté generando malestar con TCC.
 - 💬 Simplemente conversar y desahogarte sobre cómo ha ido tu día.
 
 Dime con total libertad qué necesitas en este instante.`;
