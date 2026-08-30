@@ -4,6 +4,7 @@ import {
   TrendingUp, 
   Calendar, 
   ArrowUpRight, 
+  ArrowDownRight,
   Brain, 
   PieChart as PieIcon, 
   Activity, 
@@ -22,7 +23,14 @@ import {
   Check, 
   Plus,
   Compass,
-  ArrowRight
+  ArrowRight,
+  Printer,
+  Copy,
+  FileText,
+  Tag,
+  Smile,
+  X,
+  Share2
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { FluxGlowLogo } from '../common/FluxGlowLogo';
@@ -86,9 +94,10 @@ const MOOD_TO_LABEL: Record<string, string> = {
 };
 
 export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) => {
-  const { success } = useToast();
-  const [showWeeklySummary, setShowWeeklySummary] = useState(false);
+  const { success, info } = useToast();
+  const [showWeeklySummaryModal, setShowWeeklySummaryModal] = useState(false);
   const [forecastPeriod, setForecastPeriod] = useState<'7d' | '14d' | '30d'>('7d');
+  const [selectedTrigger, setSelectedTrigger] = useState<string | null>('ejercicio');
   
   // Real Journal entries
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>(() => {
@@ -103,6 +112,16 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
   // Daily Missions State
   const [missions, setMissions] = useState<UserDailyMissionRecord[]>(() => getStoredMissions());
   const [missionFilter, setMissionFilter] = useState<'all' | 'pending' | 'completed'>('all');
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowWeeklySummaryModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   useEffect(() => {
     const handleMissionsUpdate = (e: any) => {
@@ -160,7 +179,63 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
     { month: 'Jun', guias: 28 + completedMissionsCount },
   ];
 
-  // 2. Dynamic Topics of Interest (Donut Pie Chart derived from triggers in Journal)
+  // 2. Correlation between Triggers/Tags and Moods
+  const triggerCorrelations = useMemo(() => {
+    const triggerMap: Record<string, { count: number; totalIntensity: number; moods: Record<string, number> }> = {
+      'sueño': { count: 3, totalIntensity: 24, moods: { 'tranquilo': 2, 'feliz': 1 } },
+      'ejercicio': { count: 4, totalIntensity: 35, moods: { 'feliz': 3, 'tranquilo': 1 } },
+      'trabajo': { count: 5, totalIntensity: 28, moods: { 'ansioso': 3, 'enojado': 1, 'tranquilo': 1 } },
+      'familia': { count: 3, totalIntensity: 25, moods: { 'feliz': 2, 'tranquilo': 1 } },
+      'estudio': { count: 2, totalIntensity: 13, moods: { 'ansioso': 1, 'tranquilo': 1 } },
+    };
+
+    journalEntries.forEach(entry => {
+      const triggers = entry.triggers || [];
+      const tags = (entry as any).tags || [];
+      const combined = Array.from(new Set([...triggers, ...tags]));
+      const val = entry.intensity || 5;
+      const moodKey = entry.mood.toLowerCase();
+
+      combined.forEach(t => {
+        const clean = t.replace('#', '').toLowerCase();
+        if (!triggerMap[clean]) {
+          triggerMap[clean] = { count: 0, totalIntensity: 0, moods: {} };
+        }
+        triggerMap[clean].count += 1;
+        triggerMap[clean].totalIntensity += val;
+        triggerMap[clean].moods[moodKey] = (triggerMap[clean].moods[moodKey] || 0) + 1;
+      });
+    });
+
+    return Object.entries(triggerMap).map(([tag, data]) => {
+      const avgIntensity = (data.totalIntensity / (data.count || 1)).toFixed(1);
+      const topMood = Object.entries(data.moods).sort((a, b) => b[1] - a[1])[0]?.[0] || 'tranquilo';
+      const dominantLabel = MOOD_TO_LABEL[topMood] || 'Equilibrio';
+      
+      let impactType: 'positive' | 'neutral' | 'stressor' = 'neutral';
+      if (['feliz', 'motivado', 'tranquilo'].includes(topMood) && Number(avgIntensity) >= 7) {
+        impactType = 'positive';
+      } else if (['ansioso', 'estresado', 'abrumado', 'enojado'].includes(topMood)) {
+        impactType = 'stressor';
+      }
+
+      return {
+        tag: `#${tag}`,
+        rawTag: tag,
+        count: data.count,
+        avgIntensity: Number(avgIntensity),
+        dominantMood: dominantLabel,
+        impactType,
+        recommendation: impactType === 'positive' 
+          ? 'Catalizador protector de bienestar. Priorízalo en semanas de alta demanda.'
+          : impactType === 'stressor'
+          ? 'Factor detonante recurrente. Acompaña estas actividades con pausas de respiración.'
+          : 'Factor neutro. Observa cómo interactúa con tus horas de descanso.'
+      };
+    }).sort((a, b) => b.count - a.count);
+  }, [journalEntries]);
+
+  // 3. Dynamic Topics of Interest (Donut Pie Chart derived from triggers in Journal)
   const topicsData = useMemo(() => {
     const counts: Record<string, number> = {
       'Resiliencia': 5,
@@ -191,7 +266,7 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
       }));
   }, [journalEntries]);
 
-  // 3. Dynamic 30-Day Emotional Path combining Real Journal Records + Baseline
+  // 4. Dynamic 30-Day Emotional Path
   const monthlyMoodPath = useMemo(() => {
     const baseDays = [
       { day: 1, val: 5, mood: 'Felicidad', date: '01 Jun', note: 'Buen inicio de mes' },
@@ -218,25 +293,25 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
       { day: 22, val: 4, mood: 'Tranquilidad', date: '22 Jun', note: 'Planificación semanal' },
       { day: 23, val: 3, mood: 'Inquietud', date: '23 Jun', note: 'Cierre de entregables' },
       { day: 24, val: 4, mood: 'Tranquilidad', date: '24 Jun', note: 'Caminata en parque' },
-      { day: 25, val: 5, mood: 'Felicidad', date: '25 Jun', note: 'Gran energía y foco' },
-      { day: 26, val: 4, mood: 'Tranquilidad', date: '26 Jun', note: 'Noche de lectura' },
-      { day: 27, val: 5, mood: 'Felicidad', date: '27 Jun', note: 'Reconocimiento laboral' },
-      { day: 28, val: 5, mood: 'Felicidad', date: '28 Jun', note: 'Plena satisfacción' },
-      { day: 29, val: 4, mood: 'Tranquilidad', date: '29 Jun', note: 'Reflexión en diario' },
-      { day: 30, val: 5, mood: 'Felicidad', date: '30 Jun', note: 'Cierre de mes en bienestar óptimo' },
+      { day: 25, val: 5, mood: 'Felicidad', date: '25 Jun', note: 'Buen balance vida-trabajo' },
+      { day: 26, val: 4, mood: 'Tranquilidad', date: '26 Jun', note: 'Lectura nocturna' },
+      { day: 27, val: 4, mood: 'Tranquilidad', date: '27 Jun', note: 'Descanso reparador' },
+      { day: 28, val: 5, mood: 'Felicidad', date: '28 Jun', note: 'Compartir en comunidad' },
+      { day: 29, val: 4, mood: 'Tranquilidad', date: '29 Jun', note: 'Plan de hábitos' },
+      { day: 30, val: 5, mood: 'Felicidad', date: '30 Jun', note: 'Reflexión y cierre positivo' }
     ];
 
-    // Inject recent real journal entries into the latest days
-    if (journalEntries.length > 0) {
-      const recent = [...journalEntries].reverse();
-      recent.slice(0, 5).forEach((entry, idx) => {
-        const targetDay = 30 - idx;
+    if (journalEntries && journalEntries.length > 0) {
+      journalEntries.forEach((entry) => {
+        const dayNum = parseInt(entry.date.split('-')[2] || '30', 10);
+        const targetDay = isNaN(dayNum) ? 30 : Math.min(30, Math.max(1, dayNum));
         const entryVal = MOOD_TO_VAL[entry.mood] || 4;
-        const entryMood = MOOD_TO_LABEL[entry.mood] || 'Calma';
-        const entryNote = entry.note ? (entry.note.slice(0, 38) + (entry.note.length > 38 ? '...' : '')) : 'Registro en diario';
-        
-        if (targetDay > 0 && targetDay <= 30) {
-          baseDays[targetDay - 1] = {
+        const entryMood = MOOD_TO_LABEL[entry.mood] || 'Tranquilidad';
+        const entryNote = entry.notes ? entry.notes.slice(0, 35) + '...' : 'Registro en diario';
+
+        const index = baseDays.findIndex(d => d.day === targetDay);
+        if (index !== -1) {
+          baseDays[index] = {
             day: targetDay,
             val: entryVal,
             mood: entryMood,
@@ -250,9 +325,8 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
     return baseDays;
   }, [journalEntries]);
 
-  // 4. Truly Dynamic Predictive Forecast based on chosen Period (7d, 14d, 30d) and active user habits
+  // 5. Predictive Forecast
   const forecastData = useMemo(() => {
-    // Calculate average happiness from recent entries
     const recentScores = monthlyMoodPath.map(d => d.val);
     const avgScore = recentScores.reduce((a, b) => a + b, 0) / (recentScores.length || 1);
     const isHighWellbeing = avgScore >= 3.8;
@@ -264,7 +338,7 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
         title: 'Horizonte Inmediato (Próximos 7 Días)',
         riskLevel: riskPercent <= 10 ? 'Riesgo Muy Bajo' : 'Riesgo Bajo',
         riskPercent,
-        riskDescription: 'Tu consistencia en micro-prácticas y pausas conscientes mitiga la acumulación de fatiga a corto plazo.',
+        riskDescription: 'Tu consistencia en micro-prácticas y pausas conscientes mitiga la fatiga a corto plazo.',
         riskBarColor: 'bg-brand-sage-600',
         batteryPercent,
         batteryState: `${batteryPercent}% Energía`,
@@ -281,29 +355,28 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
         title: 'Proyección Quincenal (14 Días)',
         riskLevel: 'Riesgo Estable',
         riskPercent,
-        riskDescription: 'Rendimiento equilibrado. Conviene cuidar el descanso en fines de semana para evitar desgaste a mitad de mes.',
+        riskDescription: 'Rendimiento equilibrado. Conviene cuidar el descanso en fines de semana para evitar desgaste.',
         riskBarColor: 'bg-brand-sage-600',
         batteryPercent,
         batteryState: `${batteryPercent}% Energía`,
         batteryDescription: 'Estabilidad proyectada suficiente para proyectos exigentes con buena tolerancia al estrés.',
         batteryBarColor: 'bg-brand-terracotta-500',
         actionTitle: 'Higiene del sueño sostenida',
-        actionDesc: 'Establece desconexión digital 30 minutos antes de dormir en las noches de entrega académica o laboral.',
+        actionDesc: 'Establece desconexión digital 30 minutos antes de dormir en las noches de entrega.',
         actionType: 'Recomendación de mediano plazo'
       };
     } else {
-      // 30d
       const riskPercent = isHighWellbeing ? 12 : 25;
       const batteryPercent = Math.min(88, 70 + streakDays * 2);
       return {
         title: 'Tendencia Mensual Global (30 Días)',
         riskLevel: 'Riesgo Controlado',
         riskPercent,
-        riskDescription: 'Modelo predictivo de alta adaptabilidad. Tus factores protectores consolidan una racha de resiliencia sostenible.',
+        riskDescription: 'Modelo predictivo de alta adaptabilidad. Tus factores protectores consolidan una racha sostenible.',
         riskBarColor: 'bg-brand-sage-600',
         batteryPercent,
         batteryState: `${batteryPercent}% Energía`,
-        batteryDescription: 'Capacidad acumulada para autorregular emociones intensas y superar fluctuaciones cíclicas.',
+        batteryDescription: 'Capacidad acumulada para autorregular emociones intensas y superar fluctuaciones.',
         batteryBarColor: 'bg-brand-terracotta-600',
         actionTitle: 'Revisión mensual de objetivos',
         actionDesc: 'Dedica 10 minutos a finales de mes para reflexionar sobre tus mayores aprendizajes en el diario.',
@@ -311,6 +384,30 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
       };
     }
   }, [forecastPeriod, monthlyMoodPath, streakDays]);
+
+  const activeTriggerData = triggerCorrelations.find(t => t.rawTag === selectedTrigger) || triggerCorrelations[0];
+
+  const handleCopyReport = () => {
+    const report = `📊 INFORME DE BIENESTAR FLUXGLOW
+Periodo: Junio 2026
+---------------------------------
+🌱 Racha de Hábitos: ${streakDays} días continuos
+🎯 Misiones Completadas: ${completedMissionsCount}
+📈 Nivel de Bienestar: +14% vs periodo previo
+🔋 Batería Mental Estimada: ${forecastData.batteryState}
+🛡️ Pronóstico de Riesgo: ${forecastData.riskLevel} (${forecastData.riskPercent}%)
+🔍 Factor Más Positivo: ${triggerCorrelations[0]?.tag || '#ejercicio'} (${triggerCorrelations[0]?.dominantMood})
+💡 Acción Preventiva Clave: ${forecastData.actionTitle}
+---------------------------------
+Generado con FluxGlow • Cuidado emocional consciente`;
+    navigator.clipboard?.writeText(report);
+    confetti({ particleCount: 35, spread: 50 });
+    success('Informe copiado', 'Puedes pegarlo en tus notas personales o compartirlo con tu terapeuta.');
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
 
   return (
     <div className="w-full bg-brand-sand-50 min-h-screen pb-20 pt-4 px-4 sm:px-6 lg:px-8">
@@ -322,9 +419,20 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
             <FluxGlowLogo imgSrc="/logo2.png" size="sm" showText={true} />
           </div>
 
-          <div className="text-xs font-semibold text-stone-700 bg-white border border-brand-sand-300 px-3.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-2xs">
-            <Calendar className="w-3.5 h-3.5 text-brand-sage-600" />
-            <span>Periodo de Análisis: Junio 2026</span>
+          <div className="flex items-center gap-2">
+            <div className="text-xs font-semibold text-stone-700 bg-white border border-brand-sand-300 px-3.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-2xs">
+              <Calendar className="w-3.5 h-3.5 text-brand-sage-600" />
+              <span>Periodo: Junio 2026</span>
+            </div>
+
+            <Button
+              onClick={() => setShowWeeklySummaryModal(true)}
+              variant="terracotta"
+              size="sm"
+              leftIcon={<FileText className="w-4 h-4" />}
+            >
+              Exportar Informe PDF
+            </Button>
           </div>
         </div>
 
@@ -334,7 +442,136 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
             <span className="text-brand-sage-700">Análisis </span>
             <span className="text-brand-terracotta-600">Predictivo</span>
           </h1>
-          <p className="text-stone-600 text-xs sm:text-sm mt-1">Métricas de evolución cognitiva y modelos de estabilidad emocional</p>
+          <p className="text-stone-600 text-xs sm:text-sm mt-1">Métricas de evolución cognitiva, correlación de factores detonantes y modelos de estabilidad</p>
+        </div>
+
+        {/* STATS DELTA STRIP (Comparative Periods %) */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          <div className="bg-white p-4 rounded-2xl border border-brand-sand-300 shadow-2xs flex items-center justify-between">
+            <div>
+              <p className="text-[11px] font-semibold text-stone-500">Bienestar Subjetivo</p>
+              <h3 className="text-xl font-bold text-stone-900 mt-0.5">8.4 / 10</h3>
+              <p className="text-[11px] text-brand-sage-700 font-bold flex items-center gap-0.5 mt-1">
+                <ArrowUpRight className="w-3.5 h-3.5 text-brand-sage-600" />
+                <span>+14% vs semana previa</span>
+              </p>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-brand-sage-50 border border-brand-sage-200 flex items-center justify-center text-brand-sage-700">
+              <TrendingUp className="w-5 h-5" />
+            </div>
+          </div>
+
+          <div className="bg-white p-4 rounded-2xl border border-brand-sand-300 shadow-2xs flex items-center justify-between">
+            <div>
+              <p className="text-[11px] font-semibold text-stone-500">Consistencia de Hábitos</p>
+              <h3 className="text-xl font-bold text-stone-900 mt-0.5">{streakDays} días activos</h3>
+              <p className="text-[11px] text-brand-sage-700 font-bold flex items-center gap-0.5 mt-1">
+                <ArrowUpRight className="w-3.5 h-3.5 text-brand-sage-600" />
+                <span>+22% racha sostenida</span>
+              </p>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600">
+              <Flame className="w-5 h-5 fill-amber-500" />
+            </div>
+          </div>
+
+          <div className="bg-white p-4 rounded-2xl border border-brand-sand-300 shadow-2xs flex items-center justify-between">
+            <div>
+              <p className="text-[11px] font-semibold text-stone-500">Picos de Estrés Reactivo</p>
+              <h3 className="text-xl font-bold text-stone-900 mt-0.5">2 episodios</h3>
+              <p className="text-[11px] text-brand-sage-700 font-bold flex items-center gap-0.5 mt-1">
+                <ArrowDownRight className="w-3.5 h-3.5 text-brand-sage-600" />
+                <span>-18% reducción de fatiga</span>
+              </p>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-brand-terracotta-50 border border-brand-terracotta-200 flex items-center justify-center text-brand-terracotta-600">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION: Correlación entre Factores Detonantes y Ánimo */}
+        <div className="bg-white rounded-3xl border border-brand-sand-300 shadow-2xs p-6 sm:p-7 mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-brand-sand-200">
+            <div>
+              <div className="flex items-center gap-2">
+                <Tag className="w-5 h-5 text-brand-sage-600" />
+                <h2 className="text-xl font-bold text-stone-900 font-serif">
+                  Correlación: Factores Detonantes vs. Estado de Ánimo
+                </h2>
+              </div>
+              <p className="text-xs text-stone-600 mt-0.5">
+                Descubre cómo influyen tus etiquetas y actividades en tus niveles de energía y calma emocional.
+              </p>
+            </div>
+            <span className="text-xs font-bold text-brand-sage-700 bg-brand-sage-100 px-3 py-1 rounded-full w-fit">
+              {triggerCorrelations.length} factores analizados
+            </span>
+          </div>
+
+          {/* Interactive Tag Chips */}
+          <div className="flex flex-wrap gap-2.5 my-5">
+            {triggerCorrelations.map((item) => {
+              const isSelected = selectedTrigger === item.rawTag;
+              const badgeBg = item.impactType === 'positive' 
+                ? 'border-emerald-300 text-emerald-800 hover:bg-emerald-50' 
+                : item.impactType === 'stressor'
+                ? 'border-amber-300 text-amber-800 hover:bg-amber-50'
+                : 'border-brand-sand-300 text-stone-700 hover:bg-brand-sand-100';
+
+              return (
+                <button
+                  key={item.tag}
+                  onClick={() => setSelectedTrigger(item.rawTag)}
+                  className={`px-3.5 py-2 rounded-2xl text-xs font-bold border transition-all flex items-center gap-2 cursor-pointer ${
+                    isSelected
+                      ? 'bg-brand-sage-700 text-white border-brand-sage-800 shadow-sm ring-2 ring-brand-sage-300'
+                      : `bg-white ${badgeBg}`
+                  }`}
+                >
+                  <span>{item.tag}</span>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${isSelected ? 'bg-white/20 text-white' : 'bg-brand-sand-100 text-stone-600'}`}>
+                    {item.count} reg.
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Detail card of active selected trigger */}
+          {activeTriggerData && (
+            <div className="p-4 sm:p-5 rounded-2xl bg-brand-sand-50 border border-brand-sand-300 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex-1 space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-base font-bold text-stone-900">{activeTriggerData.tag}</span>
+                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                    activeTriggerData.impactType === 'positive' 
+                      ? 'bg-emerald-100 text-emerald-800' 
+                      : activeTriggerData.impactType === 'stressor'
+                      ? 'bg-rose-100 text-rose-800'
+                      : 'bg-stone-200 text-stone-700'
+                  }`}>
+                    {activeTriggerData.dominantMood} ({activeTriggerData.avgIntensity}/10)
+                  </span>
+                </div>
+                <p className="text-xs text-stone-700 leading-relaxed">
+                  {activeTriggerData.recommendation}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3 bg-white p-3 rounded-xl border border-brand-sand-200 shrink-0">
+                <div className="text-center px-2">
+                  <p className="text-xs text-stone-500 font-medium">Frecuencia</p>
+                  <p className="text-sm font-bold text-stone-900">{activeTriggerData.count} veces</p>
+                </div>
+                <div className="h-7 w-px bg-brand-sand-300"></div>
+                <div className="text-center px-2">
+                  <p className="text-xs text-stone-500 font-medium">Intensidad Media</p>
+                  <p className="text-sm font-bold text-brand-sage-700">{activeTriggerData.avgIntensity} / 10</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* 2 Large Side-by-Side Cards */}
@@ -361,24 +598,15 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
                 </div>
 
                 <Button
-                  id="weekly-summary-btn"
-                  onClick={() => setShowWeeklySummary(!showWeeklySummary)}
+                  onClick={() => setShowWeeklySummaryModal(true)}
                   variant="sand"
                   size="sm"
                 >
-                  {showWeeklySummary ? 'Ocultar resumen' : 'Resumen semanal'}
+                  Resumen semanal
                 </Button>
               </div>
 
-              {/* Weekly summary drawer if opened */}
-              {showWeeklySummary && (
-                <div className="my-4 p-3.5 bg-brand-sage-50 border border-brand-sage-300 rounded-2xl text-xs text-brand-sage-900 animate-fadeIn">
-                  <p className="font-bold mb-1">Resumen Semanal de Progreso:</p>
-                  <p>Completaste {completedMissionsCount} micro-retos diarios y mantuviste {streakDays} días consecutivos de hábitos conscientes.</p>
-                </div>
-              )}
-
-              {/* Bottom Visuals Split: Monthly Trend Chart & Topics Donut */}
+              {/* Visuals Split: Monthly Trend Chart & Topics Donut */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
                 
                 {/* Left Sub-chart: Line curve over months */}
@@ -780,6 +1008,94 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
         </div>
 
       </div>
+
+      {/* MODAL: Informe Semanal & Exportación PDF */}
+      {showWeeklySummaryModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-7 shadow-2xl border border-brand-sand-300 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-brand-sand-300">
+              <div className="flex items-center gap-2">
+                <FileText className="w-5 h-5 text-brand-terracotta-600" />
+                <h3 className="font-bold text-stone-900 text-lg font-serif">
+                  Informe de Bienestar Semanal
+                </h3>
+              </div>
+              <button 
+                onClick={() => setShowWeeklySummaryModal(false)} 
+                className="text-stone-400 hover:text-stone-700 p-1 rounded-lg cursor-pointer"
+                title="Cerrar (Esc)"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Printable Report Document Card */}
+            <div className="my-5 p-5 bg-brand-sand-50 rounded-2xl border border-brand-sand-300 space-y-4 text-xs text-stone-800">
+              <div className="flex items-center justify-between border-b border-brand-sand-200 pb-3">
+                <div>
+                  <h4 className="font-bold text-sm text-stone-900">Resumen Clínico y Conductual</h4>
+                  <p className="text-[11px] text-stone-500">Periodo activo: 1 al 30 de Junio, 2026</p>
+                </div>
+                <span className="px-2.5 py-1 bg-brand-sage-100 text-brand-sage-800 rounded-full font-bold text-[10px]">
+                  Índice Positivo 84%
+                </span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3 text-center bg-white p-3 rounded-xl border border-brand-sand-200">
+                <div>
+                  <p className="text-base font-bold text-brand-terracotta-600">🔥 {streakDays}d</p>
+                  <p className="text-[10px] text-stone-500 font-medium">Racha Hábitos</p>
+                </div>
+                <div>
+                  <p className="text-base font-bold text-brand-sage-700">🎯 {completedMissionsCount}</p>
+                  <p className="text-[10px] text-stone-500 font-medium">Misiones</p>
+                </div>
+                <div>
+                  <p className="text-base font-bold text-emerald-600">+14%</p>
+                  <p className="text-[10px] text-stone-500 font-medium">Delta Bienestar</p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <h5 className="font-bold text-stone-900 text-xs">🔍 Hallazgos Principales:</h5>
+                <ul className="list-disc pl-4 space-y-1 text-stone-700 text-[11px]">
+                  <li>Mayor estabilidad y regulación asociada a los hábitos de <strong>#ejercicio</strong> y <strong>#sueño</strong>.</li>
+                  <li>Tensión laboral moderada identificada como principal detonante reactivo (controlada en 78%).</li>
+                  <li>Batería mental en nivel óptimo ({forecastData.batteryState}) con bajo riesgo proyectado.</li>
+                </ul>
+              </div>
+
+              <div className="p-3 bg-white rounded-xl border border-brand-sand-200">
+                <p className="font-bold text-stone-900 text-xs mb-1">💡 Recomendación Preventiva para la Próxima Semana:</p>
+                <p className="text-[11px] text-stone-600">{forecastData.actionDesc}</p>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <Button
+                onClick={handleCopyReport}
+                variant="terracotta"
+                fullWidth
+                size="md"
+                leftIcon={<Copy className="w-4 h-4" />}
+              >
+                Copiar Texto del Informe
+              </Button>
+              <Button
+                onClick={handlePrint}
+                variant="secondary"
+                fullWidth
+                size="md"
+                leftIcon={<Printer className="w-4 h-4" />}
+              >
+                Imprimir / Guardar PDF
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

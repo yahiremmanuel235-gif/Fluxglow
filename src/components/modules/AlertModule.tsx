@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Sparkles, 
   Bell, 
@@ -15,21 +15,102 @@ import {
   Play,
   Volume2,
   CalendarCheck,
-  Check
+  Check,
+  Building2,
+  ExternalLink,
+  MapPin,
+  Clock,
+  HelpCircle,
+  PhoneCall
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { FluxGlowLogo } from '../common/FluxGlowLogo';
 import { soundEngine } from '../../utils/audioSynth';
 import { useToast } from '../common/Toast';
+import { Button } from '../common/Button';
+
+// Real specialized institutions in El Salvador
+const EL_SALVADOR_RESOURCES = [
+  {
+    id: 'isss',
+    name: 'El ISSS te escucha (ISSS)',
+    type: 'Línea de Apoyo Psicológico y Psiquiátrico 24/7',
+    phone: '7071-1302',
+    hours: '24 horas / 7 días (Gratuita a toda la población)',
+    desc: 'Atención psicológica y contención en crisis emocional por especialistas del Instituto Salvadoreño del Seguro Social. No requiere ser derechohabiente.',
+    badge: 'Recomendada 24/7',
+    isPrimary: true
+  },
+  {
+    id: 'isdemu',
+    name: 'Línea 126 "Te Orienta" (ISDEMU)',
+    type: 'Atención Psicológica y Legal Especializada',
+    phone: '126',
+    hours: '24 horas / 7 días',
+    desc: 'Orientación psicológica confidencial, asesoría y apoyo en momentos de crisis para mujeres, jóvenes y familias.',
+    badge: 'Confidencial Gratuita',
+    isPrimary: false
+  },
+  {
+    id: 'minsal',
+    name: 'FonoSalud (Ministerio de Salud)',
+    type: 'Orientación de Salud Mental y Urgencias',
+    phone: '131',
+    hours: 'Lunes a Domingo (24 horas)',
+    desc: 'Orientación médica y canalización a centros de salud mental comunitarios en todo el territorio nacional.',
+    badge: 'MINSAL Nacional',
+    isPrimary: false
+  },
+  {
+    id: 'cruzroja',
+    name: 'Cruz Roja Salvadoreña - Apoyo Psicosocial',
+    type: 'Emergencias y Primeros Auxilios Psicológicos',
+    phone: '2239-4900',
+    hours: 'Atención en emergencias y crisis',
+    desc: 'Equipo de primeros auxilios psicológicos y atención prehospitalaria ante situaciones de alto impacto o estrés agudo.',
+    badge: 'Emergencias',
+    isPrimary: false
+  }
+];
 
 export const AlertModule: React.FC = () => {
   const { success, info } = useToast();
-  const [selectedRiskLevel, setSelectedRiskLevel] = useState<'estable' | 'atencion' | 'moderado' | 'elevado'>('moderado');
+  const [selectedRiskLevel, setSelectedRiskLevel] = useState<'estable' | 'atencion' | 'moderado' | 'elevado'>(() => {
+    try {
+      const saved = localStorage.getItem('fluxglow_risk_level');
+      return (saved as any) || 'moderado';
+    } catch {
+      return 'moderado';
+    }
+  });
+
   const [showBreathingExercise, setShowBreathingExercise] = useState(false);
   const [breathingPhase, setBreathingPhase] = useState<'Inhala' | 'Retén' | 'Exhala'>('Inhala');
   const [breathingCounter, setBreathingCounter] = useState(4);
   const [showContactModal, setShowContactModal] = useState(false);
+  const [showDirectoryModal, setShowDirectoryModal] = useState(false);
   const [isMusicActive, setIsMusicActive] = useState(false);
+
+  // Sync risk level changes to localStorage & dispatch event for Navbar
+  const handleSelectRiskLevel = (lvl: 'estable' | 'atencion' | 'moderado' | 'elevado') => {
+    setSelectedRiskLevel(lvl);
+    localStorage.setItem('fluxglow_risk_level', lvl);
+    window.dispatchEvent(new CustomEvent('fluxglow_risk_level_updated', { detail: lvl }));
+    info('Nivel de bienestar actualizado', `Semáforo configurado en: ${lvl.toUpperCase()}`);
+  };
+
+  // Escape key handler
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowBreathingExercise(false);
+        setShowContactModal(false);
+        setShowDirectoryModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Semáforo Status options
   const trafficLightLevels = [
@@ -100,7 +181,7 @@ export const AlertModule: React.FC = () => {
       alertTextCol: 'text-rose-950',
       recommendations: [
         'Detén tareas exigentes y realiza ejercicios de descarga.',
-        'Contacta a tu psicólogo asignado o usa la línea SOS.',
+        'Llama a la línea gratuita del ISSS (7071-1302) o a tu especialista.',
         'Practica relajación muscular progresiva.',
         'Comparte cómo te sientes con una persona de confianza.'
       ]
@@ -312,9 +393,31 @@ export const AlertModule: React.FC = () => {
               </div>
             </div>
 
-            <div className="mt-6 p-3 bg-amber-50 rounded-2xl border border-amber-200 text-[11px] text-amber-900">
-              <span className="font-bold">Línea SOS de Apoyo Gratuita:</span>
-              <p className="font-bold text-sm text-stone-900 mt-0.5">800 911 2000</p>
+            <div className="mt-6 p-3.5 bg-brand-sand-100 rounded-2xl border border-brand-sand-300">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-stone-700">Línea SOS Gratuita (El Salvador):</span>
+                <span className="text-[10px] font-bold text-brand-sage-800 bg-brand-sage-100 px-2 py-0.5 rounded-full">24/7 Oficial</span>
+              </div>
+              <div className="flex items-center justify-between mt-1">
+                <div>
+                  <p className="font-bold text-sm text-stone-900">7071-1302</p>
+                  <p className="text-[10px] text-stone-600">"El ISSS te escucha" • Atención 24/7 a toda la población</p>
+                </div>
+                <a
+                  href="tel:70711302"
+                  className="bg-brand-sage-600 hover:bg-brand-sage-700 text-white p-2 rounded-xl text-xs font-bold transition-transform hover:scale-105 shadow-2xs flex items-center gap-1"
+                  title="Llamar a línea de apoyo"
+                >
+                  <PhoneCall className="w-3.5 h-3.5" />
+                </a>
+              </div>
+              <button
+                onClick={() => setShowDirectoryModal(true)}
+                className="mt-2.5 w-full text-center text-[11px] font-bold text-brand-sage-700 hover:text-brand-sage-900 hover:underline flex items-center justify-center gap-1 cursor-pointer pt-2 border-t border-brand-sand-200"
+              >
+                <Building2 className="w-3.5 h-3.5" />
+                <span>Ver directorio completo de instituciones</span>
+              </button>
             </div>
           </div>
 
@@ -333,13 +436,13 @@ export const AlertModule: React.FC = () => {
             </div>
 
             {/* Bottom White Card: Contacto de emergencia */}
-            <div className="bg-white rounded-3xl border border-stone-200 p-5 shadow-sm text-center">
+            <div className="bg-white rounded-3xl border border-brand-sand-300 p-5 shadow-2xs text-center">
               <span className="text-xs font-bold text-stone-500 uppercase tracking-wider block mb-3">
                 Contacto de emergencia
               </span>
 
               {/* Psychologist Avatar & Info */}
-              <div className="w-16 h-16 rounded-full overflow-hidden mx-auto mb-2 border-2 border-[#548c71] shadow-2xs bg-[#faf8f4] flex items-center justify-center">
+              <div className="w-16 h-16 rounded-full overflow-hidden mx-auto mb-2 border-2 border-brand-sage-500 shadow-2xs bg-brand-sand-100 flex items-center justify-center">
                 <img
                   src="/user.png"
                   alt="Dra. María López"
@@ -347,18 +450,20 @@ export const AlertModule: React.FC = () => {
                 />
               </div>
 
-              <span className="text-[11px] text-stone-500 font-semibold block">Psicóloga asignada</span>
+              <span className="text-[11px] text-stone-500 font-semibold block">Psicóloga de Guardia</span>
               <h3 className="font-bold text-stone-900 text-sm">Dra. María López</h3>
-              <p className="text-[11px] text-stone-600 mb-4">Especialista en Salud Mental</p>
+              <p className="text-[11px] text-stone-600 mb-4">Salud Mental & Contención • El Salvador</p>
 
-              {/* Yellow/Amber Contact Button */}
-              <button
+              {/* Contact Button */}
+              <Button
                 id="contact-therapist-now-btn"
                 onClick={() => setShowContactModal(true)}
-                className="w-full bg-[#f59e0b] hover:bg-[#d97706] text-stone-950 font-bold py-2.5 rounded-full text-xs shadow-2xs transition-all hover:scale-102 cursor-pointer"
+                variant="terracotta"
+                fullWidth
+                size="sm"
               >
                 Contactar ahora
-              </button>
+              </Button>
             </div>
 
           </div>
@@ -370,7 +475,7 @@ export const AlertModule: React.FC = () => {
       {/* 4-4-4 Guided Breathing Modal */}
       {showBreathingExercise && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-8 text-center shadow-2xl animate-scaleUp border border-stone-200">
+          <div className="bg-white rounded-3xl max-w-md w-full p-8 text-center shadow-2xl animate-scaleUp border border-brand-sand-300">
             <div className="flex justify-end">
               <button onClick={() => setShowBreathingExercise(false)} className="text-stone-400 hover:text-stone-700 p-1 rounded-lg cursor-pointer">
                 <X className="w-6 h-6" />
@@ -388,7 +493,7 @@ export const AlertModule: React.FC = () => {
               <div 
                 className={`absolute inset-0 rounded-full transition-all duration-1000 ${
                   breathingPhase === 'Inhala' 
-                    ? 'bg-[#e2eee6] scale-110' 
+                    ? 'bg-brand-sage-100 scale-110' 
                     : breathingPhase === 'Retén' 
                     ? 'bg-amber-100 scale-105' 
                     : 'bg-emerald-100/60 scale-90'
@@ -396,16 +501,18 @@ export const AlertModule: React.FC = () => {
               />
               <div className="relative z-10">
                 <p className="text-xl font-extrabold text-stone-800">{breathingPhase}</p>
-                <p className="text-4xl font-black text-[#548c71]">{breathingCounter}</p>
+                <p className="text-4xl font-black text-brand-sage-600">{breathingCounter}</p>
               </div>
             </div>
 
-            <button
+            <Button
               onClick={() => setShowBreathingExercise(false)}
-              className="w-full bg-stone-900 hover:bg-stone-800 text-white py-2.5 rounded-full text-xs font-bold cursor-pointer transition-colors"
+              variant="primary"
+              fullWidth
+              size="md"
             >
               Cerrar Ejercicio
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -413,14 +520,14 @@ export const AlertModule: React.FC = () => {
       {/* Psychologist Contact Modal */}
       {showContactModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 text-center shadow-2xl animate-scaleUp border border-stone-200">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 text-center shadow-2xl animate-scaleUp border border-brand-sand-300">
             <div className="flex justify-end">
               <button onClick={() => setShowContactModal(false)} className="text-stone-400 hover:text-stone-700 p-1 rounded-lg cursor-pointer">
                 <X className="w-6 h-6" />
               </button>
             </div>
 
-            <div className="w-20 h-20 rounded-full overflow-hidden mx-auto mb-3 border-4 border-[#548c71] bg-[#faf8f4] flex items-center justify-center">
+            <div className="w-20 h-20 rounded-full overflow-hidden mx-auto mb-3 border-4 border-brand-sage-500 bg-brand-sand-100 flex items-center justify-center">
               <img
                 src="/user.png"
                 alt="Dra. María López"
@@ -429,29 +536,109 @@ export const AlertModule: React.FC = () => {
             </div>
 
             <h3 className="font-serif text-xl font-bold text-stone-900">Dra. María López</h3>
-            <p className="text-xs text-stone-500 mb-4">Cédula Prof. 948291 • Psicología Clínica y Cognitiva</p>
+            <p className="text-xs text-stone-500 mb-4">Cédula Prof. SV-9482 • Psicología Clínica y Cognitiva</p>
 
             <div className="space-y-2.5 mb-6">
               <a
-                href="tel:8009112000"
-                className="w-full bg-[#548c71] hover:bg-[#43705a] text-white py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-2xs transition-colors"
+                href="tel:70711302"
+                className="w-full bg-brand-sage-600 hover:bg-brand-sage-700 text-white py-3 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 shadow-2xs transition-colors"
               >
                 <Phone className="w-4 h-4" />
-                <span>Llamar a Consulta Inmediata</span>
+                <span>Llamar a Línea de Apoyo (7071-1302)</span>
               </a>
 
-              <button
+              <Button
                 onClick={handleBookAppointment}
-                className="w-full bg-[#faf8f4] hover:bg-stone-100 border border-stone-200 text-stone-800 py-3 rounded-xl font-bold text-xs transition-colors cursor-pointer flex items-center justify-center gap-2"
+                variant="outline"
+                fullWidth
+                size="md"
+                leftIcon={<CalendarCheck className="w-4 h-4 text-brand-sage-600" />}
               >
-                <CalendarCheck className="w-4 h-4 text-[#548c71]" />
-                <span>Agendar Sesión Online</span>
+                Agendar Sesión Online
+              </Button>
+            </div>
+
+            <div className="p-3 bg-brand-sand-100 rounded-2xl border border-brand-sand-300 text-left mb-3">
+              <p className="text-[11px] font-bold text-stone-800">Directorio de Emergencia:</p>
+              <p className="text-[11px] text-stone-600 mt-0.5">
+                Si te encuentras ante una urgencia inmediata, también puedes llamar al <strong className="text-stone-900">126</strong> (ISDEMU) o al <strong className="text-stone-900">131</strong> (MINSAL FonoSalud).
+              </p>
+            </div>
+
+            <p className="text-[11px] text-stone-500">
+              Atención confidencial para usuarios y acompañamiento emocional.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Complete Institutions Directory Modal (El Salvador) */}
+      {showDirectoryModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-brand-sand-300 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-brand-sand-300">
+              <div className="flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-brand-sage-600" />
+                <h3 className="font-bold text-stone-900 text-lg font-serif">Redes de Apoyo en El Salvador</h3>
+              </div>
+              <button 
+                onClick={() => setShowDirectoryModal(false)} 
+                className="text-stone-400 hover:text-stone-700 p-1 rounded-lg cursor-pointer"
+                title="Cerrar (Esc)"
+              >
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <p className="text-[11px] text-stone-400">
-              Atención confidencial 24 horas para usuarios de FluxGlow.
+            <p className="text-xs text-stone-600 mt-3 mb-4 leading-relaxed">
+              Líneas gratuitas, confidenciales y oficiales disponibles en El Salvador para atención psicológica, contención en crisis y salud mental comunitaria:
             </p>
+
+            <div className="space-y-3">
+              {EL_SALVADOR_RESOURCES.map((res) => (
+                <div 
+                  key={res.id}
+                  className={`p-4 rounded-2xl border transition-all ${
+                    res.isPrimary 
+                      ? 'bg-brand-sage-50 border-brand-sage-300 shadow-2xs' 
+                      : 'bg-brand-sand-50 border-brand-sand-300'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2 mb-1">
+                    <div>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white border border-brand-sand-300 text-brand-sage-800">
+                        {res.badge}
+                      </span>
+                      <h4 className="font-bold text-stone-900 text-sm mt-1.5">{res.name}</h4>
+                      <p className="text-[11px] font-medium text-brand-sage-700">{res.type}</p>
+                    </div>
+                    <a
+                      href={`tel:${res.phone.replace(/[^0-9]/g, '')}`}
+                      className="shrink-0 bg-brand-sage-600 hover:bg-brand-sage-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-2xs"
+                    >
+                      <Phone className="w-3.5 h-3.5" />
+                      <span>{res.phone}</span>
+                    </a>
+                  </div>
+                  <p className="text-xs text-stone-600 mt-2 leading-relaxed">{res.desc}</p>
+                  <div className="flex items-center gap-1.5 mt-2 text-[10px] text-stone-500 font-medium">
+                    <Clock className="w-3 h-3 text-stone-400" />
+                    <span>{res.hours}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-5 pt-3 border-t border-brand-sand-200">
+              <Button
+                onClick={() => setShowDirectoryModal(false)}
+                variant="sand"
+                fullWidth
+                size="sm"
+              >
+                Cerrar Directorio
+              </Button>
+            </div>
           </div>
         </div>
       )}

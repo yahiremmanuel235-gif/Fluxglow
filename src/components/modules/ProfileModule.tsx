@@ -25,7 +25,16 @@ import {
   Star,
   ShieldCheck,
   Zap,
-  HeartHandshake
+  HeartHandshake,
+  Share2,
+  Download,
+  Copy,
+  Clock,
+  ArrowRight,
+  Smile,
+  Activity,
+  Heart,
+  Target
 } from 'lucide-react';
 import { 
   ResponsiveContainer, 
@@ -75,6 +84,8 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
   const [customAvatarInput, setCustomAvatarInput] = useState('');
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showMoreGoalsModal, setShowMoreGoalsModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [badgeFilter, setBadgeFilter] = useState<'all' | 'unlocked' | 'locked'>('all');
 
   // Real Journal entries for emotional tracking
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>(() => {
@@ -93,6 +104,19 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
   const currentLevel = Math.floor(totalXP / 100) + 1;
   const completedMissionsCount = storedMissions.filter(m => m.status === 'completed').length;
 
+  // Real Community interactions
+  const [communityInteractionsCount, setCommunityInteractionsCount] = useState<number>(() => {
+    try {
+      const postsSaved = localStorage.getItem('fluxglow_community_posts');
+      const posts = postsSaved ? JSON.parse(postsSaved) : [];
+      const userPosts = posts.filter((p: any) => p.author?.includes('Tú') || p.author?.includes(userName));
+      const actionsCount = parseInt(localStorage.getItem('fluxglow_community_actions_count') || '0', 10);
+      return (userPosts.length * 2) + actionsCount;
+    } catch {
+      return 0;
+    }
+  });
+
   // Escape key handler for accessible modals
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -100,11 +124,12 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
         if (showAvatarModal) setShowAvatarModal(false);
         if (showSettingsModal) setShowSettingsModal(false);
         if (showMoreGoalsModal) setShowMoreGoalsModal(false);
+        if (showShareModal) setShowShareModal(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showAvatarModal, showSettingsModal, showMoreGoalsModal]);
+  }, [showAvatarModal, showSettingsModal, showMoreGoalsModal, showShareModal]);
 
   useEffect(() => {
     const handleMissionsUpdate = () => {
@@ -203,57 +228,121 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
     success('Foto actualizada', 'Tu avatar ha sido modificado con éxito.');
   };
 
-  // Recent 3-day history & chart dynamically derived
-  const chartData = [
-    { date: '1/6/2026', intensidad: 7 },
-    { date: '2/6/2026', intensidad: 5 },
-    { date: '3/6/2026', intensidad: 8 },
-  ];
+  // Recent entries dynamically derived from journal
+  const recentTableEntries = journalEntries.slice(0, 4).map(e => ({
+    date: e.date,
+    mood: e.mood.charAt(0).toUpperCase() + e.mood.slice(1),
+    intensity: `${e.intensity}/10`
+  }));
 
-  const recentTableEntries = [
-    { date: '03/06/2026', mood: 'Feliz', intensity: '8/10' },
-    { date: '02/06/2026', mood: 'Ansioso', intensity: '5/10' },
-    { date: '01/06/2026', mood: 'Tranquilo', intensity: '7/10' },
-  ];
+  const chartData = journalEntries.slice(0, 7).reverse().map(e => ({
+    date: e.date.slice(5),
+    intensidad: e.intensity
+  }));
 
-  // Dynamic Badges Hub
+  // Dynamic Badges Hub with realistic milestones and progress tracking
   const achievements = [
     { 
-      id: 'streak', 
-      title: 'Racha Activa', 
-      desc: `${activeStreak} días seguidos cuidando tu bienestar`, 
-      icon: '🔥', 
+      id: 'streak-1', 
+      title: 'Hábito Inicial (Racha 1d)', 
+      desc: 'Comienza tu viaje de bienestar registrando 1 día activo', 
+      icon: '🌱', 
+      current: activeStreak,
+      target: 1,
       unlocked: activeStreak >= 1 
     },
     { 
-      id: 'missions', 
-      title: 'Misiones Cumplidas', 
-      desc: `${completedMissionsCount} retos de guías superados`, 
+      id: 'streak-7', 
+      title: 'Guardián Semanal (Racha 7d)', 
+      desc: 'Mantén 7 días continuos de cuidado emocional', 
+      icon: '🔥', 
+      current: activeStreak,
+      target: 7,
+      unlocked: activeStreak >= 7 
+    },
+    { 
+      id: 'streak-30', 
+      title: 'Maestro de la Constancia (30d)', 
+      desc: 'Completa un mes de autorregulación y constancia', 
+      icon: '👑', 
+      current: activeStreak,
+      target: 30,
+      unlocked: activeStreak >= 30 
+    },
+    { 
+      id: 'missions-3', 
+      title: 'Explorador de Retos (3 misiones)', 
+      desc: 'Supera 3 retos prácticos en tus guías de aprendizaje', 
       icon: '🎯', 
-      unlocked: completedMissionsCount >= 1 
+      current: completedMissionsCount,
+      target: 3,
+      unlocked: completedMissionsCount >= 3 
     },
     { 
-      id: 'xp', 
-      title: `Nivel ${currentLevel} Alcanzado`, 
-      desc: `${totalXP} puntos de experiencia acumulados`, 
-      icon: '⭐', 
-      unlocked: totalXP >= 50 
+      id: 'missions-10', 
+      title: 'Imparable (10 misiones)', 
+      desc: 'Supera 10 misiones prácticas en tus guías de aprendizaje', 
+      icon: '🚀', 
+      current: completedMissionsCount,
+      target: 10,
+      unlocked: completedMissionsCount >= 10 
     },
     { 
-      id: 'journal', 
-      title: 'Diario Consciente', 
-      desc: `${journalEntries.length} reflexiones y estados registrados`, 
+      id: 'journal-5', 
+      title: 'Diario Consciente (5 entradas)', 
+      desc: 'Reflexiona y asienta al menos 5 registros emocionales', 
       icon: '✍️', 
-      unlocked: journalEntries.length >= 1 
+      current: journalEntries.length,
+      target: 5,
+      unlocked: journalEntries.length >= 5 
     },
     { 
       id: 'community', 
       title: 'Comunidad Solidaria', 
-      desc: 'Participación en foros seguros de apoyo mutuo', 
+      desc: 'Participa activamente en foros seguros o grupos de apoyo', 
       icon: '🤝', 
-      unlocked: true 
+      current: communityInteractionsCount,
+      target: 1,
+      unlocked: communityInteractionsCount >= 1 
     },
   ];
+
+  const filteredAchievements = achievements.filter(a => {
+    if (badgeFilter === 'unlocked') return a.unlocked;
+    if (badgeFilter === 'locked') return !a.unlocked;
+    return true;
+  });
+
+  const unlockedCount = achievements.filter(a => a.unlocked).length;
+
+  // Unified Activity Timeline (Real items from journal + missions)
+  const timelineActivities = [
+    ...journalEntries.slice(0, 3).map(e => ({
+      id: `j-${e.id}`,
+      type: 'journal',
+      title: `Registro en Diario: ${e.mood.toUpperCase()} (${e.intensity}/10)`,
+      desc: e.notes ? (e.notes.length > 70 ? e.notes.slice(0, 70) + '...' : e.notes) : 'Reflexión registrada',
+      date: `${e.date} • ${e.time || 'Registro reciente'}`,
+      icon: '✍️',
+      color: 'bg-brand-sage-100 text-brand-sage-700 border-brand-sage-300'
+    })),
+    ...storedMissions.filter(m => m.status === 'completed').slice(0, 2).map(m => ({
+      id: `m-${m.id}`,
+      type: 'mission',
+      title: `Misión completada: ${m.title}`,
+      desc: `+${m.xp || 30} XP sumados a tu progreso`,
+      date: m.completedDate || 'Completado',
+      icon: '🎯',
+      color: 'bg-brand-terracotta-100 text-brand-terracotta-700 border-brand-terracotta-300'
+    }))
+  ];
+
+  const handleCopyProgress = () => {
+    const text = `🌟 Mi Progreso en FluxGlow:\n🔥 Racha Activa: ${activeStreak} días\n⭐ Nivel ${currentLevel} (${totalXP} XP)\n🎯 Misiones Completadas: ${completedMissionsCount}\n✍️ Registros en Diario: ${journalEntries.length}\n🏆 Insignias Desbloqueadas: ${unlockedCount}/${achievements.length}`;
+    navigator.clipboard?.writeText(text);
+    confetti({ particleCount: 40, spread: 60 });
+    success('¡Progreso copiado!', 'Listo para compartir o guardar tu resumen de bienestar.');
+  };
 
   const currentAvatar = userProfile?.avatarUrl || '/user.png';
 
@@ -560,50 +649,136 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
               </div>
             </div>
 
+            {/* CARD 4: Unified Activity Timeline */}
+            <div className="bg-white rounded-3xl border border-brand-sand-300 shadow-2xs p-6 sm:p-7">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-stone-900 font-serif flex items-center gap-2">
+                  <Activity className="w-5 h-5 text-brand-sage-600" />
+                  <span>Línea de Tiempo de Actividad</span>
+                </h2>
+                <span className="text-xs font-semibold text-stone-500">Reciente</span>
+              </div>
+
+              {timelineActivities.length === 0 ? (
+                <p className="text-xs text-stone-500 text-center py-6">Aún no hay actividades registradas.</p>
+              ) : (
+                <div className="relative pl-6 space-y-4 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-brand-sand-300">
+                  {timelineActivities.map((act) => (
+                    <div key={act.id} className="relative group">
+                      {/* Timeline Dot */}
+                      <span className="absolute -left-6 top-1 w-4 h-4 rounded-full bg-white border-2 border-brand-sage-500 flex items-center justify-center text-[8px]">
+                        •
+                      </span>
+                      <div className="p-3 bg-brand-sand-50 hover:bg-brand-sand-100/80 rounded-2xl border border-brand-sand-300 transition-colors">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-bold text-stone-900 flex items-center gap-1.5">
+                            <span>{act.icon}</span>
+                            <span>{act.title}</span>
+                          </span>
+                          <span className="text-[10px] text-stone-500 font-medium whitespace-nowrap">{act.date}</span>
+                        </div>
+                        <p className="text-xs text-stone-600 mt-1">{act.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
           </div>
 
           {/* RIGHT COLUMN: ✨ Insignias y Logros Unificados (4 Cols) */}
           <div className="lg:col-span-4">
             <div className="bg-white rounded-3xl border border-brand-sand-300 shadow-2xs p-6 sm:p-7 sticky top-20">
-              <h2 className="text-xl font-bold text-stone-900 mb-5 font-serif flex items-center gap-2">
-                <Trophy className="w-5 h-5 text-brand-terracotta-600" />
-                Insignias & Logros
-              </h2>
-
-              {/* Achievements Checklist with Real Badges */}
-              <div className="space-y-3">
-                {achievements.map((ach) => (
-                  <div 
-                    key={ach.id}
-                    className={`flex items-start gap-3 p-3.5 rounded-2xl border transition-all ${
-                      ach.unlocked 
-                        ? 'bg-brand-sage-50 border-brand-sage-300 shadow-2xs' 
-                        : 'bg-brand-sand-50 border-brand-sand-200 opacity-60'
-                    }`}
-                  >
-                    <span className="text-xl shrink-0 mt-0.5">{ach.icon}</span>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs font-bold text-stone-900">{ach.title}</p>
-                        {ach.unlocked && (
-                          <span className="text-[10px] font-bold text-brand-sage-700 bg-brand-sage-100 px-2 py-0.5 rounded-full">
-                            Obtenido
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-[11px] text-stone-600 mt-0.5 leading-snug">
-                        {ach.desc}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-stone-900 font-serif flex items-center gap-2">
+                  <Trophy className="w-5 h-5 text-brand-terracotta-600" />
+                  <span>Insignias & Logros</span>
+                </h2>
+                <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-brand-sage-100 text-brand-sage-800 border border-brand-sage-200">
+                  {unlockedCount}/{achievements.length}
+                </span>
               </div>
 
-              {/* Motivational Footer */}
-              <div className="mt-6 pt-4 border-t border-brand-sand-200 text-center">
-                <p className="text-xs text-stone-600 font-medium">
-                  Racha activa de hábitos: <strong className="text-brand-sage-700 font-bold">{activeStreak} días seguidos</strong>
-                </p>
+              {/* Badges Filter Tabs */}
+              <div className="flex items-center gap-1 p-1 bg-brand-sand-100 rounded-xl mb-4 text-xs font-semibold">
+                <button
+                  onClick={() => setBadgeFilter('all')}
+                  className={`flex-1 py-1 rounded-lg transition-all ${badgeFilter === 'all' ? 'bg-white text-stone-900 shadow-2xs' : 'text-stone-600 hover:text-stone-900'}`}
+                >
+                  Todas
+                </button>
+                <button
+                  onClick={() => setBadgeFilter('unlocked')}
+                  className={`flex-1 py-1 rounded-lg transition-all ${badgeFilter === 'unlocked' ? 'bg-white text-stone-900 shadow-2xs' : 'text-stone-600 hover:text-stone-900'}`}
+                >
+                  Obtenidas ({unlockedCount})
+                </button>
+                <button
+                  onClick={() => setBadgeFilter('locked')}
+                  className={`flex-1 py-1 rounded-lg transition-all ${badgeFilter === 'locked' ? 'bg-white text-stone-900 shadow-2xs' : 'text-stone-600 hover:text-stone-900'}`}
+                >
+                  Por Desbloquear
+                </button>
+              </div>
+
+              {/* Achievements Checklist with Real Progress Bars */}
+              <div className="space-y-3 max-h-[460px] overflow-y-auto pr-1">
+                {filteredAchievements.map((ach) => {
+                  const percent = Math.min(100, Math.round((ach.current / ach.target) * 100));
+                  return (
+                    <div 
+                      key={ach.id}
+                      className={`flex flex-col p-3.5 rounded-2xl border transition-all ${
+                        ach.unlocked 
+                          ? 'bg-brand-sage-50 border-brand-sage-300 shadow-2xs' 
+                          : 'bg-brand-sand-50 border-brand-sand-200 opacity-75'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <span className="text-xl shrink-0 mt-0.5">{ach.icon}</span>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs font-bold text-stone-900">{ach.title}</p>
+                            {ach.unlocked ? (
+                              <span className="text-[10px] font-bold text-brand-sage-700 bg-brand-sage-100 px-2 py-0.5 rounded-full">
+                                Obtenido
+                              </span>
+                            ) : (
+                              <span className="text-[10px] font-semibold text-stone-500">
+                                {ach.current}/{ach.target}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-stone-600 mt-0.5 leading-snug">
+                            {ach.desc}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Progress bar */}
+                      <div className="mt-2.5 w-full bg-brand-sand-200 h-1.5 rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full transition-all duration-500 ${ach.unlocked ? 'bg-brand-sage-500' : 'bg-brand-terracotta-500'}`}
+                          style={{ width: `${percent}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Share Achievements CTA */}
+              <div className="mt-5 pt-4 border-t border-brand-sand-200">
+                <Button
+                  onClick={() => setShowShareModal(true)}
+                  variant="terracotta"
+                  fullWidth
+                  size="sm"
+                  leftIcon={<Share2 className="w-4 h-4" />}
+                >
+                  Compartir Tarjeta de Logros
+                </Button>
               </div>
             </div>
           </div>
@@ -770,6 +945,78 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
                   </button>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Share Achievements Modal */}
+      {showShareModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-brand-sand-300">
+            <div className="flex items-center justify-between pb-3 border-b border-brand-sand-300">
+              <h3 className="font-bold text-stone-900 text-lg font-serif flex items-center gap-2">
+                <Share2 className="w-5 h-5 text-brand-terracotta-600" />
+                <span>Tarjeta de Logros</span>
+              </h3>
+              <button 
+                onClick={() => setShowShareModal(false)} 
+                className="text-stone-400 hover:text-stone-700 p-1 rounded-lg cursor-pointer"
+                title="Cerrar (Esc)"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Visual Achievement Card */}
+            <div className="my-5 p-6 bg-gradient-to-br from-brand-sage-50 to-brand-sand-100 rounded-3xl border border-brand-sage-200 shadow-inner text-center">
+              <div className="w-16 h-16 mx-auto rounded-full bg-white border-2 border-brand-sage-400 shadow-sm flex items-center justify-center text-3xl mb-3 overflow-hidden">
+                <img src={currentAvatar} alt={userName} className="w-full h-full object-cover" />
+              </div>
+              <h4 className="text-lg font-bold text-stone-900 font-serif">{userName}</h4>
+              <p className="text-xs text-brand-sage-800 font-semibold mb-4">Nivel {currentLevel} • {totalXP} XP</p>
+
+              <div className="grid grid-cols-3 gap-2 text-center bg-white/80 backdrop-blur-xs p-3 rounded-2xl border border-brand-sand-300 mb-4">
+                <div>
+                  <p className="text-base font-bold text-brand-terracotta-600">🔥 {activeStreak}</p>
+                  <p className="text-[10px] text-stone-600 font-medium">Días racha</p>
+                </div>
+                <div>
+                  <p className="text-base font-bold text-brand-sage-700">🎯 {completedMissionsCount}</p>
+                  <p className="text-[10px] text-stone-600 font-medium">Misiones</p>
+                </div>
+                <div>
+                  <p className="text-base font-bold text-amber-600">🏆 {unlockedCount}</p>
+                  <p className="text-[10px] text-stone-600 font-medium">Insignias</p>
+                </div>
+              </div>
+
+              <p className="text-[11px] text-stone-600 italic">"Cuidando mi bienestar mental día a día con FluxGlow"</p>
+            </div>
+
+            {/* Actions */}
+            <div className="space-y-2.5">
+              <Button
+                onClick={handleCopyProgress}
+                variant="terracotta"
+                fullWidth
+                size="md"
+                leftIcon={<Copy className="w-4 h-4" />}
+              >
+                Copiar Resumen de Texto
+              </Button>
+              <Button
+                onClick={() => {
+                  confetti({ particleCount: 35, spread: 50 });
+                  success('Insignias sincronizadas', 'Tus logros han sido verificados.');
+                  setShowShareModal(false);
+                }}
+                variant="secondary"
+                fullWidth
+                size="md"
+              >
+                Listo
+              </Button>
             </div>
           </div>
         </div>

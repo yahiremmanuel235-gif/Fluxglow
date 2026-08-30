@@ -37,14 +37,29 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [moreDropdownOpen, setMoreDropdownOpen] = useState(false);
   const [pendingMissions, setPendingMissions] = useState<number>(() => getPendingMissionsCount());
+  const [currentRisk, setCurrentRisk] = useState<string>(() => {
+    try {
+      return localStorage.getItem('fluxglow_risk_level') || 'moderado';
+    } catch {
+      return 'moderado';
+    }
+  });
   const moreMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleMissionsUpdate = () => {
       setPendingMissions(getPendingMissionsCount());
     };
+    const handleRiskUpdate = (e: any) => {
+      setCurrentRisk(e.detail || 'moderado');
+    };
+
     window.addEventListener('fluxglow_missions_updated', handleMissionsUpdate);
-    return () => window.removeEventListener('fluxglow_missions_updated', handleMissionsUpdate);
+    window.addEventListener('fluxglow_risk_level_updated', handleRiskUpdate);
+    return () => {
+      window.removeEventListener('fluxglow_missions_updated', handleMissionsUpdate);
+      window.removeEventListener('fluxglow_risk_level_updated', handleRiskUpdate);
+    };
   }, []);
 
   // Close dropdown on outside click
@@ -100,7 +115,8 @@ export const Navbar: React.FC<NavbarProps> = ({
     { 
       id: 'alert', 
       label: 'Alerta', 
-      icon: <Bell className="w-4 h-4 text-brand-sage-600" />
+      icon: <Bell className={`w-4 h-4 ${currentRisk === 'elevado' ? 'text-rose-600 animate-bounce' : currentRisk === 'moderado' ? 'text-amber-600' : 'text-brand-sage-600'}`} />,
+      badge: currentRisk === 'elevado' ? 'SOS' : currentRisk === 'moderado' ? '!' : undefined
     }
   ];
 
