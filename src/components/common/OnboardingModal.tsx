@@ -28,17 +28,26 @@ interface OnboardingModalProps {
   isOpen: boolean;
   onClose: () => void;
   onNavigate?: (view: ViewMode) => void;
+  initialMode?: 'ask_first_time' | 'tutorial' | 'update_notes';
 }
 
-type OnboardingState = 'ask_first_time' | 'ask_experienced_guide' | 'tutorial';
+type OnboardingState = 'ask_first_time' | 'ask_experienced_guide' | 'tutorial' | 'update_notes';
 
 export const OnboardingModal: React.FC<OnboardingModalProps> = ({ 
   isOpen, 
   onClose,
-  onNavigate 
+  onNavigate,
+  initialMode = 'ask_first_time'
 }) => {
-  const [modalState, setModalState] = useState<OnboardingState>('ask_first_time');
+  const [modalState, setModalState] = useState<OnboardingState>(initialMode);
   const [currentStep, setCurrentStep] = useState(0);
+
+  // Sync initialMode if opened specifically
+  React.useEffect(() => {
+    if (isOpen && initialMode) {
+      setModalState(initialMode);
+    }
+  }, [isOpen, initialMode]);
 
   if (!isOpen) return null;
 
@@ -47,7 +56,8 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
       setModalState('tutorial');
       setCurrentStep(0);
     } else {
-      setModalState('ask_experienced_guide');
+      // User says they already used the platform -> show the Update Notes directly!
+      setModalState('update_notes');
     }
   };
 
@@ -56,8 +66,13 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
       setModalState('tutorial');
       setCurrentStep(0);
     } else {
-      handleComplete();
+      setModalState('update_notes');
     }
+  };
+
+  const handleSkipOrFinishTutorial = () => {
+    // After looking at the tutorial or skipping it, show the update notes
+    setModalState('update_notes');
   };
 
   const handleComplete = () => {
@@ -233,16 +248,20 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         <div className="flex items-center justify-between px-6 py-3.5 border-b border-stone-100 bg-[#fbf9f5]">
           <div className="flex items-center gap-2">
             <FluxGlowLogo imgSrc="/logo2.png" size="sm" showText={true} />
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#548c71] bg-emerald-50 px-2.5 py-0.5 rounded-full ml-2 border border-emerald-200/60">
-              Guía de Interfaces
+            <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full ml-2 border ${
+              modalState === 'update_notes' 
+                ? 'text-[#e07a52] bg-orange-50 border-orange-200/60' 
+                : 'text-[#548c71] bg-emerald-50 border-emerald-200/60'
+            }`}>
+              {modalState === 'update_notes' ? '🎉 Novedades' : 'Guía de Interfaces'}
             </span>
           </div>
 
           <button
-            onClick={handleComplete}
+            onClick={modalState === 'update_notes' ? handleComplete : handleSkipOrFinishTutorial}
             className="text-xs font-semibold text-stone-400 hover:text-stone-700 transition-colors cursor-pointer px-2 py-1"
           >
-            Saltar y Explorar
+            {modalState === 'update_notes' ? 'Cerrar' : 'Saltar y ver novedades'}
           </button>
         </div>
 
@@ -455,16 +474,168 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                     if (currentStep < interfacesList.length - 1) {
                       setCurrentStep(prev => prev + 1);
                     } else {
-                      handleComplete();
+                      handleSkipOrFinishTutorial();
                     }
                   }}
                   className="bg-[#548c71] hover:bg-[#43705a] text-white px-5 py-2.5 rounded-full text-xs sm:text-sm font-bold shadow-xs hover:shadow-md transition-all flex items-center gap-2 cursor-pointer"
                 >
-                  <span>{currentStep === interfacesList.length - 1 ? '¡Comenzar a usar FluxGlow!' : 'Siguiente Interfaz'}</span>
+                  <span>{currentStep === interfacesList.length - 1 ? 'Ver Novedades de la Actualización' : 'Siguiente Interfaz'}</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
 
+            </div>
+          </>
+        )}
+
+        {/* SCREEN 4: NOVEDADES DE ESTA ACTUALIZACIÓN */}
+        {modalState === 'update_notes' && (
+          <>
+            {/* Scrollable Notes Content */}
+            <div className="p-6 sm:p-8 flex-1 overflow-y-auto">
+              
+              {/* Header Title */}
+              <div className="text-center max-w-2xl mx-auto mb-6">
+                <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-100/80 border border-amber-300 text-amber-900 text-xs font-bold mb-3 shadow-2xs">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-700" />
+                  <span>Versión Actualizada</span>
+                </div>
+                <h2 className="font-serif text-2xl sm:text-3xl font-bold text-stone-900 leading-tight">
+                  🎉 Novedades de esta actualización — FluxGlow
+                </h2>
+                <p className="text-xs sm:text-sm text-stone-600 mt-2 leading-relaxed">
+                  Hemos incorporado nuevas herramientas interactivas, prácticas al instante, gamificación positiva y mayor transparencia para enriquecer tu experiencia.
+                </p>
+              </div>
+
+              {/* The 6 Update Notes Cards */}
+              <div className="space-y-4 max-w-2xl mx-auto">
+                
+                {/* 1. Bienvenida guiada */}
+                <div className="bg-[#faf7f2] rounded-2xl p-4 sm:p-5 border border-stone-200 shadow-2xs hover:border-[#548c71]/40 transition-colors">
+                  <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0 mt-0.5">
+                      <span className="text-lg">👋</span>
+                    </div>
+                    <div>
+                      <h3 className="text-sm sm:text-base font-bold text-stone-900 mb-1.5 flex items-center gap-2">
+                        <span>1. 👋 Bienvenida guiada para nuevos usuarios</span>
+                      </h3>
+                      <p className="text-xs sm:text-sm text-stone-700 leading-relaxed">
+                        Al entrar por primera vez, la app pregunta si es tu primera visita. Si dices que sí, puedes ver un recorrido completo por las 7 secciones de la plataforma (con imágenes, lo que hace cada una y para qué te sirve) antes de empezar a usarla.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Guías completas y transparentes */}
+                <div className="bg-[#faf7f2] rounded-2xl p-4 sm:p-5 border border-stone-200 shadow-2xs hover:border-blue-300 transition-colors">
+                  <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center shrink-0 mt-0.5">
+                      <span className="text-lg">📚</span>
+                    </div>
+                    <div>
+                      <h3 className="text-sm sm:text-base font-bold text-stone-900 mb-1.5 flex items-center gap-2">
+                        <span>2. 📚 Guías completas y transparentes en "Explora y Aprende"</span>
+                      </h3>
+                      <p className="text-xs sm:text-sm text-stone-700 leading-relaxed">
+                        Ya no son solo resúmenes cortos — cada guía ahora incluye: explicación simple del tema, consejos prácticos, glosario de palabras técnicas, y una misión diaria para ponerlo en práctica. Como el contenido está generado con IA por ahora (mientras conseguimos fuentes verificadas), cada guía lo aclara con un aviso visible, para ser 100% transparentes con quien la lea.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. Sistema de Misiones Diarias */}
+                <div className="bg-[#faf7f2] rounded-2xl p-4 sm:p-5 border border-stone-200 shadow-2xs hover:border-amber-300 transition-colors">
+                  <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0 mt-0.5">
+                      <span className="text-lg">🎯</span>
+                    </div>
+                    <div>
+                      <h3 className="text-sm sm:text-base font-bold text-stone-900 mb-1.5 flex items-center gap-2">
+                        <span>3. 🎯 Sistema de Misiones Diarias (sección nueva)</span>
+                      </h3>
+                      <p className="text-xs sm:text-sm text-stone-700 leading-relaxed">
+                        Cada guía desbloquea misiones cortas (3-5 minutos) para practicar lo aprendido. Tienen su propia sección, donde puedes ver tus misiones pendientes y completadas, ganar puntos (XP) y mantener una racha de días activos. La barra de navegación ahora muestra cuántas misiones tienes pendientes con un contador visual.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4. Prácticas al Instante */}
+                <div className="bg-[#faf7f2] rounded-2xl p-4 sm:p-5 border border-stone-200 shadow-2xs hover:border-teal-300 transition-colors">
+                  <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center shrink-0 mt-0.5">
+                      <span className="text-lg">🧘</span>
+                    </div>
+                    <div>
+                      <h3 className="text-sm sm:text-base font-bold text-stone-900 mb-1.5 flex items-center gap-2">
+                        <span>4. 🧘 Prácticas al Instante</span>
+                      </h3>
+                      <p className="text-xs sm:text-sm text-stone-700 leading-relaxed">
+                        Ejercicios rápidos de calma que puedes hacer en el momento: Suspiro Fisiológico, Respiración 4-7-8, Anclaje Sensorial 5-4-3-2-1 y un Temporizador de Enfoque — pensados para usarse en menos de 5 minutos cuando lo necesites.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 5. Flux AI mucho más potente */}
+                <div className="bg-[#faf7f2] rounded-2xl p-4 sm:p-5 border border-stone-200 shadow-2xs hover:border-purple-300 transition-colors">
+                  <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-800 flex items-center justify-center shrink-0 mt-0.5">
+                      <span className="text-lg">🤖</span>
+                    </div>
+                    <div>
+                      <h3 className="text-sm sm:text-base font-bold text-stone-900 mb-1.5 flex items-center gap-2">
+                        <span>5. 🤖 Flux AI, mucho más potente</span>
+                      </h3>
+                      <p className="text-xs sm:text-sm text-stone-700 leading-relaxed">
+                        El asistente conversacional ahora te permite: iniciar una nueva conversación cuando quieras (archivando la anterior de forma ordenada), elegir el enfoque de la respuesta que necesitas (acompañamiento empático, plan de acción rápido, regulación somática, reencuadre cognitivo o apagado mental nocturno), e indicar tu estado actual con "pastillas" rápidas (sobrepensamiento, desánimo, bloqueo con tareas) para recibir algo hecho a tu medida, no una respuesta genérica. Dentro del chat también puedes pedir un ejercicio de respiración guiada al instante, micropasos más sencillos, escuchar las respuestas en voz alta, o descargar la sesión. Y siempre visible al fondo: un aviso claro de que la IA es un apoyo informativo, no un reemplazo de ayuda profesional.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 6. Tutorial de cómo leer una guía */}
+                <div className="bg-[#faf7f2] rounded-2xl p-4 sm:p-5 border border-stone-200 shadow-2xs hover:border-rose-300 transition-colors">
+                  <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-rose-100 text-rose-800 flex items-center justify-center shrink-0 mt-0.5">
+                      <span className="text-lg">🆘</span>
+                    </div>
+                    <div>
+                      <h3 className="text-sm sm:text-base font-bold text-stone-900 mb-1.5 flex items-center gap-2">
+                        <span>6. 🆘 Tutorial de "cómo leer una guía"</span>
+                      </h3>
+                      <p className="text-xs sm:text-sm text-stone-700 leading-relaxed">
+                        La primera vez que abres cualquier guía, un tutorial corto te explica sus 4 partes clave (resumen, aviso de contenido, consejos y misión), para que sepas sacarle el máximo provecho desde el principio. Se puede volver a abrir cuando quieras con el ícono de ayuda.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            {/* Bottom Footer Controls for Update Notes */}
+            <div className="px-6 py-4 border-t border-stone-100 bg-[#fbf9f5] flex flex-col sm:flex-row items-center justify-between gap-3">
+              <button
+                onClick={() => {
+                  setModalState('tutorial');
+                  setCurrentStep(0);
+                }}
+                className="text-xs font-semibold text-stone-600 hover:text-stone-900 transition-colors flex items-center gap-1.5 cursor-pointer py-1"
+              >
+                <span>👀 Ver recorrido de las 7 interfaces</span>
+              </button>
+
+              <button
+                id="close-update-notes-btn"
+                onClick={handleComplete}
+                className="w-full sm:w-auto bg-[#548c71] hover:bg-[#43705a] text-white px-7 py-3 rounded-full text-xs sm:text-sm font-bold shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>¡Entendido, empezar a explorar!</span>
+                <Check className="w-4 h-4 stroke-[3]" />
+              </button>
             </div>
           </>
         )}

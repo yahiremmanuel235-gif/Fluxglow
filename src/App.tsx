@@ -34,7 +34,26 @@ export default function App() {
   const [currentView, setCurrentView] = useState<ViewMode>('landing');
   const [isAudioPlaying, setIsAudioPlaying] = useState<boolean>(false);
   const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
+  const [onboardingInitialMode, setOnboardingInitialMode] = useState<'ask_first_time' | 'tutorial' | 'update_notes'>('ask_first_time');
   const [activeGuideId, setActiveGuideId] = useState<string | undefined>(undefined);
+
+  // Listen for global custom events to open onboarding or update notes
+  useEffect(() => {
+    const handleOpenUpdateNotes = () => {
+      setOnboardingInitialMode('update_notes');
+      setShowOnboarding(true);
+    };
+    const handleOpenTutorial = () => {
+      setOnboardingInitialMode('tutorial');
+      setShowOnboarding(true);
+    };
+    window.addEventListener('fluxglow_open_update_notes', handleOpenUpdateNotes);
+    window.addEventListener('fluxglow_open_tutorial', handleOpenTutorial);
+    return () => {
+      window.removeEventListener('fluxglow_open_update_notes', handleOpenUpdateNotes);
+      window.removeEventListener('fluxglow_open_tutorial', handleOpenTutorial);
+    };
+  }, []);
 
   // Persistent user profile state connected across register, login & profile personalization
   const [userProfile, setUserProfile] = useState<UserProfileData>(() => {
@@ -196,6 +215,7 @@ export default function App() {
         isOpen={showOnboarding}
         onClose={() => setShowOnboarding(false)}
         onNavigate={handleNavigate}
+        initialMode={onboardingInitialMode}
       />
 
     </div>

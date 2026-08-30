@@ -162,14 +162,24 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               </li>
             </ul>
 
-            <button 
-              id="scroll-to-top-btn"
-              onClick={scrollToTop}
-              className="mt-4 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs transition-colors"
-            >
-              <ArrowUp className="w-3.5 h-3.5" />
-              <span>Volver arriba</span>
-            </button>
+            <div className="flex flex-col gap-2 pt-1">
+              <button 
+                id="footer-open-update-notes-btn"
+                onClick={() => window.dispatchEvent(new CustomEvent('fluxglow_open_update_notes'))}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-950/60 hover:bg-emerald-900/80 text-emerald-300 text-xs border border-emerald-800/60 transition-colors text-left"
+              >
+                <span>🎉 Novedades de la actualización</span>
+              </button>
+
+              <button 
+                id="scroll-to-top-btn"
+                onClick={scrollToTop}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs transition-colors"
+              >
+                <ArrowUp className="w-3.5 h-3.5" />
+                <span>Volver arriba</span>
+              </button>
+            </div>
           </div>
 
         </div>
