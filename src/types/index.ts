@@ -127,14 +127,18 @@ export interface VideoPodcastItem {
   id: string;
   title: string;
   author: string;
+  authorRole?: string;
+  channel?: string;
   duration: string;
   views: string;
   timeAgo: string;
   image: string;
   type: 'video' | 'podcast';
   category: string;
-  url?: string;
+  youtubeId: string;
+  youtubeUrl: string;
   description: string;
+  keyTakeaways?: string[];
 }
 
 export interface InstantPracticeItem {

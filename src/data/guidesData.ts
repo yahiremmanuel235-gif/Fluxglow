@@ -808,75 +808,213 @@ export const POPULAR_GUIDES_CATALOG: GuideItem[] = DEMO_GUIDES_CATALOG.slice(4).
 
 export const VERIFIED_MEDIA_CATALOG: VideoPodcastItem[] = [
   {
-    id: 'media-1',
-    title: 'Las GRANDES MENTIRAS sobre el TRAUMA PSICOLÓGICO y la TERAPIA EMDR ~ ...',
-    author: 'Alejandro Santos',
-    duration: '1:24:19',
-    views: '5.9 K vistas',
-    timeAgo: 'hace 6 meses',
-    image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=80',
-    type: 'podcast',
-    category: 'Ansiedad',
-    description: 'Conversación profunda con el especialista Alejandro Santos sobre la neurobiología del trauma, cómo se almacena en el cuerpo y los mitos de la terapia EMDR.'
-  },
-  {
-    id: 'media-2',
-    title: 'Cómo tener confianza en uno mismo - Walter Riso | Oficial',
-    author: 'Walter Riso',
-    duration: '13:23',
-    views: '12 K vistas',
-    timeAgo: 'hace 4 días',
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80',
+    id: 'media-marian-recupera',
+    title: 'Recupera tu mente, reconquista tu vida: Neurociencia y Gestión Emocional',
+    author: 'Dra. Marian Rojas Estapé',
+    authorRole: 'Médico Psiquiatra y Divulgadora en Salud Mental',
+    channel: 'Aprendemos Juntos 2030 (BBVA)',
+    duration: '21:30',
+    views: '6.2 M vistas',
+    timeAgo: 'Verificado',
+    image: 'https://img.youtube.com/vi/S_0l-EqwknU/hqdefault.jpg',
     type: 'video',
-    category: 'Autoestima',
-    description: 'El célebre psicólogo clínico Walter Riso expone los 4 pilares fundamentales del autoesquema: autoeficacia, autoconcepto, autoimagen y autorrefuerzo.'
-  },
-  {
-    id: 'media-3',
-    title: '¿Por qué nos acercamos siempre al mismo tipo de persona, aunque no nos beneficie?',
-    author: 'Marian Rojas Estapé',
-    duration: '2:42',
-    views: '86 K vistas',
-    timeAgo: 'hace 3 años',
-    image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800&auto=format&fit=crop&q=80',
-    type: 'video',
-    category: 'Relaciones Sanas',
-    description: 'La psiquiatra Marian Rojas Estapé analiza los patrones de apego y la necesidad inconsciente de reparar heridas de la infancia en las relaciones presentes.'
-  },
-  {
-    id: 'media-4',
-    title: 'Por qué cada vez hay más depresión y ansiedad | José Luis Marín, psiquiatra',
-    author: 'AprendemosJuntos ✓ y José Luis Marín',
-    duration: '1:20:51',
-    views: '335 K vistas',
-    timeAgo: 'hace 1 mes',
-    image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=800&auto=format&fit=crop&q=80',
-    type: 'podcast',
     category: 'Estrés',
-    description: 'El psiquiatra José Luis Marín aborda el impacto de la hiperconectividad, la soledad moderna y cómo cultivar recursos psicológicos de contención.'
+    youtubeId: 'S_0l-EqwknU',
+    youtubeUrl: 'https://www.youtube.com/watch?v=S_0l-EqwknU',
+    description: 'La psiquiatra Marian Rojas Estapé expone cómo el estrés crónico hiperactiva el cortisol, por qué vivimos en un estado de alerta continuo y cómo educar la atención y la calma para recuperar el equilibrio.',
+    keyTakeaways: [
+      'El 90% de las cosas que nos preocupan nunca llegan a suceder, pero el organismo las padece con la misma intensidad.',
+      'El impacto de la dopamina inmediata frente al bienestar profundo y duradero.',
+      'Estrategias prácticas de respiración y conexión afectiva para reducir la respuesta inflamatoria.'
+    ]
   },
   {
-    id: 'media-5',
-    title: 'Inteligencia Emocional y Gestión del Enfado en el Trabajo y la Vida Cotidiana',
-    author: 'Dra. Elsa Punset',
-    duration: '18:40',
-    views: '112 K vistas',
-    timeAgo: 'hace 2 meses',
-    image: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=800&auto=format&fit=crop&q=80',
+    id: 'media-marian-emociones-cuerpo',
+    title: 'Por qué tus emociones afectan directamente a tu cuerpo y salud',
+    author: 'Dra. Marian Rojas Estapé',
+    authorRole: 'Psiquiatra, Instituto Español de Investigaciones Psiquiátricas',
+    channel: 'Aprendemos Juntos 2030 (BBVA)',
+    duration: '19:45',
+    views: '4.9 M vistas',
+    timeAgo: 'Verificado',
+    image: 'https://img.youtube.com/vi/TjqrualxgkI/hqdefault.jpg',
     type: 'video',
     category: 'Inteligencia Emocional',
-    description: 'Herramientas de neurociencia afectiva para regular la reactividad y transformar emociones desafiantes en claridad comunicativa.'
+    youtubeId: 'TjqrualxgkI',
+    youtubeUrl: 'https://www.youtube.com/watch?v=TjqrualxgkI',
+    description: 'Análisis detallado de la conexión somato-emocional: cómo la mente somatiza la angustia no procesada, el papel de las personas vitamina y cómo sanar desde la auto-observación compasiva.',
+    keyTakeaways: [
+      'Cómo la amígdala cerebral y el nervio vago regulan la respuesta física ante el estrés.',
+      'Las "personas vitamina" elevan los niveles de oxitocina y reducen la sobreactivación del sistema simpático.',
+      'Aprender a descodificar las señales físicas del cuerpo antes de que se conviertan en crisis.'
+    ]
   },
   {
-    id: 'media-6',
-    title: 'El Duelo Consciente: Cómo acompañar y procesar despedidas difíciles',
-    author: 'Lic. Patricia Villalobos',
-    duration: '32:15',
-    views: '45 K vistas',
-    timeAgo: 'hace 5 meses',
-    image: 'https://images.unsplash.com/photo-1518495973542-4542c06a5843?w=800&auto=format&fit=crop&q=80',
+    id: 'media-marian-amamos',
+    title: '¿Amamos como nos amaron? Los patrones de apego y vínculos afectivos',
+    author: 'Dra. Marian Rojas Estapé',
+    authorRole: 'Médico Psiquiatra y Escritora',
+    channel: 'Aprendemos Juntos 2030 (BBVA)',
+    duration: '24:10',
+    views: '3.8 M vistas',
+    timeAgo: 'Verificado',
+    image: 'https://img.youtube.com/vi/EmcaRSKHAgI/hqdefault.jpg',
+    type: 'video',
+    category: 'Relaciones Sanas',
+    youtubeId: 'EmcaRSKHAgI',
+    youtubeUrl: 'https://www.youtube.com/watch?v=EmcaRSKHAgI',
+    description: 'Marian Rojas reflexiona sobre el origen de nuestras heridas de infancia, cómo el estilo de apego condiciona las relaciones de pareja y qué pasos dar para construir amores maduros y libres.',
+    keyTakeaways: [
+      'Identificar si tu forma de relacionarte nace desde el miedo al abandono o desde la seguridad.',
+      'Comprender la biografía emocional para dejar de repetir patrones autodestructivos.',
+      'Para amar sanamente a otra persona es indispensable primero aprender a habitarse y respetarse a uno mismo.'
+    ]
+  },
+  {
+    id: 'media-silvia-dependencia',
+    title: 'Esto no es amor, es dependencia emocional: Cómo soltar vínculos dañinos',
+    author: 'Silvia Congost',
+    authorRole: 'Psicóloga Especialista en Autoestima y Dependencia Emocional',
+    channel: 'Aprendemos Juntos 2030 (BBVA)',
+    duration: '16:32',
+    views: '21 M vistas',
+    timeAgo: 'Verificado',
+    image: 'https://img.youtube.com/vi/PYp582OObNM/hqdefault.jpg',
+    type: 'video',
+    category: 'Relaciones Sanas',
+    youtubeId: 'PYp582OObNM',
+    youtubeUrl: 'https://www.youtube.com/watch?v=PYp582OObNM',
+    description: 'Silvia Congost expone con claridad los signos inequívocos del apego dependiente, el autoengaño de querer cambiar a la pareja y la importancia del contacto cero para sanar.',
+    keyTakeaways: [
+      'Una relación sana suma tranquilidad y certeza; si genera angustia constante no es amor, es adicción emocional.',
+      'Aceptar que no podemos cambiar a quien no desea cambiar nos ahorra años de desgaste psicológico.',
+      'El contacto cero y el fortalecimiento de la autoestima como bases de la recuperación afectiva.'
+    ]
+  },
+  {
+    id: 'media-riso-amor',
+    title: '¿Por qué nos equivocamos tanto en el amor? Guía para amar sin sufrir',
+    author: 'Dr. Walter Riso',
+    authorRole: 'Doctor en Psicología, Terapeuta Cognitivo y Escritor',
+    channel: 'Aprendemos Juntos 2030 (BBVA)',
+    duration: '29:15',
+    views: '8.4 M vistas',
+    timeAgo: 'Verificado',
+    image: 'https://img.youtube.com/vi/u4duNKPm9cM/hqdefault.jpg',
+    type: 'video',
+    category: 'Relaciones Sanas',
+    youtubeId: 'u4duNKPm9cM',
+    youtubeUrl: 'https://www.youtube.com/watch?v=u4duNKPm9cM',
+    description: 'El célebre psicólogo clínico Walter Riso analiza cómo desarmar las trampas del apego afectivo destructivo, por qué el amor no debe implicar resignación ni dolor, y cómo construir relaciones fundamentadas en la dignidad.',
+    keyTakeaways: [
+      'El amor no es incondicional ni eterno por defecto; debe construirse sobre el respeto mutuo y la reciprocidad.',
+      'Diferencia clave entre desear a la pareja y depender neuróticamente de ella para validar la propia existencia.',
+      'Los 3 pilares del amor inteligente: eros (deseo), philia (amistad) y ágape (ternura y compasión).'
+    ]
+  },
+  {
+    id: 'media-margarita-mente',
+    title: 'Cambia tu mente, cambia tu vida: Cómo dominar tu diálogo interno',
+    author: 'Margarita Pasos',
+    authorRole: 'Especialista en Psicología del Comportamiento & Diálogo Interno',
+    channel: 'TEDx Talks (TEDxManagua)',
+    duration: '18:24',
+    views: '9.8 M vistas',
+    timeAgo: 'Verificado',
+    image: 'https://img.youtube.com/vi/uhZzB5hid6M/hqdefault.jpg',
+    type: 'video',
+    category: 'Autoestima',
+    youtubeId: 'uhZzB5hid6M',
+    youtubeUrl: 'https://www.youtube.com/watch?v=uhZzB5hid6M',
+    description: 'Una de las charlas TEDx en español más vistas del mundo sobre cómo la conversación interna condiciona nuestra química biológica, nuestras emociones y nuestra capacidad para superar momentos de crisis.',
+    keyTakeaways: [
+      'Tu cerebro obedece las órdenes y preguntas que le formulas repetidamente a diario.',
+      'Sustituir el "¿Por qué a mí?" por "¿Qué puedo aprender de esto y qué acción concreta tomo hoy?".',
+      'El impacto directo del lenguaje que utilizas sobre tus niveles de energía y resiliencia.'
+    ]
+  },
+  {
+    id: 'media-puig-potencial',
+    title: 'Despierta el potencial que llevas dentro: Neurobiología del cambio',
+    author: 'Dr. Mario Alonso Puig',
+    authorRole: 'Médico Especialista en Neurociencia Afectiva y Liderazgo',
+    channel: 'Aprendemos Juntos 2030 (BBVA)',
+    duration: '22:15',
+    views: '12 M vistas',
+    timeAgo: 'Verificado',
+    image: 'https://img.youtube.com/vi/2WaL95mNb6c/hqdefault.jpg',
+    type: 'video',
+    category: 'Autoestima',
+    youtubeId: '2WaL95mNb6c',
+    youtubeUrl: 'https://www.youtube.com/watch?v=2WaL95mNb6c',
+    description: 'El Dr. Mario Alonso Puig desglosa cómo la neuroplasticidad cerebral permite reinventarse ante la incertidumbre y cómo la actitud frente a los tropiezos modela el hipocampo.',
+    keyTakeaways: [
+      'El miedo al error paraliza; la curiosidad y la autocompasión abren nuevas conexiones sinápticas.',
+      'Cómo la postura corporal y la respiración profunda influyen en el estado de ánimo y la lucidez cognitiva.',
+      'El poder transformador de creer en la capacidad propia de evolución continua.'
+    ]
+  },
+  {
+    id: 'media-puig-silencio',
+    title: 'El poder del silencio: Calmar el ruido mental y la rumiación',
+    author: 'Dr. Mario Alonso Puig',
+    authorRole: 'Médico Cirujano, Conferenciante y Autor',
+    channel: 'Aprendemos Juntos 2030 (BBVA)',
+    duration: '27:50',
+    views: '5.1 M vistas',
+    timeAgo: 'Verificado',
+    image: 'https://img.youtube.com/vi/ZBKbJs5MBFE/hqdefault.jpg',
+    type: 'podcast',
+    category: 'Estrés',
+    youtubeId: 'ZBKbJs5MBFE',
+    youtubeUrl: 'https://www.youtube.com/watch?v=ZBKbJs5MBFE',
+    description: 'Exploración profunda sobre el impacto del mindfulness y el silencio consciente frente a la hiperestimulación digital y la sobrecarga cognitiva de la vida moderna.',
+    keyTakeaways: [
+      'El silencio no es vacío, es el espacio donde el sistema nervioso se regenera y autorregula.',
+      'Prácticas breves de atención plena para pausar el piloto automático del estrés.',
+      'La diferencia entre aislamiento evitativo y soledad restauradora.'
+    ]
+  },
+  {
+    id: 'media-punset-reconectar',
+    title: 'Cómo reconectar con lo que verdaderamente importa en la vida',
+    author: 'Dra. Elsa Punset',
+    authorRole: 'Divulgadora y Especialista en Inteligencia Emocional',
+    channel: 'Aprendemos Juntos 2030 (BBVA)',
+    duration: '18:40',
+    views: '4.3 M vistas',
+    timeAgo: 'Verificado',
+    image: 'https://img.youtube.com/vi/ZdbQZP0QaVo/hqdefault.jpg',
+    type: 'video',
+    category: 'Inteligencia Emocional',
+    youtubeId: 'ZdbQZP0QaVo',
+    youtubeUrl: 'https://www.youtube.com/watch?v=ZdbQZP0QaVo',
+    description: 'Estrategias de psicología positiva aplicada e inteligencia emocional para cultivar la gratitud, frenar la reactividad impulsiva y nutrir relaciones profundas.',
+    keyTakeaways: [
+      'Entrenar el sesgo de positividad cerebral mediante micro-prácticas de gratitud diaria.',
+      'Aprender a expresar límites claros sin agresividad ni culpa.',
+      'El impacto de los pequeños rituales cotidianos en la estabilidad emocional a largo plazo.'
+    ]
+  },
+  {
+    id: 'media-cyrulnik-trauma',
+    title: 'Por qué algunas personas superan el trauma y otras no: Claves de la resiliencia',
+    author: 'Dr. Boris Cyrulnik',
+    authorRole: 'Neurólogo, Psiquiatra y Padre del concepto de Resiliencia',
+    channel: 'Aprendemos Juntos 2030 (BBVA)',
+    duration: '31:20',
+    views: '2.8 M vistas',
+    timeAgo: 'Verificado',
+    image: 'https://img.youtube.com/vi/_IugzPwpsyY/hqdefault.jpg',
     type: 'podcast',
     category: 'Duelo y Pérdida',
-    description: 'Acompañamiento tanatológico compasivo para afrontar transiciones, vacíos emocionales y pérdidas significativas sin culpa.'
+    youtubeId: '_IugzPwpsyY',
+    youtubeUrl: 'https://www.youtube.com/watch?v=_IugzPwpsyY',
+    description: 'El legendario neuropsiquiatra Boris Cyrulnik expone cómo es posible transformar las heridas más dolorosas en fortalezas psicológicas a través del apego seguro y la resignificación narrativa.',
+    keyTakeaways: [
+      'El dolor es inevitable, pero el sufrimiento desolador se alivia mediante el vínculo y la palabra compartida.',
+      'Los "tutores de resiliencia": cómo una sola persona que crea en ti puede cambiar tu destino neurológico.',
+      'Aprender a tejer un nuevo sentido de vida a partir de las experiencias difíciles.'
+    ]
   }
 ];

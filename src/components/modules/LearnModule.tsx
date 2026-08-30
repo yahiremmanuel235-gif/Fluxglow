@@ -35,12 +35,16 @@ import {
   ThumbsDown,
   ArrowRight,
   TrendingUp,
-  Compass
+  Compass,
+  ExternalLink,
+  Tv,
+  BadgeCheck
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { FluxGlowLogo } from '../common/FluxGlowLogo';
 import { useToast } from '../common/Toast';
 import { GuideTutorialModal } from './GuideTutorialModal';
+import { YouTubePlayerModal } from './YouTubePlayerModal';
 import { PSYCHOLOGICAL_TESTS, MOCK_JOURNAL_ENTRIES } from '../../data/mockData';
 import { 
   DEMO_GUIDES_CATALOG, 
@@ -109,7 +113,6 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
 
   // Video player modal
   const [activeMedia, setActiveMedia] = useState<VideoPodcastItem | null>(null);
-  const [isPlaying, setIsPlaying] = useState(true);
 
   // Psychological test modal
   const [activeTest, setActiveTest] = useState<PsychologicalTest | null>(null);
@@ -1239,16 +1242,25 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
         {/* SECTION 4: Videos y podcasts de psicólogos verificados */}
         {filteredMedia.length > 0 && (
           <div className="mb-12">
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight flex items-center gap-2">
-                <span>Videos y podcasts de psicólogos verificados:</span>
-                <span className="text-xs font-medium text-stone-400 bg-stone-100 px-2.5 py-0.5 rounded-full">
-                  {filteredMedia.length}
-                </span>
-              </h2>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-5 gap-2">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-red-100 text-red-600 flex items-center justify-center shadow-2xs">
+                    <Tv className="w-4 h-4" />
+                  </div>
+                  <span>Videos y podcasts de psicólogos verificados:</span>
+                  <span className="text-xs font-bold text-red-700 bg-red-50 border border-red-200 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                    <span>YouTube</span>
+                    <span>• {filteredMedia.length}</span>
+                  </span>
+                </h2>
+                <p className="text-xs text-stone-500 mt-0.5">
+                  Conferencias magistrales, entrevistas y podcasts reales de psiquiatras y terapeutas reconocidos. Puedes reproducirlos directamente aquí o verlos en YouTube.
+                </p>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {filteredMedia.map((media) => (
                 <div 
                   key={media.id}
@@ -1257,7 +1269,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                     setActiveMedia(media);
                     recordLearningActivity();
                   }}
-                  className="group cursor-pointer flex flex-col bg-white rounded-3xl p-3.5 border border-stone-200 hover:border-stone-300 shadow-xs hover:shadow-md transition-all justify-between"
+                  className="group cursor-pointer flex flex-col bg-white rounded-3xl p-3.5 border border-stone-200 hover:border-red-200 hover:shadow-md transition-all justify-between"
                 >
                   <div>
                     <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-stone-900 mb-3">
@@ -1265,43 +1277,57 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                         src={media.image}
                         alt={media.title}
                         referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${media.youtubeId}/hqdefault.jpg`;
+                        }}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 opacity-90"
                       />
                       
-                      <div className="absolute top-2.5 left-2.5">
-                        <span className="bg-black/75 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">
-                          {media.type === 'video' ? '🎬 Video' : '🎙️ Podcast'}
+                      <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
+                        <span className="bg-red-600/95 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 shadow-xs">
+                          <Tv className="w-2.5 h-2.5" />
+                          <span>{media.type === 'video' ? 'Video' : 'Podcast'}</span>
                         </span>
                       </div>
 
-                      <div className="absolute bottom-2.5 right-2.5 bg-black/80 text-white font-mono text-[11px] px-2.5 py-0.5 rounded-md">
+                      <div className="absolute bottom-2.5 right-2.5 bg-black/80 text-white font-mono text-[11px] px-2 py-0.5 rounded-md backdrop-blur-xs">
                         {media.duration}
                       </div>
 
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-10 h-10 rounded-full bg-white/90 text-stone-900 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                          <Play className="w-4 h-4 ml-0.5 fill-stone-900" />
+                        <div className="w-11 h-11 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow-lg group-hover:scale-115 group-hover:bg-red-600 transition-all">
+                          <Play className="w-5 h-5 ml-0.5 fill-white" />
                         </div>
                       </div>
                     </div>
 
                     <div>
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-[#548c71] mb-1">
-                        {media.category}
+                      <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-red-600 mb-1">
+                        <span>{media.category}</span>
+                        <span className="text-stone-400 font-mono font-medium lowercase flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {media.duration}
+                        </span>
                       </div>
-                      <h4 className="text-xs sm:text-sm font-bold text-stone-900 line-clamp-2 group-hover:text-[#548c71] transition-colors leading-snug">
+                      <h4 className="text-xs sm:text-sm font-bold text-stone-900 line-clamp-2 group-hover:text-red-600 transition-colors leading-snug">
                         {media.title}
                       </h4>
-                      <p className="text-[11px] text-stone-500 mt-1">
-                        Por <strong>{media.author}</strong> • {media.views}
+                      <p className="text-[11px] text-stone-500 mt-1 flex items-center gap-1">
+                        <span className="truncate">Por <strong>{media.author}</strong></span>
+                        <BadgeCheck className="w-3.5 h-3.5 text-sky-500 shrink-0" />
                       </p>
+                      {media.channel && (
+                        <p className="text-[10px] text-stone-400 mt-0.5 truncate">
+                          {media.channel}
+                        </p>
+                      )}
                     </div>
                   </div>
 
                   <div className="mt-3 pt-2 border-t border-stone-100 flex items-center justify-between text-[11px]">
-                    <span className="text-stone-400">{media.timeAgo}</span>
-                    <span className="text-[#548c71] font-bold flex items-center gap-1">
-                      Reproducir →
+                    <span className="text-stone-400">{media.views}</span>
+                    <span className="text-red-600 font-bold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+                      Ver en YouTube →
                     </span>
                   </div>
                 </div>
@@ -1866,53 +1892,14 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
         </div>
       )}
 
-      {/* Media Player Modal */}
-      {activeMedia && (
-        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-stone-900 text-white rounded-3xl max-w-2xl w-full p-6 sm:p-7 shadow-2xl animate-in zoom-in-95 duration-200 border border-stone-800">
-            <div className="flex items-center justify-between pb-3 border-b border-stone-800">
-              <span className="text-xs font-bold uppercase tracking-wider text-amber-300">
-                {activeMedia.type === 'video' ? '🎬 Video Conferencia' : '🎙️ Podcast Psicológico'} • {activeMedia.category}
-              </span>
-              <button
-                onClick={() => setActiveMedia(null)}
-                className="text-stone-400 hover:text-white p-1 cursor-pointer"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            <div className="my-4 aspect-video rounded-2xl overflow-hidden relative bg-black flex items-center justify-center">
-              <img
-                src={activeMedia.image}
-                alt={activeMedia.title}
-                className="w-full h-full object-cover opacity-60"
-              />
-              <button
-                onClick={() => setIsPlaying(!isPlaying)}
-                className="absolute w-16 h-16 rounded-full bg-[#548c71] text-white flex items-center justify-center shadow-lg hover:scale-105 transition-transform cursor-pointer"
-              >
-                {isPlaying ? <Pause className="w-8 h-8" /> : <Play className="w-8 h-8 ml-1" />}
-              </button>
-
-              <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between text-xs text-stone-300 bg-black/50 backdrop-blur-xs px-3 py-1.5 rounded-xl">
-                <span>{isPlaying ? 'Reproduciendo audio HD' : 'Pausado'}</span>
-                <span className="font-mono">{activeMedia.duration}</span>
-              </div>
-            </div>
-
-            <h3 className="font-serif text-lg sm:text-xl font-bold mb-1">
-              {activeMedia.title}
-            </h3>
-            <p className="text-xs text-stone-400 mb-4">
-              Por <strong>{activeMedia.author}</strong> • {activeMedia.views}
-            </p>
-            <p className="text-xs sm:text-sm text-stone-300 bg-stone-800/80 p-3.5 rounded-xl leading-relaxed border border-stone-700/50">
-              {activeMedia.description}
-            </p>
-          </div>
-        </div>
-      )}
+      {/* YouTube Video / Podcast Player Modal */}
+      <YouTubePlayerModal
+        media={activeMedia}
+        isOpen={!!activeMedia}
+        onClose={() => setActiveMedia(null)}
+        onSelectMedia={(media) => setActiveMedia(media)}
+        allMedia={VERIFIED_MEDIA_CATALOG}
+      />
 
       {/* Psychological Test Modal */}
       {activeTest && (
@@ -2138,6 +2125,15 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
         practice={activePractice}
         isOpen={!!activePractice}
         onClose={() => setActivePractice(null)}
+      />
+
+      {/* YouTube Verified Player Modal */}
+      <YouTubePlayerModal
+        media={activeMedia}
+        isOpen={!!activeMedia}
+        onClose={() => setActiveMedia(null)}
+        onSelectMedia={(item) => setActiveMedia(item)}
+        allMedia={VERIFIED_MEDIA_CATALOG}
       />
 
       {/* Guide Tutorial Modal */}
