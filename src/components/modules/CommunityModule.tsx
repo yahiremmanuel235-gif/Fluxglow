@@ -22,6 +22,7 @@ import { FluxGlowLogo } from '../common/FluxGlowLogo';
 import { CommunityPost } from '../../types';
 import { MOCK_COMMUNITY_POSTS } from '../../data/mockData';
 import { useToast } from '../common/Toast';
+import { Button } from '../common/Button';
 
 export const CommunityModule: React.FC = () => {
   const { success, warning, info } = useToast();
@@ -130,17 +131,17 @@ export const CommunityModule: React.FC = () => {
   };
 
   return (
-    <div className="w-full bg-[#fbf9f5] min-h-screen pb-20 pt-4 px-4 sm:px-6 lg:px-8">
+    <div className="w-full bg-brand-sand-50 min-h-screen pb-20 pt-4 px-4 sm:px-6 lg:px-8">
       <div className="max-w-[1360px] mx-auto">
 
         {/* Top Header with Brand Logo */}
-        <div className="flex items-center justify-between py-2 border-b border-[#ece4d9] mb-4">
+        <div className="flex items-center justify-between py-2 border-b border-brand-sand-300 mb-4">
           <div className="flex items-center gap-2">
             <FluxGlowLogo imgSrc="/logo2.png" size="sm" showText={true} />
           </div>
 
-          <div className="text-xs font-semibold text-[#548c71] bg-[#e2eee6] border border-[#548c71]/30 px-3 py-1.5 rounded-full flex items-center gap-1.5">
-            <ShieldCheck className="w-3.5 h-3.5 text-[#548c71]" />
+          <div className="text-xs font-semibold text-brand-sage-800 bg-brand-sage-100 border border-brand-sage-300 px-3 py-1.5 rounded-full flex items-center gap-1.5">
+            <ShieldCheck className="w-3.5 h-3.5 text-brand-sage-600" />
             <span>Espacio 100% Moderado y Seguro</span>
           </div>
         </div>
@@ -148,24 +149,24 @@ export const CommunityModule: React.FC = () => {
         {/* Big Display Title: Comunidad FluxGlow */}
         <div className="text-center my-6">
           <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight">
-            <span className="text-[#548c71]">Comunidad </span>
-            <span className="text-[#de6943]">FluxGlow</span>
+            <span className="text-brand-sage-700">Comunidad </span>
+            <span className="text-brand-terracotta-600">FluxGlow</span>
           </h1>
-          <p className="text-stone-500 text-xs sm:text-sm mt-1">Conecta, comparte y avanza en compañía de personas como tú</p>
+          <p className="text-stone-600 text-xs sm:text-sm mt-1">Conecta, comparte y avanza en compañía de personas como tú</p>
         </div>
 
         {/* TOP ROW: 4 Modern Rounded Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
 
           {/* CARD 1: 💬 Foros moderados */}
-          <div className="bg-white rounded-3xl border border-stone-200 shadow-sm p-5 sm:p-6 flex flex-col justify-between">
+          <div className="bg-white rounded-3xl border border-brand-sand-300 shadow-2xs p-5 sm:p-6 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-sm font-bold text-stone-900 font-serif flex items-center gap-2">
                   <span className="text-base">💬</span>
                   Foros moderados
                 </h2>
-                <span className="text-[10px] font-semibold text-stone-400">4 activos</span>
+                <span className="text-[10px] font-semibold text-stone-500">4 activos</span>
               </div>
 
               <div className="space-y-2">
@@ -180,21 +181,21 @@ export const CommunityModule: React.FC = () => {
                       }}
                       className={`flex items-center justify-between p-2.5 rounded-2xl border transition-all cursor-pointer ${
                         isSelected 
-                          ? 'bg-[#e2eee6] border-[#548c71]/50 shadow-2xs' 
-                          : 'bg-[#faf8f4] border-stone-200/70 hover:bg-stone-100/70'
+                          ? 'bg-brand-sage-100 border-brand-sage-400 shadow-2xs' 
+                          : 'bg-brand-sand-50 border-brand-sand-200 hover:bg-brand-sand-100'
                       }`}
                     >
                       <div className="flex items-center gap-2 min-w-0">
                         <span className="text-sm shrink-0">{f.icon}</span>
                         <div className="truncate">
-                          <p className={`text-xs font-semibold truncate ${isSelected ? 'text-[#253d33]' : 'text-stone-800'}`}>
+                          <p className={`text-xs font-semibold truncate ${isSelected ? 'text-brand-sage-900 font-bold' : 'text-stone-800'}`}>
                             {f.name}
                           </p>
                           <span className="text-[10px] text-stone-500">{f.count}</span>
                         </div>
                       </div>
                       <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
-                        isSelected ? 'bg-[#548c71] text-white' : 'text-stone-400'
+                        isSelected ? 'bg-brand-sage-600 text-white' : 'text-stone-500 bg-white border border-brand-sand-300'
                       }`}>
                         {isSelected ? 'Activo' : 'Ver'}
                       </span>
@@ -206,14 +207,14 @@ export const CommunityModule: React.FC = () => {
           </div>
 
           {/* CARD 2: 👥 Grupos de apoyo */}
-          <div className="bg-white rounded-3xl border border-stone-200 shadow-sm p-5 sm:p-6 flex flex-col justify-between">
+          <div className="bg-white rounded-3xl border border-brand-sand-300 shadow-2xs p-5 sm:p-6 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-sm font-bold text-stone-900 font-serif flex items-center gap-2">
                   <span className="text-base">👥</span>
                   Grupos de apoyo
                 </h2>
-                <span className="text-[10px] font-semibold text-stone-400">Compañía</span>
+                <span className="text-[10px] font-semibold text-stone-500">Compañía</span>
               </div>
 
               <div className="space-y-2.5">
@@ -222,10 +223,10 @@ export const CommunityModule: React.FC = () => {
                   return (
                     <div 
                       key={g.id}
-                      className="flex items-center justify-between p-2.5 rounded-2xl bg-[#faf8f4] border border-stone-200/70 hover:border-stone-300 transition-all"
+                      className="flex items-center justify-between p-2.5 rounded-2xl bg-brand-sand-50 border border-brand-sand-200 hover:border-brand-sand-300 transition-all"
                     >
                       <div className="flex items-center gap-2 min-w-0">
-                        <div className="w-7 h-7 rounded-full bg-amber-100 flex items-center justify-center text-xs shrink-0">
+                        <div className="w-7 h-7 rounded-full bg-brand-sand-200 flex items-center justify-center text-xs shrink-0">
                           {g.icon}
                         </div>
                         <div className="truncate">
@@ -238,13 +239,13 @@ export const CommunityModule: React.FC = () => {
                         onClick={() => handleToggleGroup(g.name)}
                         className={`text-[11px] font-bold px-2.5 py-1 rounded-full transition-all shrink-0 cursor-pointer flex items-center gap-1 ${
                           isJoined
-                            ? 'bg-[#e2eee6] text-[#253d33] border border-[#548c71]/40'
+                            ? 'bg-brand-sage-100 text-brand-sage-900 border border-brand-sage-400'
                             : 'bg-stone-900 hover:bg-stone-800 text-white shadow-2xs'
                         }`}
                       >
                         {isJoined ? (
                           <>
-                            <Check className="w-3 h-3 text-[#548c71]" />
+                            <Check className="w-3 h-3 text-brand-sage-700" />
                             <span>Unido</span>
                           </>
                         ) : (
@@ -259,14 +260,14 @@ export const CommunityModule: React.FC = () => {
           </div>
 
           {/* CARD 3: 🏆 Retos emocionales */}
-          <div className="bg-white rounded-3xl border border-stone-200 shadow-sm p-5 sm:p-6 flex flex-col justify-between">
+          <div className="bg-white rounded-3xl border border-brand-sand-300 shadow-2xs p-5 sm:p-6 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-sm font-bold text-stone-900 font-serif flex items-center gap-2">
                   <span className="text-base">🏆</span>
                   Retos emocionales
                 </h2>
-                <span className="text-[10px] font-semibold text-stone-400">Hábitos</span>
+                <span className="text-[10px] font-semibold text-stone-500">Hábitos</span>
               </div>
 
               <div className="space-y-2.5">
@@ -275,10 +276,10 @@ export const CommunityModule: React.FC = () => {
                   return (
                     <div 
                       key={c.id}
-                      className="flex items-center justify-between p-2.5 rounded-2xl bg-[#faf8f4] border border-stone-200/70 hover:border-stone-300 transition-all"
+                      className="flex items-center justify-between p-2.5 rounded-2xl bg-brand-sand-50 border border-brand-sand-200 hover:border-brand-sand-300 transition-all"
                     >
                       <div className="flex items-center gap-2 min-w-0">
-                        <div className="w-7 h-7 rounded-full bg-[#e2eee6] flex items-center justify-center text-xs shrink-0">
+                        <div className="w-7 h-7 rounded-full bg-brand-sage-100 flex items-center justify-center text-xs shrink-0">
                           {c.icon}
                         </div>
                         <div className="truncate">
@@ -291,13 +292,13 @@ export const CommunityModule: React.FC = () => {
                         onClick={() => handleToggleChallenge(c.name)}
                         className={`text-[11px] font-bold px-2.5 py-1 rounded-full transition-all shrink-0 cursor-pointer flex items-center gap-1 ${
                           isEnrolled
-                            ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                            : 'bg-[#548c71] hover:bg-[#43705a] text-white shadow-2xs'
+                            ? 'bg-brand-sand-200 text-stone-900 border border-brand-sand-400 font-bold'
+                            : 'bg-brand-sage-500 hover:bg-brand-sage-600 text-white shadow-2xs'
                         }`}
                       >
                         {isEnrolled ? (
                           <>
-                            <Check className="w-3 h-3 text-amber-700" />
+                            <Check className="w-3 h-3 text-stone-800" />
                             <span>Inscrito</span>
                           </>
                         ) : (
@@ -312,19 +313,19 @@ export const CommunityModule: React.FC = () => {
           </div>
 
           {/* CARD 4: 🏅 Reconocimientos */}
-          <div className="bg-white rounded-3xl border border-stone-200 shadow-sm p-5 sm:p-6 flex flex-col justify-between">
+          <div className="bg-white rounded-3xl border border-brand-sand-300 shadow-2xs p-5 sm:p-6 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-sm font-bold text-stone-900 font-serif flex items-center gap-2">
                   <span className="text-base">🏅</span>
                   Reconocimientos
                 </h2>
-                <span className="text-[10px] font-semibold text-stone-400">Insignias</span>
+                <span className="text-[10px] font-semibold text-stone-500">Insignias</span>
               </div>
 
               <div className="space-y-2">
                 {recognitions.map((r, idx) => (
-                  <div key={idx} className="p-2.5 rounded-2xl bg-[#faf8f4] border border-stone-200/70">
+                  <div key={idx} className="p-2.5 rounded-2xl bg-brand-sand-50 border border-brand-sand-200">
                     <div className="flex items-center gap-2 mb-0.5">
                       <span className="text-sm">{r.icon}</span>
                       <p className="text-xs font-bold text-stone-900">{r.badge}</p>
@@ -339,14 +340,14 @@ export const CommunityModule: React.FC = () => {
         </div>
 
         {/* BOTTOM CARD: Compartir experiencias */}
-        <div className="bg-white rounded-3xl border border-stone-200 shadow-sm p-6 sm:p-8 mb-10">
+        <div className="bg-white rounded-3xl border border-brand-sand-300 shadow-2xs p-6 sm:p-8 mb-10">
           
           <h2 className="text-2xl font-bold text-stone-900 mb-1 font-serif">
             Compartir experiencias
           </h2>
           <p className="text-sm font-semibold text-stone-700 mb-4 flex items-center gap-2">
             <span>Foro actual:</span>
-            <span className="bg-[#e2eee6] text-[#253d33] px-2.5 py-0.5 rounded-full text-xs font-bold">
+            <span className="bg-brand-sage-100 text-brand-sage-900 border border-brand-sage-300 px-2.5 py-0.5 rounded-full text-xs font-bold">
               {selectedForum}
             </span>
           </p>
@@ -355,7 +356,7 @@ export const CommunityModule: React.FC = () => {
             
             {/* Left Input & Button Area (7 Cols) */}
             <div className="lg:col-span-7 space-y-4">
-              <div className="border border-dashed border-stone-300 rounded-2xl p-4 bg-[#faf8f4]">
+              <div className="border border-dashed border-brand-sand-300 rounded-2xl p-4 bg-brand-sand-50">
                 <textarea
                   id="community-experience-textarea"
                   rows={4}
@@ -368,14 +369,15 @@ export const CommunityModule: React.FC = () => {
 
               <div className="flex items-center justify-between">
                 <span className="text-xs text-stone-500">Tu publicación será visible para todos los miembros</span>
-                <button
+                <Button
                   id="publish-experience-btn"
                   onClick={() => handlePublish()}
-                  className="bg-[#548c71] hover:bg-[#43705a] text-white px-8 py-2.5 rounded-full text-sm font-bold shadow-xs hover:shadow-md transition-all cursor-pointer active:scale-95 flex items-center gap-2"
+                  variant="primary"
+                  size="md"
+                  leftIcon={<Send className="w-3.5 h-3.5" />}
                 >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>Publicar</span>
-                </button>
+                  Publicar
+                </Button>
               </div>
             </div>
 
@@ -385,7 +387,7 @@ export const CommunityModule: React.FC = () => {
                 <img
                   src="/logo2.png"
                   alt="Comunidad unida FluxGlow"
-                  className="w-full h-full object-contain p-4 rounded-3xl bg-[#faf8f4] border border-stone-200 shadow-xs"
+                  className="w-full h-full object-contain p-4 rounded-3xl bg-brand-sand-50 border border-brand-sand-300 shadow-2xs"
                 />
               </div>
               <span className="text-xs font-semibold text-stone-500 mt-2 text-center">
@@ -396,17 +398,17 @@ export const CommunityModule: React.FC = () => {
           </div>
 
           {/* Feed of Shared Community Posts */}
-          <div className="mt-8 pt-6 border-t border-stone-200">
-            <h3 className="text-sm font-bold text-stone-500 uppercase tracking-wider mb-4">
+          <div className="mt-8 pt-6 border-t border-brand-sand-300">
+            <h3 className="text-sm font-bold text-stone-600 uppercase tracking-wider mb-4">
               Publicaciones Recientes de la Comunidad:
             </h3>
 
             <div className="space-y-4">
               {posts.slice(0, 3).map((post) => (
-                <div key={post.id} className="bg-[#faf8f4] rounded-2xl p-4 border border-stone-200/80">
+                <div key={post.id} className="bg-brand-sand-50 rounded-2xl p-4 border border-brand-sand-200">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2.5">
-                      <img src={post.authorAvatar || '/user.png'} alt={post.author} className="w-8 h-8 rounded-full object-cover border border-stone-200" />
+                      <img src={post.authorAvatar || '/user.png'} alt={post.author} className="w-8 h-8 rounded-full object-cover border border-brand-sand-300" />
                       <div>
                         <p className="text-xs font-bold text-stone-900">{post.author}</p>
                         <span className="text-[10px] text-stone-500">{post.timeAgo} • Foro: {post.category}</span>
@@ -428,7 +430,7 @@ export const CommunityModule: React.FC = () => {
                     </button>
                     <button 
                       onClick={() => handleHug(post.id)}
-                      className="flex items-center gap-1 hover:text-amber-600 transition-colors cursor-pointer"
+                      className="flex items-center gap-1 hover:text-brand-terracotta-600 transition-colors cursor-pointer"
                     >
                       <span>🤗 {post.hugs} Abrazos</span>
                     </button>
@@ -444,4 +446,3 @@ export const CommunityModule: React.FC = () => {
     </div>
   );
 };
-

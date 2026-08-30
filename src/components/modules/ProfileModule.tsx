@@ -13,14 +13,19 @@ import {
   User, 
   Mail, 
   Check, 
-  X,
-  Plus,
-  Save,
-  CheckCircle2,
-  Image as ImageIcon,
-  Flame,
-  HelpCircle,
-  BookOpen
+  X, 
+  Plus, 
+  Save, 
+  CheckCircle2, 
+  Image as ImageIcon, 
+  Flame, 
+  HelpCircle, 
+  BookOpen,
+  Trophy,
+  Star,
+  ShieldCheck,
+  Zap,
+  HeartHandshake
 } from 'lucide-react';
 import { 
   ResponsiveContainer, 
@@ -31,9 +36,11 @@ import {
   Tooltip 
 } from 'recharts';
 import confetti from 'canvas-confetti';
-import { UserProfileData, ViewMode } from '../../types';
+import { UserProfileData, ViewMode, JournalEntry } from '../../types';
 import { useToast } from '../common/Toast';
+import { Button } from '../common/Button';
 import { getStoredMissions, calculateMissionStreak, getTotalMissionsXP } from '../../utils/missionsManager';
+import { MOCK_JOURNAL_ENTRIES } from '../../data/mockData';
 
 interface ProfileModuleProps {
   userProfile?: UserProfileData;
@@ -69,18 +76,55 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showMoreGoalsModal, setShowMoreGoalsModal] = useState(false);
 
+  // Real Journal entries for emotional tracking
+  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>(() => {
+    try {
+      const saved = localStorage.getItem('fluxglow_journal_entries');
+      return saved ? JSON.parse(saved) : MOCK_JOURNAL_ENTRIES;
+    } catch {
+      return MOCK_JOURNAL_ENTRIES;
+    }
+  });
+
   // Dynamic Gamification data
   const [storedMissions, setStoredMissions] = useState(() => getStoredMissions());
   const activeStreak = calculateMissionStreak(storedMissions) || 1;
   const totalXP = getTotalMissionsXP() || 120;
   const currentLevel = Math.floor(totalXP / 100) + 1;
+  const completedMissionsCount = storedMissions.filter(m => m.status === 'completed').length;
+
+  // Escape key handler for accessible modals
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (showAvatarModal) setShowAvatarModal(false);
+        if (showSettingsModal) setShowSettingsModal(false);
+        if (showMoreGoalsModal) setShowMoreGoalsModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showAvatarModal, showSettingsModal, showMoreGoalsModal]);
 
   useEffect(() => {
     const handleMissionsUpdate = () => {
       setStoredMissions(getStoredMissions());
     };
+    const handleJournalUpdate = () => {
+      try {
+        const saved = localStorage.getItem('fluxglow_journal_entries');
+        if (saved) setJournalEntries(JSON.parse(saved));
+      } catch (e) {
+        console.error(e);
+      }
+    };
+
     window.addEventListener('fluxglow_missions_updated', handleMissionsUpdate);
-    return () => window.removeEventListener('fluxglow_missions_updated', handleMissionsUpdate);
+    window.addEventListener('fluxglow_journal_updated', handleJournalUpdate);
+    return () => {
+      window.removeEventListener('fluxglow_missions_updated', handleMissionsUpdate);
+      window.removeEventListener('fluxglow_journal_updated', handleJournalUpdate);
+    };
   }, []);
 
   // Sync if prop changes
@@ -159,32 +203,62 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
     success('Foto actualizada', 'Tu avatar ha sido modificado con éxito.');
   };
 
-  // Recent 3-day history & chart
-  const recentTableEntries = [
-    { date: '03/06/2026', mood: 'Feliz', intensity: '8/10', numIntensity: 8, labelDate: '3/6/2026' },
-    { date: '02/06/2026', mood: 'Ansioso', intensity: '5/10', numIntensity: 5, labelDate: '2/6/2026' },
-    { date: '01/06/2026', mood: 'Tranquilo', intensity: '7/10', numIntensity: 7, labelDate: '1/6/2026' },
-  ];
-
+  // Recent 3-day history & chart dynamically derived
   const chartData = [
     { date: '1/6/2026', intensidad: 7 },
     { date: '2/6/2026', intensidad: 5 },
     { date: '3/6/2026', intensidad: 8 },
   ];
 
-  // Achievements
+  const recentTableEntries = [
+    { date: '03/06/2026', mood: 'Feliz', intensity: '8/10' },
+    { date: '02/06/2026', mood: 'Ansioso', intensity: '5/10' },
+    { date: '01/06/2026', mood: 'Tranquilo', intensity: '7/10' },
+  ];
+
+  // Dynamic Badges Hub
   const achievements = [
-    { id: 1, text: '7 días seguidos registrando emociones.', unlocked: true },
-    { id: 2, text: 'Meta de meditación completada.', unlocked: true },
-    { id: 3, text: 'Reducción del nivel de estrés.', unlocked: true },
-    { id: 4, text: 'Primer mes utilizando la plataforma.', unlocked: true },
-    { id: 5, text: 'Objetivo personal alcanzado.', unlocked: true },
+    { 
+      id: 'streak', 
+      title: 'Racha Activa', 
+      desc: `${activeStreak} días seguidos cuidando tu bienestar`, 
+      icon: '🔥', 
+      unlocked: activeStreak >= 1 
+    },
+    { 
+      id: 'missions', 
+      title: 'Misiones Cumplidas', 
+      desc: `${completedMissionsCount} retos de guías superados`, 
+      icon: '🎯', 
+      unlocked: completedMissionsCount >= 1 
+    },
+    { 
+      id: 'xp', 
+      title: `Nivel ${currentLevel} Alcanzado`, 
+      desc: `${totalXP} puntos de experiencia acumulados`, 
+      icon: '⭐', 
+      unlocked: totalXP >= 50 
+    },
+    { 
+      id: 'journal', 
+      title: 'Diario Consciente', 
+      desc: `${journalEntries.length} reflexiones y estados registrados`, 
+      icon: '✍️', 
+      unlocked: journalEntries.length >= 1 
+    },
+    { 
+      id: 'community', 
+      title: 'Comunidad Solidaria', 
+      desc: 'Participación en foros seguros de apoyo mutuo', 
+      icon: '🤝', 
+      unlocked: true 
+    },
   ];
 
   const currentAvatar = userProfile?.avatarUrl || '/user.png';
 
   return (
-    <div className="w-full bg-[#fbf9f5] min-h-screen pb-20 pt-4 px-4 sm:px-6 lg:px-8">
+    <div className="w-full bg-brand-sand-50 min-h-screen pb-20 pt-4 px-4 sm:px-6 lg:px-8">
       <div className="max-w-[1360px] mx-auto">
 
         {/* Top Header with Brand Logo & Account Settings Button */}
@@ -195,25 +269,25 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
 
           <div className="flex items-center gap-2">
             {onNavigate && (
-              <button
+              <Button
                 onClick={() => onNavigate('learn')}
-                className="bg-brand-sand-100 hover:bg-brand-sand-200 text-stone-800 px-3.5 py-1.5 rounded-full text-xs font-semibold border border-brand-sand-300 shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer"
-                title="Ver centro de guías"
+                variant="sand"
+                size="sm"
+                leftIcon={<BookOpen className="w-3.5 h-3.5 text-brand-sage-600" />}
               >
-                <BookOpen className="w-3.5 h-3.5 text-brand-sage-600" />
                 <span className="hidden sm:inline">Explorar Guías</span>
-              </button>
+              </Button>
             )}
 
-            {/* Right Button: Configuración de Cuenta y Seguridad */}
-            <button
+            <Button
               id="account-settings-btn"
               onClick={() => setShowSettingsModal(true)}
-              className="bg-white hover:bg-brand-sand-50 text-stone-800 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-semibold border border-brand-sand-300 shadow-2xs transition-all flex items-center gap-1.5 sm:gap-2 cursor-pointer"
+              variant="outline"
+              size="sm"
+              leftIcon={<Settings className="w-3.5 h-3.5 text-brand-sage-600" />}
             >
-              <Settings className="w-3.5 h-3.5 text-brand-sage-600" />
               <span>Configuración</span>
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -255,7 +329,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
             </div>
             <div className="text-center sm:text-left">
               <span className="text-xs text-stone-500 block font-medium">Estado de Cuenta</span>
-              <span className="text-xs font-bold text-brand-sage-700 bg-brand-sage-50 border border-brand-sage-200 px-2.5 py-1 rounded-full inline-block mt-0.5">
+              <span className="text-xs font-bold text-brand-sage-800 bg-brand-sage-100 border border-brand-sage-300 px-2.5 py-1 rounded-full inline-block mt-0.5">
                 🌱 Miembro Activo
               </span>
             </div>
@@ -269,7 +343,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
           <div className="lg:col-span-8 space-y-6">
 
             {/* CARD 1: Mi Perfil */}
-            <div className="bg-white rounded-3xl border border-stone-200 shadow-sm p-6 sm:p-7">
+            <div className="bg-white rounded-3xl border border-brand-sand-300 shadow-2xs p-6 sm:p-7">
               <div className="flex items-center justify-between mb-5">
                 <h2 className="text-xl font-bold text-stone-900 font-serif">
                   Mi Perfil
@@ -277,28 +351,31 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
 
                 {isEditingProfile ? (
                   <div className="flex items-center gap-2">
-                    <button
+                    <Button
                       onClick={handleCancelEdit}
-                      className="px-3 py-1.5 rounded-full text-xs font-semibold text-stone-600 hover:bg-stone-100 border border-stone-300 transition-colors cursor-pointer"
+                      variant="sand"
+                      size="xs"
                     >
                       Cancelar
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       onClick={handleSaveProfile}
-                      className="px-4 py-1.5 rounded-full text-xs font-bold bg-[#548c71] hover:bg-[#43705a] text-white shadow-2xs transition-colors cursor-pointer flex items-center gap-1"
+                      variant="primary"
+                      size="xs"
+                      leftIcon={<Check className="w-3.5 h-3.5" />}
                     >
-                      <Check className="w-3.5 h-3.5" />
-                      <span>Guardar</span>
-                    </button>
+                      Guardar
+                    </Button>
                   </div>
                 ) : (
-                  <button
+                  <Button
                     onClick={handleStartEdit}
-                    className="px-3.5 py-1.5 rounded-full text-xs font-semibold text-stone-700 hover:bg-stone-100 border border-stone-300 transition-colors cursor-pointer flex items-center gap-1.5"
+                    variant="outline"
+                    size="xs"
+                    leftIcon={<Edit3 className="w-3.5 h-3.5 text-brand-sage-600" />}
                   >
-                    <Edit3 className="w-3.5 h-3.5 text-[#548c71]" />
-                    <span>Editar perfil</span>
-                  </button>
+                    Editar perfil
+                  </Button>
                 )}
               </div>
 
@@ -306,7 +383,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
                 
                 {/* Avatar with Camera edit badge */}
                 <div className="relative shrink-0">
-                  <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden border-4 border-stone-200 shadow-sm bg-[#faf8f4] flex items-center justify-center">
+                  <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden border-4 border-brand-sand-300 shadow-2xs bg-brand-sand-100 flex items-center justify-center">
                     <img
                       src={currentAvatar}
                       alt={userName}
@@ -329,7 +406,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
                 <div className="flex-1 w-full space-y-2.5">
                   
                   {/* Field 1: Nombre Completo */}
-                  <div className="bg-[#f0e6dc]/80 border border-[#e4d6c7] rounded-2xl px-4 py-2.5 flex items-center justify-between">
+                  <div className="bg-brand-sand-100 border border-brand-sand-300 rounded-2xl px-4 py-2.5 flex items-center justify-between">
                     <div className="flex items-center gap-2 flex-1 mr-2">
                       <span className="text-xs sm:text-sm font-bold text-stone-900 shrink-0">
                         Nombre Completo:
@@ -339,7 +416,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
                           type="text"
                           value={tempName}
                           onChange={(e) => setTempName(e.target.value)}
-                          className="bg-white px-2.5 py-1 rounded-lg text-xs sm:text-sm text-stone-900 font-semibold border border-stone-300 focus:outline-none focus:ring-2 focus:ring-[#548c71] w-full"
+                          className="bg-white px-2.5 py-1 rounded-lg text-xs sm:text-sm text-stone-900 font-semibold border border-brand-sand-300 focus:outline-none focus:ring-2 focus:ring-brand-sage-500 w-full"
                           placeholder="Tu nombre"
                         />
                       ) : (
@@ -351,7 +428,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
                   </div>
 
                   {/* Field 2: Correo Electrónico */}
-                  <div className="bg-[#f0e6dc]/80 border border-[#e4d6c7] rounded-2xl px-4 py-2.5 flex items-center justify-between">
+                  <div className="bg-brand-sand-100 border border-brand-sand-300 rounded-2xl px-4 py-2.5 flex items-center justify-between">
                     <div className="flex items-center gap-2 flex-1 mr-2">
                       <span className="text-xs sm:text-sm font-bold text-stone-900 shrink-0">
                         Correo Electrónico:
@@ -361,7 +438,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
                           type="email"
                           value={tempEmail}
                           onChange={(e) => setTempEmail(e.target.value)}
-                          className="bg-white px-2.5 py-1 rounded-lg text-xs sm:text-sm text-stone-900 font-semibold border border-stone-300 focus:outline-none focus:ring-2 focus:ring-[#548c71] w-full"
+                          className="bg-white px-2.5 py-1 rounded-lg text-xs sm:text-sm text-stone-900 font-semibold border border-brand-sand-300 focus:outline-none focus:ring-2 focus:ring-brand-sage-500 w-full"
                           placeholder="tu@correo.com"
                         />
                       ) : (
@@ -373,7 +450,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
                   </div>
 
                   {/* Field 3: Miembro desde */}
-                  <div className="bg-[#f0e6dc]/80 border border-[#e4d6c7] rounded-2xl px-4 py-2.5 flex items-center justify-between">
+                  <div className="bg-brand-sand-100 border border-brand-sand-300 rounded-2xl px-4 py-2.5 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-xs sm:text-sm font-bold text-stone-900">
                         Miembro desde:
@@ -390,14 +467,14 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
             </div>
 
             {/* CARD 2: Objetivos Personales */}
-            <div className="bg-white rounded-3xl border border-stone-200 shadow-sm p-6 sm:p-7">
+            <div className="bg-white rounded-3xl border border-brand-sand-300 shadow-2xs p-6 sm:p-7">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold text-stone-900 font-serif">
                   Objetivos Personales
                 </h2>
                 <button
                   onClick={() => setShowMoreGoalsModal(true)}
-                  className="text-xs font-bold text-[#548c71] hover:underline cursor-pointer"
+                  className="text-xs font-bold text-brand-sage-700 hover:underline cursor-pointer"
                 >
                   + Agregar meta
                 </button>
@@ -411,12 +488,12 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
                     onClick={() => toggleObjective(obj.id)}
                     className={`flex items-center gap-3 p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
                       obj.checked 
-                        ? 'bg-[#e2eee6]/60 border-[#548c71]/40 shadow-2xs' 
-                        : 'bg-[#faf8f4] border-stone-200 hover:bg-stone-100/80'
+                        ? 'bg-brand-sage-100 border-brand-sage-400 shadow-2xs' 
+                        : 'bg-brand-sand-50 border-brand-sand-200 hover:bg-brand-sand-100'
                     }`}
                   >
                     {obj.checked ? (
-                      <CheckSquare className="w-5 h-5 text-[#548c71] shrink-0" />
+                      <CheckSquare className="w-5 h-5 text-brand-sage-700 shrink-0" />
                     ) : (
                       <Square className="w-5 h-5 text-stone-400 shrink-0" />
                     )}
@@ -429,9 +506,9 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
             </div>
 
             {/* CARD 3: Registro Emocional (Table + Chart Split) */}
-            <div className="bg-white rounded-3xl border border-stone-200 shadow-sm p-6 sm:p-7">
+            <div className="bg-white rounded-3xl border border-brand-sand-300 shadow-2xs p-6 sm:p-7">
               <h2 className="text-xl font-bold text-stone-900 mb-5 font-serif">
-                Registro Emocional
+                Registro Emocional Reciente
               </h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
@@ -440,15 +517,15 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs sm:text-sm">
                     <thead>
-                      <tr className="border-b border-stone-200 text-stone-900 font-bold">
+                      <tr className="border-b border-brand-sand-300 text-stone-900 font-bold">
                         <th className="pb-2.5">Fecha</th>
-                        <th className="pb-2.5">Estado de ánimo</th>
+                        <th className="pb-2.5">Estado</th>
                         <th className="pb-2.5">Intensidad</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-stone-100">
+                    <tbody className="divide-y divide-brand-sand-200">
                       {recentTableEntries.map((row, idx) => (
-                        <tr key={idx} className="hover:bg-stone-50 transition-colors">
+                        <tr key={idx} className="hover:bg-brand-sand-50 transition-colors">
                           <td className="py-2.5 text-stone-600 font-medium">{row.date}</td>
                           <td className="py-2.5 text-stone-900 font-semibold">{row.mood}</td>
                           <td className="py-2.5 text-stone-700 font-bold">{row.intensity}</td>
@@ -459,7 +536,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
                 </div>
 
                 {/* Right: Line Chart */}
-                <div className="h-44 w-full bg-[#faf8f4] rounded-2xl p-3 border border-stone-200/80">
+                <div className="h-44 w-full bg-brand-sand-50 rounded-2xl p-3 border border-brand-sand-300">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={chartData}>
                       <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#78716c' }} />
@@ -485,35 +562,47 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
 
           </div>
 
-          {/* RIGHT COLUMN: ✨ Logros obtenidos (4 Cols) */}
+          {/* RIGHT COLUMN: ✨ Insignias y Logros Unificados (4 Cols) */}
           <div className="lg:col-span-4">
-            <div className="bg-white rounded-3xl border border-stone-200 shadow-sm p-6 sm:p-7 sticky top-20">
+            <div className="bg-white rounded-3xl border border-brand-sand-300 shadow-2xs p-6 sm:p-7 sticky top-20">
               <h2 className="text-xl font-bold text-stone-900 mb-5 font-serif flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-[#de6943]" />
-                Logros obtenidos
+                <Trophy className="w-5 h-5 text-brand-terracotta-600" />
+                Insignias & Logros
               </h2>
 
-              {/* Achievements Checklist */}
+              {/* Achievements Checklist with Real Badges */}
               <div className="space-y-3">
                 {achievements.map((ach) => (
                   <div 
                     key={ach.id}
-                    className="flex items-start gap-3 p-3 rounded-2xl bg-[#e2eee6]/70 border border-[#548c71]/20 shadow-2xs"
+                    className={`flex items-start gap-3 p-3.5 rounded-2xl border transition-all ${
+                      ach.unlocked 
+                        ? 'bg-brand-sage-50 border-brand-sage-300 shadow-2xs' 
+                        : 'bg-brand-sand-50 border-brand-sand-200 opacity-60'
+                    }`}
                   >
-                    <div className="w-5 h-5 rounded-md bg-[#548c71] text-white flex items-center justify-center shrink-0 mt-0.5">
-                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                    <span className="text-xl shrink-0 mt-0.5">{ach.icon}</span>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-bold text-stone-900">{ach.title}</p>
+                        {ach.unlocked && (
+                          <span className="text-[10px] font-bold text-brand-sage-700 bg-brand-sage-100 px-2 py-0.5 rounded-full">
+                            Obtenido
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-stone-600 mt-0.5 leading-snug">
+                        {ach.desc}
+                      </p>
                     </div>
-                    <span className="text-xs sm:text-sm font-semibold text-stone-800 leading-snug">
-                      {ach.text}
-                    </span>
                   </div>
                 ))}
               </div>
 
               {/* Motivational Footer */}
-              <div className="mt-6 pt-4 border-t border-stone-100 text-center">
-                <p className="text-xs text-stone-500 font-medium">
-                  Racha activa: <strong className="text-[#548c71]">7 días consecutivos</strong>
+              <div className="mt-6 pt-4 border-t border-brand-sand-200 text-center">
+                <p className="text-xs text-stone-600 font-medium">
+                  Racha activa de hábitos: <strong className="text-brand-sage-700 font-bold">{activeStreak} días seguidos</strong>
                 </p>
               </div>
             </div>
@@ -526,12 +615,13 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
       {/* Avatar Selection Modal */}
       {showAvatarModal && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-xl border border-stone-200">
-            <div className="flex items-center justify-between pb-3 border-b border-stone-200">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-xl border border-brand-sand-300">
+            <div className="flex items-center justify-between pb-3 border-b border-brand-sand-300">
               <h3 className="font-bold text-stone-900 text-lg font-serif">Elige tu foto de perfil</h3>
               <button 
                 onClick={() => setShowAvatarModal(false)} 
                 className="text-stone-400 hover:text-stone-700 p-1 rounded-lg cursor-pointer"
+                title="Cerrar (Esc)"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -540,25 +630,25 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
             <div className="py-5 space-y-5">
               <div>
                 <p className="text-xs font-semibold text-stone-700 mb-3">Avatares disponibles:</p>
-                <div className="grid grid-cols-5 gap-3">
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5">
                   {PRESET_AVATARS.map((av) => (
                     <button
                       key={av.id}
                       onClick={() => handleSelectAvatar(av.url)}
                       className={`flex flex-col items-center gap-1.5 p-2 rounded-2xl border transition-all cursor-pointer ${
                         currentAvatar === av.url 
-                          ? 'border-[#548c71] bg-[#e2eee6] ring-2 ring-[#548c71]/40' 
-                          : 'border-stone-200 hover:border-stone-300 bg-stone-50'
+                          ? 'border-brand-sage-500 bg-brand-sage-100 ring-2 ring-brand-sage-400' 
+                          : 'border-brand-sand-200 hover:border-brand-sand-300 bg-brand-sand-50'
                       }`}
                     >
-                      <img src={av.url} alt={av.label} className="w-10 h-10 rounded-full object-cover" />
+                      <img src={av.url} alt={av.label} className="w-9 h-9 rounded-full object-cover" />
                       <span className="text-[9px] font-semibold text-stone-600 truncate w-full text-center">{av.label}</span>
                     </button>
                   ))}
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-stone-100">
+              <div className="pt-3 border-t border-brand-sand-200">
                 <label className="block text-xs font-semibold text-stone-700 mb-1.5">
                   O pega una URL personalizada:
                 </label>
@@ -568,19 +658,20 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
                     value={customAvatarInput}
                     onChange={(e) => setCustomAvatarInput(e.target.value)}
                     placeholder="https://ejemplo.com/mifoto.jpg"
-                    className="flex-1 border border-stone-300 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-[#548c71]"
+                    className="flex-1 border border-brand-sand-300 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-brand-sage-500"
                   />
-                  <button
+                  <Button
                     onClick={() => {
                       if (customAvatarInput.trim()) {
                         handleSelectAvatar(customAvatarInput.trim());
                       }
                     }}
                     disabled={!customAvatarInput.trim()}
-                    className="bg-[#548c71] hover:bg-[#43705a] disabled:opacity-40 text-white px-4 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                    variant="primary"
+                    size="sm"
                   >
                     Usar
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -591,10 +682,14 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
       {/* Settings Modal */}
       {showSettingsModal && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-xl border border-stone-200">
-            <div className="flex items-center justify-between pb-3 border-b border-stone-200">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-xl border border-brand-sand-300">
+            <div className="flex items-center justify-between pb-3 border-b border-brand-sand-300">
               <h3 className="font-bold text-stone-900 text-lg font-serif">Configuración de Cuenta</h3>
-              <button onClick={() => setShowSettingsModal(false)} className="text-stone-400 hover:text-stone-700 p-1 rounded-lg cursor-pointer">
+              <button 
+                onClick={() => setShowSettingsModal(false)} 
+                className="text-stone-400 hover:text-stone-700 p-1 rounded-lg cursor-pointer"
+                title="Cerrar (Esc)"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -605,7 +700,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
                   type="text" 
                   value={userName}
                   onChange={(e) => setUserName(e.target.value)}
-                  className="mt-1 w-full border border-stone-300 rounded-xl p-2.5 text-stone-800 font-medium focus:outline-none focus:ring-2 focus:ring-[#548c71]"
+                  className="mt-1 w-full border border-brand-sand-300 rounded-xl p-2.5 text-stone-800 font-medium focus:outline-none focus:ring-2 focus:ring-brand-sage-500"
                 />
               </label>
               <label className="block">
@@ -614,27 +709,29 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
                   type="email" 
                   value={userEmail}
                   onChange={(e) => setUserEmail(e.target.value)}
-                  className="mt-1 w-full border border-stone-300 rounded-xl p-2.5 text-stone-800 font-medium focus:outline-none focus:ring-2 focus:ring-[#548c71]"
+                  className="mt-1 w-full border border-brand-sand-300 rounded-xl p-2.5 text-stone-800 font-medium focus:outline-none focus:ring-2 focus:ring-brand-sage-500"
                 />
               </label>
               <div className="pt-2">
                 <p className="font-semibold text-stone-700 mb-1.5">Privacidad y Seguridad:</p>
-                <label className="flex items-center gap-2 p-2.5 bg-stone-50 rounded-xl border border-stone-200">
-                  <input type="checkbox" defaultChecked className="accent-[#548c71] w-4 h-4 rounded-sm" />
+                <label className="flex items-center gap-2 p-2.5 bg-brand-sand-50 rounded-xl border border-brand-sand-300">
+                  <input type="checkbox" defaultChecked className="accent-brand-sage-600 w-4 h-4 rounded-sm" />
                   <span className="text-stone-800 font-medium">Mantener registros en modo privado protegido</span>
                 </label>
               </div>
             </div>
-            <button
+            <Button
               onClick={() => {
                 setShowSettingsModal(false);
                 onUpdateProfile?.({ name: userName, email: userEmail });
                 success('Configuración guardada', 'Los ajustes de tu cuenta se han actualizado.');
               }}
-              className="w-full bg-[#548c71] hover:bg-[#43705a] text-white py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+              variant="primary"
+              fullWidth
+              size="md"
             >
               Guardar Cambios
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -642,16 +739,20 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
       {/* More Goals Modal */}
       {showMoreGoalsModal && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-xl border border-stone-200">
-            <div className="flex items-center justify-between pb-3 border-b border-stone-200">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-xl border border-brand-sand-300">
+            <div className="flex items-center justify-between pb-3 border-b border-brand-sand-300">
               <h3 className="font-bold text-stone-900 text-lg font-serif">Metas & Hábitos Sugeridos</h3>
-              <button onClick={() => setShowMoreGoalsModal(false)} className="text-stone-400 hover:text-stone-700 p-1 rounded-lg cursor-pointer">
+              <button 
+                onClick={() => setShowMoreGoalsModal(false)} 
+                className="text-stone-400 hover:text-stone-700 p-1 rounded-lg cursor-pointer"
+                title="Cerrar (Esc)"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="py-4 space-y-2 text-xs">
               {['Higiene del Sueño', 'Menos tiempo en pantallas', 'Diálogo interior positivo', 'Agradecimientos diarios'].map((g, idx) => (
-                <div key={idx} className="flex items-center justify-between p-3 bg-[#faf8f4] rounded-2xl border border-stone-200/80">
+                <div key={idx} className="flex items-center justify-between p-3 bg-brand-sand-50 rounded-2xl border border-brand-sand-300">
                   <span className="font-semibold text-stone-800">{g}</span>
                   <button 
                     onClick={() => {
@@ -663,7 +764,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
                       setShowMoreGoalsModal(false);
                       success('Meta agregada', `Has sumado "${g}" a tus objetivos.`);
                     }}
-                    className="text-[#548c71] hover:text-[#43705a] font-bold cursor-pointer bg-[#e2eee6] px-3 py-1 rounded-full text-[11px]"
+                    className="text-brand-sage-700 hover:text-brand-sage-900 font-bold cursor-pointer bg-brand-sage-100 px-3 py-1 rounded-full text-[11px]"
                   >
                     + Activar
                   </button>
@@ -677,4 +778,3 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
     </div>
   );
 };
-

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { ViewMode, UserProfileData } from './types';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
@@ -139,7 +140,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#faf7f2] font-sans antialiased text-stone-800 selection:bg-[#8DB596]/30 selection:text-[#2d6a4f]">
+    <div className="min-h-screen flex flex-col bg-brand-sand-50 font-sans antialiased text-stone-800 selection:bg-brand-sage-200 selection:text-brand-sage-900">
       
       {/* Show full modules navbar when inside any application module */}
       {currentView !== 'landing' && (
@@ -151,60 +152,72 @@ export default function App() {
         />
       )}
 
-      {/* Main Dynamic View Content */}
+      {/* Main Dynamic View Content with smooth motion transition */}
       <main className="flex-1">
-        {currentView === 'landing' && (
-          <LandingPage 
-            onNavigate={handleNavigate} 
-            currentUser={userProfile}
-            onAuthSuccess={handleAuthSuccess}
-            isAudioPlaying={isAudioPlaying}
-            onToggleAudio={handleToggleAmbientAudio}
-          />
-        )}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentView}
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.15, ease: 'easeOut' }}
+            className="w-full h-full"
+          >
+            {currentView === 'landing' && (
+              <LandingPage 
+                onNavigate={handleNavigate} 
+                currentUser={userProfile}
+                onAuthSuccess={handleAuthSuccess}
+                isAudioPlaying={isAudioPlaying}
+                onToggleAudio={handleToggleAmbientAudio}
+              />
+            )}
 
-        {currentView === 'learn' && (
-          <LearnModule 
-            onNavigate={handleNavigate} 
-            initialGuideId={activeGuideId} 
-          />
-        )}
+            {currentView === 'learn' && (
+              <LearnModule 
+                onNavigate={handleNavigate} 
+                initialGuideId={activeGuideId} 
+              />
+            )}
 
-        {currentView === 'journal' && (
-          <JournalModule 
-            onNavigate={handleNavigate} 
-          />
-        )}
+            {currentView === 'journal' && (
+              <JournalModule 
+                onNavigate={handleNavigate} 
+              />
+            )}
 
-        {currentView === 'missions' && (
-          <MissionsModule 
-            onNavigate={handleNavigate} 
-            onOpenGuideById={handleOpenGuideById} 
-          />
-        )}
+            {currentView === 'missions' && (
+              <MissionsModule 
+                onNavigate={handleNavigate} 
+                onOpenGuideById={handleOpenGuideById} 
+              />
+            )}
 
-        {currentView === 'analytics' && (
-          <AnalyticsModule onNavigate={handleNavigate} />
-        )}
+            {currentView === 'analytics' && (
+              <AnalyticsModule onNavigate={handleNavigate} />
+            )}
 
-        {currentView === 'ai' && (
-          <FluxAiModule userProfile={userProfile} />
-        )}
+            {currentView === 'ai' && (
+              <FluxAiModule userProfile={userProfile} />
+            )}
 
-        {currentView === 'alert' && (
-          <AlertModule />
-        )}
+            {currentView === 'alert' && (
+              <AlertModule />
+            )}
 
-        {currentView === 'profile' && (
-          <ProfileModule 
-            userProfile={userProfile} 
-            onUpdateProfile={handleUpdateProfile} 
-          />
-        )}
+            {currentView === 'profile' && (
+              <ProfileModule 
+                userProfile={userProfile} 
+                onUpdateProfile={handleUpdateProfile} 
+                onNavigate={handleNavigate}
+              />
+            )}
 
-        {currentView === 'community' && (
-          <CommunityModule />
-        )}
+            {currentView === 'community' && (
+              <CommunityModule />
+            )}
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       {/* Global Footer */}
@@ -221,4 +234,3 @@ export default function App() {
     </div>
   );
 }
-

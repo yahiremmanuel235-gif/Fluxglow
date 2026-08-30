@@ -172,6 +172,7 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
     const updated = [newEntry, ...entries];
     setEntries(updated);
     localStorage.setItem('fluxglow_journal_entries', JSON.stringify(updated));
+    window.dispatchEvent(new CustomEvent('fluxglow_journal_updated', { detail: updated }));
 
     if (onEntryCreated) {
       onEntryCreated(newEntry);
@@ -202,6 +203,7 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
     const updated = entries.filter(e => e.id !== id);
     setEntries(updated);
     localStorage.setItem('fluxglow_journal_entries', JSON.stringify(updated));
+    window.dispatchEvent(new CustomEvent('fluxglow_journal_updated', { detail: updated }));
     success('Registro eliminado', 'La entrada ha sido retirada de tu historial.');
   };
 
