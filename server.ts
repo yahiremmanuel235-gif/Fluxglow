@@ -78,35 +78,51 @@ Directrices de excelencia para tus respuestas:
    - Ante ideación suicida, autolesión o emergencia grave, responde con máxima calidez, contención inmediata y recuerda con delicadeza la línea de ayuda (+503 7801-4680) o los servicios de emergencia de su localidad.
 5. **Idioma y Tono**: Responde siempre en español natural, cercano, respetuoso y profundamente humano.`;
 
-      const contents = [
-        ...history.map((h: { role?: string; sender?: string; content?: string; text?: string }) => ({
-          role: (h.role === 'user' || h.sender === 'user') ? 'user' : 'model',
-          parts: [{ text: h.content || h.text || '' }]
-        })),
-        {
-          role: 'user',
-          parts: [{ text: message }]
+      // Sanitize and normalize conversation history
+      const formattedContents: { role: 'user' | 'model'; parts: { text: string }[] }[] = [];
+
+      if (Array.isArray(history)) {
+        for (const h of history) {
+          const rawText = 
+            typeof h === 'string' ? h :
+            (h.content || h.text || (Array.isArray(h.parts) && h.parts[0]?.text) || '');
+          
+          const cleanText = typeof rawText === 'string' ? rawText.trim() : '';
+          if (cleanText) {
+            const isUser = h.role === 'user' || h.sender === 'user';
+            formattedContents.push({
+              role: isUser ? 'user' : 'model',
+              parts: [{ text: cleanText }]
+            });
+          }
         }
-      ];
+      }
+
+      // Append current user message
+      formattedContents.push({
+        role: 'user',
+        parts: [{ text: message.trim() }]
+      });
 
       const response = await client.models.generateContent({
         model: "gemini-3.7-flash",
-        contents: contents,
+        contents: formattedContents,
         config: {
           systemInstruction: systemInstruction,
           temperature: 0.7,
         }
       });
 
+      const replyText = response.text?.trim() || generateFallbackAssistantResponse(message, userMood, context);
+
       return res.json({
-        response: response.text || "Estoy aquí para escucharte y apoyarte en lo que necesites.",
+        response: replyText,
         isFallback: false,
       });
 
     } catch (error: any) {
-      console.error("Error in /api/gemini/chat:", error);
-      // Fallback gracefully on any API failure
-      const fallback = generateFallbackAssistantResponse(req.body.message, req.body.userMood);
+      console.error("Error in /api/chat Gemini call:", error?.message || error);
+      const fallback = generateFallbackAssistantResponse(req.body.message, req.body.userMood, req.body.context);
       return res.json({ response: fallback, isFallback: true });
     }
   });

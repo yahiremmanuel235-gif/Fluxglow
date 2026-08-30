@@ -204,6 +204,8 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
           userContext: userProfile ? { name: userProfile.name, ageGroup: userProfile.ageGroup } : undefined,
           history: messages.slice(-8).map(m => ({
             role: m.sender === 'user' ? 'user' : 'model',
+            content: m.text,
+            text: m.text,
             parts: [{ text: m.text }]
           }))
         })
@@ -277,25 +279,41 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
   };
 
   const getFallbackResponse = (query: string, mode: AiMode): string => {
-    const q = query.toLowerCase();
+    const q = query.toLowerCase().trim();
 
     if (q.includes('suicid') || q.includes('quitarme la vida') || q.includes('no quiero vivir') || q.includes('hacerme daño')) {
       return `💙 **Estoy aquí contigo y tu bienestar es lo más importante.**\nPor favor, no cargues con este dolor en soledad. Existen personas listas para escucharte con total respeto y confidencialidad en este momento:\n\n- 📞 **Línea de Apoyo y Acompañamiento Emocional**: [+503 7801-4680](tel:+50378014680)\n- 🚨 **Servicios de Emergencia**: Llama al 911 o acude al centro de salud más cercano.\n\nRespira despacio. Tu vida tiene un valor incalculable y este momento difícil puede ser acompañado.`;
+    }
+
+    if (q === 'hola' || q === 'buenas' || q === 'buenos dias' || q === 'buenas tardes' || q === 'buenas noches' || q.startsWith('hola ') || q.startsWith('que tal')) {
+      return `👋 ¡Hola! Es un gusto saludarte. Soy **Flux AI**, tu espacio seguro de bienestar emocional y psicología práctica en FluxGlow.\n\nEstoy aquí para escucharte sin juicios, ayudarte a ordenar tus pensamientos o guiarte en ejercicios rápidos de calma.\n\n¿Cómo te estás sintiendo en este momento o en qué te gustaría que nos enfoquemos hoy?`;
+    }
+
+    if (q.includes('como estas') || q.includes('cómo estás') || q.includes('como te encuentras')) {
+      return `🌸 Estoy aquí con toda la disposición para acompañarte y escucharte. Me alegra que dediques este momento para ti.\n\n¿Cómo ha estado tu día y qué hay en tu mente ahora mismo?`;
+    }
+
+    if (q.includes('gracias') || q.includes('muchas gracias')) {
+      return `✨ **Con todo el gusto.** Recuerda que este espacio es tuyo y puedes regresar cada vez que necesites claridad, desahogo o una pausa para respirar. ¿Hay algo más en lo que te pueda apoyar hoy?`;
+    }
+
+    if (q.includes('que puedes hacer') || q.includes('qué puedes hacer') || q.includes('ayuda') || q.includes('para que sirves')) {
+      return `🌟 **Puedo ayudarte de diversas maneras prácticas:**\n\n1. 🫁 **Regulación somática**: Ejercicios de respiración (Suspiro fisiológico, 4-7-8) y anclaje sensorial para frenar la ansiedad.\n2. ⚡ **Plan de acción y vencer procrastinación**: Dividir tareas abrumadoras en micropasos de 2 a 5 minutos.\n3. 🧠 **Reencuadre cognitivo**: Detectar trampas mentales (sobrepensamiento, catastrofismo) y encontrar perspectivas realistas.\n4. 🌙 **Apagado mental nocturno**: Técnicas para soltar preocupaciones antes de dormir.\n5. 💬 **Desahogo seguro**: Un espacio confidencial para expresar lo que sientes sin juzgarte.\n\n¿Por cuál de estas áreas te gustaría empezar?`;
     }
 
     if (mode === 'somatic' || q.includes('cuerpo') || q.includes('respirar') || q.includes('palpitaciones') || q.includes('ansiedad') || q.includes('ansioso') || q.includes('nervios')) {
       return `🫁 **Regulación Somática del Sistema Nervioso**:\nCuando experimentamos ansiedad o sobrecarga, el cuerpo activa la respuesta de alerta. Vamos a indicarle al nervio vago que estamos a salvo.\n\n1. **Suspiro Fisiológico**: Inhala profundo por la nariz, toma una segunda micro-inhalación corta arriba y exhala despacio por la boca con un suspiro largo. Repítelo 3 veces.\n2. **Soltar Mandíbula y Hombros**: Deja caer los hombros 2 centímetros y separa la lengua del paladar.\n3. **Anclaje Sensorial**: Siente el apoyo del suelo en tus pies y ubica 3 objetos de color verde o azul a tu vista.\n\n¿Cómo sientes tu respiración tras esta pausa de un minuto?`;
     }
 
-    if (mode === 'reframe' || q.includes('sobrepensando') || q.includes('rumiacion') || q.includes('pensar de mas') || q.includes('pensar de más') || q.includes('culpa')) {
-      return `🧠 **Reencuadre Cognitivo (TCC & Claridad)**:\nEl sobrepensamiento suele ser una trampa donde la mente confunde una posibilidad incierta con un peligro inminente.\n\n🔍 **Filtro de Desactivación**:\n1. **¿Es un hecho o una interpretación?**: Separa lo que realmente ha ocurrido de las predicciones catastróficas que tu mente está construyendo.\n2. **Perspectiva Compasiva**: ¿Qué le dirías a un buen amigo si estuviera pasando exactamente por este mismo pensamiento?\n3. **Foco en el Presente**: ¿Qué está en tu control hacer en los próximos 10 minutos para aliviar esta carga?\n\n¿Cuál es ese pensamiento que más te está desgastando hoy?`;
+    if (mode === 'reframe' || q.includes('sobrepensando') || q.includes('rumiacion') || q.includes('pensar de mas') || q.includes('pensar de más') || q.includes('culpa') || q.includes('miedo') || q.includes('preocupad')) {
+      return `🧠 **Reencuadre Cognitivo (TCC & Claridad)**:\nEl sobrepensamiento suele ser una trampa donde la mente confunde una posibilidad incierta con un peligro inminente.\n\n🔍 **Filtro de Desactivación**:\n1. **¿Es un hecho o una interpretación?**: Separa lo que realmente ha ocurrido de las predicciones catastróficas que tu mente está construyendo.\n2. **Perspectiva Compasiva**: ¿Qué le dirías a un buen amigo si estuviera pasando exactamente por este mismo pensamiento?\n3. **Foco en el Presente**: ¿Qué está en tu control hacer en los próximos 10 minutos para aliviar esta carga?\n\n¿Cuál es ese pensamiento específico que más te está desgastando hoy?`;
     }
 
     if (mode === 'sleep' || q.includes('dormir') || q.includes('insomnio') || q.includes('noche') || q.includes('desvelo')) {
       return `🌙 **Ritual de Apagado Mental para el Descanso**:\nIntentar dormir cuando la mente sigue en modo resolución de problemas genera frustración. Vamos a desacelerar el ritmo juntos.\n\n1. **Descarga en Papel**: Escribe 2 o 3 pendientes que te preocupen y añade: *"Lo revisaré mañana a las 10:00 AM"*. Esto le permite al cerebro soltar la retención.\n2. **Baja el Brillo**: Reduce la luz de tu entorno y relaja la vista.\n3. **Respiración 4-7-8**: Inhala en 4s, retén suavemente 7s y exhala en 8s por 4 ciclos.\n\n¿Te gustaría que hagamos una breve visualización de relajación antes de acostarte?`;
     }
 
-    if (mode === 'action' || q.includes('tarea') || q.includes('flojera') || q.includes('motivo') || q.includes('procrastin')) {
+    if (mode === 'action' || q.includes('tarea') || q.includes('flojera') || q.includes('motivo') || q.includes('procrastin') || q.includes('empezar')) {
       return `Es completamente comprensible sentir esa resistencia mental. En psicología sabemos que la mal llamada "flojera" suele ser fatiga acumulada o una tarea que se siente inmensa.\n\n⚡ **Técnica del Micropaso de 2 Minutos**:\n1. **Meta diminuta**: Tu único objetivo en este instante NO es terminar todo, sino solo abrir el cuaderno o documento.\n2. **Cero distracciones**: Pon el móvil fuera de tu campo visual por 10 minutos.\n3. **Inercia positiva**: Trabaja solo 5 minutos seguidos con cronómetro. Romper la resistencia inicial es el 80% del éxito.\n\n¿De qué materia o actividad se trata? Cuéntame y la desglosamos en 3 pasos mínimos.`;
     }
 
@@ -303,11 +321,15 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
       return `¡Excelente iniciativa! Trabajar en bloques delimitados le da a tu cerebro una sensación inmediata de alivio y control.\n\n⏱️ **Protocolo de Enfoque Relámpago de 15 Minutos**:\n- **Minutos 0 a 2 (Claridad)**: Elige solo UN entregable concreto (ej. leer una página o estructurar 3 ideas clave).\n- **Minutos 3 a 12 (Foco)**: Inmersión total sin cambiar de ventana ni revisar notificaciones.\n- **Minutos 13 a 15 (Cierre)**: Marca tu avance y haz una respiración profunda para registrar el logro.\n\n¿Cuál es ese primer objetivo concreto al que le dedicamos estos 15 minutos?`;
     }
 
-    if (q.includes('organizar') || q.includes('pendientes') || q.includes('estres') || q.includes('agobio')) {
+    if (q.includes('organizar') || q.includes('pendientes') || q.includes('estres') || q.includes('agobio') || q.includes('abrumad')) {
       return `Cuando tenemos demasiadas tareas dando vueltas en la cabeza, la memoria de trabajo se satura y se activa la alarma del estrés.\n\n📋 **Estrategia de Descarga 1-3-5**:\n1. **1 Tarea Clave**: La prioridad no negociable de hoy.\n2. **3 Tareas Medias**: Acciones manejables en 20 minutos.\n3. **5 Micro-acciones**: Cosas rápidas (un correo, un mensaje, ordenar la mesa).\n\nTodo lo demás queda programado sin culpa para mañana. ¿Quieres que organicemos tus pendientes con esta fórmula?`;
     }
 
-    return `Gracias por compartir esto conmigo. Estoy aquí para acompañarte sin juzgarte y darte herramientas prácticas fundamentadas en psicología para sentirte en balance.\n\n✨ **Recordatorio**: No necesitas resolver todo hoy de golpe; un paso pequeño y consciente a la vez es suficiente para recuperar la serenidad.\n\n¿Te gustaría que hagamos un ejercicio de respiración guiada, o prefieres contarme más sobre lo que tienes en mente?`;
+    if (q.includes('triste') || q.includes('llorar') || q.includes('desanimo') || q.includes('desánimo') || q.includes('bajon') || q.includes('bajón')) {
+      return `🤍 **Te abrazo con el pensamiento.** Es completamente válido sentirse así; la tristeza es una invitación del cuerpo a bajar la velocidad y cuidarte con delicadeza.\n\n- No te fuerces a fingir que todo está bien.\n- Date permiso de descansar y tomar algo caliente.\n- Tu valor sigue intacto sin importar lo productivo que hayas sido hoy.\n\n¿Quieres contarme qué ocurrió o prefieres que hagamos una pausa en silencio juntos?`;
+    }
+
+    return `Te escucho con atención y respeto. Sobre lo que mencionas ("${query.length > 60 ? query.slice(0, 57) + '...' : query}"):\n\n✨ **Perspectiva psicológica**: Recuerda que procesar tus vivencias y darles nombre es un paso clave para recuperar el balance y la claridad.\n\n¿Te gustaría que analicemos esto con una técnica de enfoque rápido, una respiración somática o prefieres profundizar más en cómo te hace sentir?`;
   };
 
   return (
