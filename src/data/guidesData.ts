@@ -567,10 +567,244 @@ export const DEMO_GUIDES_CATALOG: GuideItem[] = [
         xp: 35
       }
     ]
+  },
+  {
+    id: 'guide-eq-8',
+    badge: 'Maestría Emocional',
+    title: 'Inteligencia Emocional en la práctica: Cómo regular tus reacciones y comunicarte con claridad',
+    image: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=800&auto=format&fit=crop&q=80',
+    category: 'Inteligencia Emocional',
+    author: 'Flux AI • Inteligencia Afectiva',
+    readTime: '8 min',
+    isDemoContent: true,
+    simpleSummary: 'Aprende a identificar con precisión tus estados afectivos, pausar antes de reaccionar impulsivamente y expresar tus necesidades sin agresión ni sumisión.',
+    demoNotice: AI_DEMO_NOTICE_TEXT,
+    explainedContent: [
+      {
+        heading: '1. Alfabetización Emocional: Nombrar para Calmar (Name it to Tame it)',
+        text: 'Los estudios de neuroimagen demuestran que cuando una persona nombra con exactitud lo que siente (por ejemplo: "Siento decepción y frustración", en lugar de un genérico "estoy mal"), la actividad en la amígdala disminuye y se activa la corteza prefrontal dorsolateral, facilitando el autocontrol.',
+        bulletPoints: [
+          'Amplía tu vocabulario emocional más allá de "bien" o "mal". Distingue entre irritación, impotencia, nostalgia o desgana.',
+          'Las emociones son datos, no directivas: sentir enojo no te obliga a atacar; sentir miedo no te obliga a huir.'
+        ]
+      },
+      {
+        heading: '2. La Pausa Sagrada de 6 Segundos entre el Estímulo y la Respuesta',
+        text: 'La cascada neuroquímica de una emoción intensa dura aproximadamente 6 segundos en recorrer el torrente sanguíneo. Si logras retrasar tu reacción durante esa breve ventana, recuperas la capacidad de responder conscientemente en vez de reaccionar en piloto automático:',
+        bulletPoints: [
+          'Ante un detonante, inhala profundo y cuenta mentalmente del 1 al 6 prestando atención al aire entrando por tu nariz.',
+          'Hazte la pregunta clave: "¿Esta respuesta que estoy a punto de dar me acerca a la persona que quiero ser o solo busca descargar mi molestia?".'
+        ]
+      },
+      {
+        heading: '3. Escucha Empática y Validación Afectiva',
+        text: 'La mayoría de las personas escuchan para responder, no para comprender. La verdadera conexión ocurre cuando validas la experiencia del otro sin apresurarte a solucionar su problema ni juzgar lo que siente.',
+        bulletPoints: [
+          'Usa frases de validación: "Tiene sentido que te sientas así dada la situación" o "¿Quieres que te escuche y te acompañe o prefieres buscar soluciones?".',
+          'Evita el positivismo tóxico ("No pasa nada", "Podría ser peor"); permite que la otra persona exprese su vulnerabilidad.'
+        ]
+      },
+      {
+        heading: '4. Comunicación Asertiva en Primera Persona (Fórmula XYZ)',
+        text: 'Expresa desacuerdos y necesidades sin generar actitudes defensivas:',
+        bulletPoints: [
+          'Fórmula: "Cuando ocurre X (hecho observable sin juicios), me siento Y (emoción propia), y me gustaría / necesitaría Z (petición concreta en positivo)".',
+          'Sustituye las acusaciones ("Tú nunca me escuchas") por declaraciones sobre tu experiencia ("Cuando miras el móvil mientras hablo, me siento ignorado").'
+        ]
+      }
+    ],
+    glossary: [
+      { term: 'Alfabetización Emocional', definition: 'Capacidad de identificar, categorizar y verbalizar con precisión matices afectivos y sensaciones internas.' },
+      { term: 'Secuestro Amigdalino', definition: 'Reacción emocional inmediata e intensa que anula momentáneamente el control lógico de la corteza prefrontal.' },
+      { term: 'Validación Emocional', definition: 'Reconocimiento y aceptación legítima de las emociones de otra persona sin juzgarlas ni minimizarlas.' },
+      { term: 'Fórmula XYZ', definition: 'Estructura lingüística de asertividad que comunica hechos, emociones y peticiones sin culpar al interlocutor.' }
+    ],
+    extraTips: [
+      'Haz un chequeo interno 2 veces al día preguntándote: "¿Qué emoción está presente en mi cuerpo ahora mismo?".',
+      'Respira hondo 3 veces antes de responder un correo o mensaje que te haya generado molestia.',
+      'Sustituye la palabra "pero" por "y" en conversaciones difíciles para sumar perspectivas en lugar de invalidar la del otro.',
+      'Recuerda que validar una emoción ajena no significa necesariamente estar de acuerdo con su conducta.'
+    ],
+    dailyMissions: [
+      {
+        id: 'mission-eq-1',
+        title: 'Práctica de la Pausa de 6 Segundos',
+        description: 'Aplica una pausa consciente de 6 segundos ante el primer momento de irritación o prisa que surja hoy.',
+        timeEstimate: '2 min',
+        xp: 35
+      },
+      {
+        id: 'mission-eq-2',
+        title: 'Check-in de Alfabetización Emocional',
+        description: 'Identifica con exactitud 3 emociones concretas que experimentes durante tu jornada y regístralas en tu diario.',
+        timeEstimate: '4 min',
+        xp: 40
+      },
+      {
+        id: 'mission-eq-3',
+        title: 'Escucha activa sin dar consejos rápidos',
+        description: 'En tu próxima conversación, escucha atentamente a la otra persona durante 3 minutos sin interrumpir ni ofrecer soluciones inmediatas.',
+        timeEstimate: '5 min',
+        xp: 45
+      }
+    ]
+  },
+  {
+    id: 'guide-grief-9',
+    badge: 'Abrazar el Proceso',
+    title: 'Navegar el duelo y la pérdida: Procesar el dolor sin apresurar tus tiempos',
+    image: 'https://images.unsplash.com/photo-1518495973542-4542c06a5843?w=800&auto=format&fit=crop&q=80',
+    category: 'Duelo y Pérdida',
+    author: 'Flux AI • Tanatología y Acompañamiento',
+    readTime: '9 min',
+    isDemoContent: true,
+    simpleSummary: 'El duelo no es una enfermedad que deba curarse de inmediato, sino un proceso biológico y psicológico natural para asimilar cambios, despedidas y vacíos significativos.',
+    demoNotice: AI_DEMO_NOTICE_TEXT,
+    explainedContent: [
+      {
+        heading: '1. La naturaleza no lineal del dolor emocional',
+        text: 'La concepción popular de que el duelo sigue etapas ordenadas y lineales ha sido superada por la psicología moderna. El duelo oscila como las olas del mar: días de relativa calma se intercalan con momentos de tristeza aguda, confusión o enojo. Ambas orillas son normales y necesarias para la cicatrización interna.',
+        bulletPoints: [
+          'No te juzgues por reírte o disfrutar en un momento dado: la alegría no anula tu amor ni tu respeto por lo que perdiste.',
+          'No te presiones con cronogramas ajenos; cada mente metaboliza la ausencia a su propio ritmo.'
+        ]
+      },
+      {
+        heading: '2. Rituales de despedida y honra del legado',
+        text: 'El cerebro necesita actos simbólicos tangibles para asimilar el cierre de una etapa, vínculo o presencia física:',
+        bulletPoints: [
+          'Escribe una carta de gratitud y desahogo expresando todo aquello que quedó pendiente, sin censuras.',
+          'Crea un espacio o momento simbólico (encender una vela, plantar una semilla, visitar un lugar especial) para conectar con el recuerdo desde la paz.'
+        ]
+      },
+      {
+        heading: '3. Autocompasión y manejo de la fatiga del duelo',
+        text: 'Procesar una pérdida consume una inmensa cantidad de glucosa cerebral y energía física. Es habitual sentir pesadez corporal, niebla mental y dificultades de concentración:',
+        bulletPoints: [
+          'Reduce las exigencias en tareas accesorias y prioriza los básicos biológicos: sueño, hidratación y caminatas suaves.',
+          'Rodéate de personas que sepan sostener el silencio contigo sin necesidad de recitar frases hechas o consejos no solicitados.'
+        ]
+      },
+      {
+        heading: '4. Resignificación: Construir un nuevo sentido de vida',
+        text: 'Superar un duelo no significa olvidar, sino integrar la experiencia en tu biografía personal:',
+        bulletPoints: [
+          'Pregúntate: "¿Qué valores, aprendizajes o memorias hermosas puedo honrar a través de mis acciones presentes?".',
+          'Date permiso para volver a proyectar metas futuras conservando el amor intacto en tu interior.'
+        ]
+      }
+    ],
+    glossary: [
+      { term: 'Duelo Adaptativo', definition: 'Respuesta psicológica y emocional natural ante la pérdida significativa de un ser querido, relación o etapa vital.' },
+      { term: 'Modelo Dual del Duelo', definition: 'Teoría que explica cómo alternamos sanamente entre la orientación a la pérdida (dolor) y la orientación a la restauración (vida cotidiana).' },
+      { term: 'Resignificación', definition: 'Proceso cognitivo de encontrar un propósito o significado trascendente a partir de vivencias difíciles.' },
+      { term: 'Niebla del Duelo', definition: 'Sensación temporal de fatiga cognitiva, desorientación y lentitud mental provocada por el desgaste emocional.' }
+    ],
+    extraTips: [
+      'Permítete llorar sin pedir disculpas: el llanto libera endorfinas y oxitocina que calman el dolor físico y emocional.',
+      'Ten una libreta para escribir pensamientos sueltos cuando la nostalgia aparezca en la noche.',
+      'No temas hablar de lo que sientes con profesionales o grupos de apoyo cuando sientas que la carga excede tus fuerzas.',
+      'Pasa tiempo en contacto con la naturaleza para recordar los ciclos de renovación continua de la vida.'
+    ],
+    dailyMissions: [
+      {
+        id: 'mission-grief-1',
+        title: 'Carta de desahogo y liberación',
+        description: 'Dedica 8 minutos a escribir tus emociones sin filtros en un papel, honrando lo que sientes hoy.',
+        timeEstimate: '8 min',
+        xp: 45
+      },
+      {
+        id: 'mission-grief-2',
+        title: 'Paseo de conexión natural y silencio',
+        description: 'Camina 10 minutos al aire libre observando el entorno en silencio y respirando con suavidad.',
+        timeEstimate: '10 min',
+        xp: 35
+      },
+      {
+        id: 'mission-grief-3',
+        title: 'Acto de autocuidado consciente',
+        description: 'Prepárate una comida caliente, una infusión o date un baño tibio como gesto de cariño hacia ti.',
+        timeEstimate: '15 min',
+        xp: 40
+      }
+    ]
+  },
+  {
+    id: 'guide-relationships-10',
+    badge: 'Vínculos Nutritivos',
+    title: 'Límites afectivos y apego seguro: Cómo cultivar relaciones sanas y conscientes',
+    image: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&auto=format&fit=crop&q=80',
+    category: 'Relaciones Sanas',
+    author: 'Flux AI • Psicología Vincular',
+    readTime: '8 min',
+    isDemoContent: true,
+    simpleSummary: 'Descubre cómo construir vínculos afectivos basados en la confianza recíproca, el respeto a los espacios individuales y la asertividad sin temor al rechazo.',
+    demoNotice: AI_DEMO_NOTICE_TEXT,
+    explainedContent: [
+      {
+        heading: '1. Comprendiendo los estilos de apego en la vida adulta',
+        text: 'Nuestra forma de vincularnos está moldeada por experiencias tempranas de seguridad o incertidumbre. Reconocer si tiendes hacia el apego ansioso (miedo al abandono) o evitativo (miedo a la intimidad) es el primer paso para cultivar un apego seguro basado en la confianza y el diálogo transparente.',
+        bulletPoints: [
+          'El apego seguro no teme la cercanía ni la autonomía: disfruta de compartir sin perder la identidad propia.',
+          'Las necesidades afectivas son legítimas; comunicarlas con claridad evita malos entendidos y rencores acumulados.'
+        ]
+      },
+      {
+        heading: '2. Poner límites afectivos claros sin culpa',
+        text: 'Los límites no son murallas para aislarte ni armas para castigar; son las puertas y ventanas que permiten relaciones sanas:',
+        bulletPoints: [
+          'Un "no" respetuoso a una petición que sobrepasa tu energía es un "sí" a tu estabilidad emocional.',
+          'Las personas que realmente te aprecian respetarán tus límites; quienes se molesten se beneficiaban de tu falta de fronteras.'
+        ]
+      },
+      {
+        heading: '3. El arte de la reparación tras un desacuerdo',
+        text: 'Las relaciones duraderas y sólidas no son aquellas que nunca tienen conflictos, sino aquellas que saben repararlos con madurez:',
+        bulletPoints: [
+          'Asume tu parte de responsabilidad sin excusas: "Lamento haber levantado la voz antes, estaba abrumado pero no es excusa".',
+          'Enfócate en resolver el problema en equipo ("Tú y yo contra el problema"), no en ganar una batalla egoica.'
+        ]
+      }
+    ],
+    glossary: [
+      { term: 'Apego Seguro', definition: 'Patrón de vinculación caracterizado por la confianza mutua, la comodidad con la intimidad y la capacidad de comunicar necesidades.' },
+      { term: 'Límites Asertivos', definition: 'Fronteras psicológicas y físicas comunicadas con respeto para preservar la dignidad y el bienestar personal.' },
+      { term: 'Reparación Vincular', definition: 'Acciones voluntarias orientadas a restablecer la armonía, la confianza y la sintonía tras un desacuerdo.' },
+      { term: 'Diferenciación del Yo', definition: 'Capacidad de mantener la propia identidad y calma emocional mientras se permanece conectado con los demás.' }
+    ],
+    extraTips: [
+      'Comunica tus expectativas directamente en lugar de asumir que la otra persona debería "adivinarlas".',
+      'Celebra los éxitos de tus seres queridos con entusiasmo genuino: fortalece el vínculo afectivo de forma exponencial.',
+      'Programa momentos de calidad sin pantallas para conversar cara a cara con las personas que te importan.'
+    ],
+    dailyMissions: [
+      {
+        id: 'mission-relationships-1',
+        title: 'Expresión directa de una necesidad afectiva',
+        description: 'Comunica hoy a alguien de tu confianza un deseo o agradecimiento concreto de forma transparente.',
+        timeEstimate: '3 min',
+        xp: 35
+      },
+      {
+        id: 'mission-relationships-2',
+        title: 'Poner un límite respetuoso',
+        description: 'Di un "no" amable pero firme a un compromiso o demanda que comprometa tu descanso o tranquilidad.',
+        timeEstimate: '2 min',
+        xp: 40
+      },
+      {
+        id: 'mission-relationships-3',
+        title: 'Mensaje de aprecio sincero',
+        description: 'Envía un mensaje detallando una cualidad que valoras profundamente en un amigo, colega o familiar.',
+        timeEstimate: '4 min',
+        xp: 35
+      }
+    ]
   }
 ];
 
-export const POPULAR_GUIDES_CATALOG: GuideItem[] = DEMO_GUIDES_CATALOG.slice(3).concat(DEMO_GUIDES_CATALOG.slice(0, 3));
+export const POPULAR_GUIDES_CATALOG: GuideItem[] = DEMO_GUIDES_CATALOG.slice(4).concat(DEMO_GUIDES_CATALOG.slice(0, 4));
 
 export const VERIFIED_MEDIA_CATALOG: VideoPodcastItem[] = [
   {
@@ -620,5 +854,29 @@ export const VERIFIED_MEDIA_CATALOG: VideoPodcastItem[] = [
     type: 'podcast',
     category: 'Estrés',
     description: 'El psiquiatra José Luis Marín aborda el impacto de la hiperconectividad, la soledad moderna y cómo cultivar recursos psicológicos de contención.'
+  },
+  {
+    id: 'media-5',
+    title: 'Inteligencia Emocional y Gestión del Enfado en el Trabajo y la Vida Cotidiana',
+    author: 'Dra. Elsa Punset',
+    duration: '18:40',
+    views: '112 K vistas',
+    timeAgo: 'hace 2 meses',
+    image: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=800&auto=format&fit=crop&q=80',
+    type: 'video',
+    category: 'Inteligencia Emocional',
+    description: 'Herramientas de neurociencia afectiva para regular la reactividad y transformar emociones desafiantes en claridad comunicativa.'
+  },
+  {
+    id: 'media-6',
+    title: 'El Duelo Consciente: Cómo acompañar y procesar despedidas difíciles',
+    author: 'Lic. Patricia Villalobos',
+    duration: '32:15',
+    views: '45 K vistas',
+    timeAgo: 'hace 5 meses',
+    image: 'https://images.unsplash.com/photo-1518495973542-4542c06a5843?w=800&auto=format&fit=crop&q=80',
+    type: 'podcast',
+    category: 'Duelo y Pérdida',
+    description: 'Acompañamiento tanatológico compasivo para afrontar transiciones, vacíos emocionales y pérdidas significativas sin culpa.'
   }
 ];

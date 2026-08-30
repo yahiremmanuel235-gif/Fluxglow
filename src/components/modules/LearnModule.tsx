@@ -1,11 +1,11 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { 
   Search, 
   Sparkles, 
   Heart, 
-  MoreVertical, 
   Play, 
   Pause, 
+  Square,
   X, 
   BookOpen, 
   CheckCircle2, 
@@ -13,6 +13,7 @@ import {
   FolderOpen,
   RotateCcw,
   Volume2,
+  VolumeX,
   Share2,
   BookmarkCheck,
   Check,
@@ -28,13 +29,19 @@ import {
   Wind,
   Brain,
   Timer,
-  Activity
+  Activity,
+  Flame,
+  ThumbsUp,
+  ThumbsDown,
+  ArrowRight,
+  TrendingUp,
+  Compass
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { FluxGlowLogo } from '../common/FluxGlowLogo';
 import { useToast } from '../common/Toast';
 import { GuideTutorialModal } from './GuideTutorialModal';
-import { PSYCHOLOGICAL_TESTS } from '../../data/mockData';
+import { PSYCHOLOGICAL_TESTS, MOCK_JOURNAL_ENTRIES } from '../../data/mockData';
 import { 
   DEMO_GUIDES_CATALOG, 
   POPULAR_GUIDES_CATALOG, 
@@ -49,7 +56,15 @@ import {
   completeDailyMission, 
   getStoredMissions 
 } from '../../utils/missionsManager';
-import { GuideItem, VideoPodcastItem, PsychologicalTest, UserDailyMissionRecord, ViewMode, InstantPracticeItem } from '../../types';
+import { 
+  GuideItem, 
+  VideoPodcastItem, 
+  PsychologicalTest, 
+  UserDailyMissionRecord, 
+  ViewMode, 
+  InstantPracticeItem,
+  JournalEntry 
+} from '../../types';
 
 const CATEGORY_CHIPS = [
   'Ansiedad',
@@ -92,7 +107,6 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
   // State for the 3 missions unlocked upon finishing reading
   const [unlockedMissions, setUnlockedMissions] = useState<UserDailyMissionRecord[] | null>(null);
 
-  
   // Video player modal
   const [activeMedia, setActiveMedia] = useState<VideoPodcastItem | null>(null);
   const [isPlaying, setIsPlaying] = useState(true);
@@ -108,6 +122,73 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
   // Stored missions state for real-time mission status
   const [missionsList, setMissionsList] = useState<UserDailyMissionRecord[]>(() => getStoredMissions());
 
+  // Favorites state with localStorage persistence
+  const [favorites, setFavorites] = useState<{ [id: string]: boolean }>(() => {
+    try {
+      const saved = localStorage.getItem('fluxglow_guide_favorites');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error(e);
+    }
+    return {
+      'guide-stress-1': true,
+      'guide-anxiety-2': true,
+    };
+  });
+
+  // Read guides persistent history
+  const [readGuides, setReadGuides] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('fluxglow_read_guides');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error(e);
+    }
+    return ['guide-stress-1']; // Initial default for demo feel
+  });
+
+  // Guide ratings state
+  const [guideRatings, setGuideRatings] = useState<{ [guideId: string]: 'positive' | 'negative' }>(() => {
+    try {
+      const saved = localStorage.getItem('fluxglow_guide_ratings');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error(e);
+    }
+    return {};
+  });
+
+  // Reading progress state (last section index per guide)
+  const [readingProgress, setReadingProgress] = useState<{ [guideId: string]: { sectionIndex: number; lastUpdated: string } }>(() => {
+    try {
+      const saved = localStorage.getItem('fluxglow_guide_reading_progress');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error(e);
+    }
+    return {};
+  });
+
+  // Learning streak state
+  const [learningStreak, setLearningStreak] = useState<{ streak: number; lastDate: string }>(() => {
+    try {
+      const saved = localStorage.getItem('fluxglow_learning_streak');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error(e);
+    }
+    const today = new Date().toISOString().split('T')[0];
+    return { streak: 3, lastDate: today };
+  });
+
+  // Text-to-Speech audio state for full guide narration
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+  const [isAudioPaused, setIsAudioPaused] = useState(false);
+  const [audioSpeed, setAudioSpeed] = useState<number>(1.0);
+  const [currentAudioText, setCurrentAudioText] = useState<string>('');
+  const speechUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  // Synchronize missions update event
   useEffect(() => {
     const handleMissionsUpdate = (e: any) => {
       if (e.detail) {
@@ -120,27 +201,156 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
     return () => window.removeEventListener('fluxglow_missions_updated', handleMissionsUpdate);
   }, []);
 
-  // Favorites state
-  const [favorites, setFavorites] = useState<{ [id: string]: boolean }>({
-    'guide-stress-1': true,
-    'guide-anxiety-2': true,
-  });
-
-  const toggleFavorite = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setFavorites(prev => {
-      const next = !prev[id];
-      if (next) {
-        success('Guardado en favoritos', 'Recurso añadido a tu colección.');
-      } else {
-        info('Eliminado de favoritos', 'Recurso retirado de favoritos.');
+  // Update learning streak when exploring or reading
+  const recordLearningActivity = () => {
+    const today = new Date().toISOString().split('T')[0];
+    setLearningStreak(prev => {
+      if (prev.lastDate === today) return prev;
+      
+      const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+      const newStreak = prev.lastDate === yesterday ? prev.streak + 1 : 1;
+      const updated = { streak: newStreak, lastDate: today };
+      try {
+        localStorage.setItem('fluxglow_learning_streak', JSON.stringify(updated));
+      } catch (e) {
+        console.error(e);
       }
-      return { ...prev, [id]: next };
+      return updated;
     });
   };
 
+  // Cross-reference with Journal entries for smart contextual recommendations
+  const journalRecommendation = useMemo(() => {
+    let entries: any[] = [];
+    try {
+      const saved = localStorage.getItem('fluxglow_journal_entries');
+      if (saved) {
+        entries = JSON.parse(saved);
+      } else {
+        entries = MOCK_JOURNAL_ENTRIES;
+      }
+    } catch {
+      entries = MOCK_JOURNAL_ENTRIES;
+    }
+
+    if (!entries || entries.length === 0) return null;
+
+    // Analyze recent triggers/tags and moods
+    const recent = entries.slice(0, 5);
+    const allTriggers = recent.flatMap(e => (e.triggers || e.tags || []));
+    const triggerCounts: { [k: string]: number } = {};
+    allTriggers.forEach(t => {
+      const norm = (t || '').toLowerCase();
+      triggerCounts[norm] = (triggerCounts[norm] || 0) + 1;
+    });
+
+    const hasLowMood = recent.some(e => {
+      const m = (e.mood || '').toLowerCase();
+      return m === 'triste' || m === 'enojado' || m === 'ansioso' || m === 'estresado' || m === 'abrumado';
+    });
+
+    // Matching logic
+    if (triggerCounts['trabajo'] || triggerCounts['productividad']) {
+      const guide = DEMO_GUIDES_CATALOG.find(g => g.id === 'guide-stress-1') || DEMO_GUIDES_CATALOG[0];
+      return {
+        tag: '#trabajo',
+        reason: 'Notamos registros recientes vinculados al trabajo y sobrecarga mental.',
+        guide
+      };
+    }
+    if (triggerCounts['estudios']) {
+      const guide = DEMO_GUIDES_CATALOG.find(g => g.id === 'guide-procrastination-3') || DEMO_GUIDES_CATALOG[2];
+      return {
+        tag: '#estudios',
+        reason: 'Detectamos tensión académica y retos de concentración en tu diario.',
+        guide
+      };
+    }
+    if (triggerCounts['sueño'] || triggerCounts['descanso']) {
+      const guide = DEMO_GUIDES_CATALOG.find(g => g.id === 'guide-sleep-6') || DEMO_GUIDES_CATALOG[5];
+      return {
+        tag: '#sueño',
+        reason: 'Tus registros señalan necesidad de mejorar la calidad de tu descanso.',
+        guide
+      };
+    }
+    if (triggerCounts['familia'] || triggerCounts['pareja'] || triggerCounts['amigos']) {
+      const guide = DEMO_GUIDES_CATALOG.find(g => g.id === 'guide-relationships-10') || DEMO_GUIDES_CATALOG.find(g => g.id === 'guide-eq-8') || DEMO_GUIDES_CATALOG[0];
+      return {
+        tag: '#vínculos',
+        reason: 'Tus reflexiones tocan dinámicas interpersonales y límites afectivos.',
+        guide
+      };
+    }
+    if (hasLowMood) {
+      const guide = DEMO_GUIDES_CATALOG.find(g => g.id === 'guide-selfesteem-4') || DEMO_GUIDES_CATALOG[3];
+      return {
+        tag: '#autocompasión',
+        reason: 'Has transitado emociones retadoras recientemente; te sugerimos una dosis de autocuidado.',
+        guide
+      };
+    }
+
+    // Default gentle recommendation
+    return {
+      tag: '#bienestar',
+      reason: 'Recomendación personalizada para fortalecer tu regulación diaria.',
+      guide: DEMO_GUIDES_CATALOG[0]
+    };
+  }, []);
+
+  // Save favorites with localStorage sync
+  const toggleFavorite = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setFavorites(prev => {
+      const next = { ...prev, [id]: !prev[id] };
+      try {
+        localStorage.setItem('fluxglow_guide_favorites', JSON.stringify(next));
+      } catch (err) {
+        console.error(err);
+      }
+      if (next[id]) {
+        success('Guardado en favoritos ❤️', 'Guía añadida a tu colección personal.');
+      } else {
+        info('Eliminado de favoritos', 'Guía retirada de tu lista de favoritos.');
+      }
+      return next;
+    });
+  };
+
+  // Real Share Handler (navigator.share with clipboard fallback)
+  const handleShareGuide = async (guide: GuideItem, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const shareData = {
+      title: `${guide.title} | FluxGlow`,
+      text: `Descubre esta guía práctica en FluxGlow: "${guide.title}". ${guide.simpleSummary}`,
+      url: window.location.href
+    };
+
+    try {
+      if (navigator.share && typeof navigator.share === 'function') {
+        await navigator.share(shareData);
+        success('¡Compartido con éxito!', 'Gracias por difundir herramientas de salud mental.');
+      } else {
+        await navigator.clipboard.writeText(`${shareData.title}\n\n${shareData.text}\n\n${shareData.url}`);
+        success('Enlace y resumen copiados 📋', 'El contenido de la guía está listo para compartirse.');
+      }
+    } catch (err) {
+      // User cancelled or clipboard denied
+      try {
+        await navigator.clipboard.writeText(`${guide.title} - ${guide.simpleSummary}`);
+        info('Copiado al portapapeles', 'Resumen copiado para compartir.');
+      } catch (copyErr) {
+        console.warn(copyErr);
+      }
+    }
+  };
+
+  // Open guide reader and initialize reading progress / streak
   const handleOpenGuide = (guide: GuideItem) => {
     setActiveGuide(guide);
+    recordLearningActivity();
+    
     // Check if first time opening a guide to display the quick tutorial
     const tutorialSeen = localStorage.getItem('fluxglow_guide_tutorial_seen');
     if (!tutorialSeen) {
@@ -149,40 +359,158 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
     }
   };
 
-  const handleMissionAction = (guide: GuideItem, missionId?: string) => {
-    try {
-      const record = activateMissionFromGuide(guide, missionId);
-      // If currently pending, complete it with celebration
-      const res = completeDailyMission(record.id);
-      if (res.success) {
-        confetti({
-          particleCount: 75,
-          spread: 70,
-          origin: { y: 0.6 }
-        });
-        success('¡Misión completada! Sigue así 🌱', `Sumaste +${res.mission?.xp || 30} XP y fortaleciste tu racha.`);
-      } else {
-        success('Misión activada', 'Tu reto diario ha sido agregado a tu panel de Análisis.');
+  // Mark guide section reading progress
+  const updateSectionProgress = (guideId: string, sectionIdx: number) => {
+    setReadingProgress(prev => {
+      const next = {
+        ...prev,
+        [guideId]: {
+          sectionIndex: sectionIdx,
+          lastUpdated: new Date().toISOString()
+        }
+      };
+      try {
+        localStorage.setItem('fluxglow_guide_reading_progress', JSON.stringify(next));
+      } catch (e) {
+        console.error(e);
       }
-    } catch (e) {
-      console.error(e);
-      info('Misión registrada', 'Misión añadida a tu registro de hábitos.');
+      return next;
+    });
+  };
+
+  // Rate guide at the end (¿Te sirvió? 👍/👎)
+  const handleRateGuide = (guideId: string, rating: 'positive' | 'negative') => {
+    setGuideRatings(prev => {
+      const next = { ...prev, [guideId]: rating };
+      try {
+        localStorage.setItem('fluxglow_guide_ratings', JSON.stringify(next));
+      } catch (e) {
+        console.error(e);
+      }
+      return next;
+    });
+    if (rating === 'positive') {
+      confetti({ particleCount: 40, spread: 50, origin: { y: 0.8 } });
+      success('¡Gracias por tu valoración! 👍', 'Priorizaremos más guías y herramientas similares para ti.');
+    } else {
+      info('Valoración registrada 📝', 'Anotamos tus comentarios para seguir mejorando nuestro contenido.');
     }
+  };
+
+  // Full-Guide Text-to-Speech Engine
+  const startGuideAudio = (guide: GuideItem) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      warning('Audio no compatible', 'Tu navegador no soporta síntesis de voz interactiva.');
+      return;
+    }
+
+    if (isAudioPlaying && isAudioPaused) {
+      window.speechSynthesis.resume();
+      setIsAudioPaused(false);
+      return;
+    }
+
+    // Build the complete spoken script
+    const sectionsText = guide.explainedContent.map(s => `${s.heading}. ${s.text}. ${s.bulletPoints?.join('. ') || ''}`).join('. ');
+    const tipsText = guide.extraTips?.join('. ') || '';
+    const fullScript = `Guía: ${guide.title}. Categoría: ${guide.category}. Resumen: ${guide.simpleSummary}. Contenido: ${sectionsText}. Consejos prácticos: ${tipsText}.`;
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(fullScript);
+    utterance.lang = 'es-ES';
+    utterance.rate = audioSpeed;
+    utterance.pitch = 1.0;
+
+    utterance.onstart = () => {
+      setIsAudioPlaying(true);
+      setIsAudioPaused(false);
+      setCurrentAudioText(guide.title);
+      info('Reproduciendo guía completa 🎧', 'Puedes escuchar la narración con voz natural mientras descansas.');
+    };
+
+    utterance.onend = () => {
+      setIsAudioPlaying(false);
+      setIsAudioPaused(false);
+      success('Narración de audio finalizada ✨', 'Has completado la escucha de esta guía.');
+    };
+
+    utterance.onerror = (e) => {
+      console.warn('Speech error:', e);
+      setIsAudioPlaying(false);
+      setIsAudioPaused(false);
+    };
+
+    speechUtteranceRef.current = utterance;
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const pauseGuideAudio = () => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.pause();
+      setIsAudioPaused(true);
+      info('Audio en pausa', 'Presiona reproducir para continuar.');
+    }
+  };
+
+  const stopGuideAudio = () => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      setIsAudioPlaying(false);
+      setIsAudioPaused(false);
+    }
+  };
+
+  // Change playback rate on the fly
+  const handleChangeSpeed = (newSpeed: number) => {
+    setAudioSpeed(newSpeed);
+    if (isAudioPlaying && activeGuide) {
+      stopGuideAudio();
+      setTimeout(() => startGuideAudio(activeGuide), 150);
+    }
+  };
+
+  // Clean up audio on guide close or unmount
+  useEffect(() => {
+    return () => {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, [activeGuide]);
+
+  // Finish reading guide handler
+  const handleFinishReading = (guide: GuideItem) => {
+    // Record read status
+    if (!readGuides.includes(guide.id)) {
+      const updated = [...readGuides, guide.id];
+      setReadGuides(updated);
+      try {
+        localStorage.setItem('fluxglow_read_guides', JSON.stringify(updated));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    recordLearningActivity();
+
+    // Activate missions in pending state (so user takes them to real practice throughout the day)
+    const activated = activateAllMissionsFromGuide(guide);
+    setUnlockedMissions(activated);
+
+    confetti({
+      particleCount: 90,
+      spread: 80,
+      origin: { y: 0.6 }
+    });
+    success('¡Lectura completada con éxito! 🎉', 'Has desbloqueado 3 misiones prácticas para llevar la teoría a tu día.');
   };
 
   // String normalizer for accent-free search
   const normalize = (str: string) => 
     (str || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 
-  // Filter Helper
-  const matchesSearchAndCategory = (item: { 
-    title: string; 
-    badge?: string; 
-    category: string; 
-    author?: string; 
-    simpleSummary?: string;
-    description?: string;
-  }) => {
+  // Comprehensive Search Matcher (searches title, category, badge, author, summary, deep content, glossary, tips)
+  const matchesSearchAndCategory = (item: any) => {
     // Category match
     if (selectedCategory && selectedCategory !== 'todos') {
       const nCat = normalize(selectedCategory);
@@ -203,7 +531,29 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
       const authorMatch = normalize(item.author || '').includes(q);
       const descMatch = normalize(item.description || item.simpleSummary || '').includes(q);
 
-      if (!titleMatch && !badgeMatch && !catMatch && !authorMatch && !descMatch) {
+      // Search deep inside guide content (sections, glossary, extra tips)
+      let deepContentMatch = false;
+      if (item.explainedContent && Array.isArray(item.explainedContent)) {
+        deepContentMatch = item.explainedContent.some((sec: any) => 
+          normalize(sec.heading).includes(q) || 
+          normalize(sec.text).includes(q) ||
+          (sec.bulletPoints && sec.bulletPoints.some((bp: string) => normalize(bp).includes(q)))
+        );
+      }
+
+      let glossaryMatch = false;
+      if (item.glossary && Array.isArray(item.glossary)) {
+        glossaryMatch = item.glossary.some((g: any) => 
+          normalize(g.term).includes(q) || normalize(g.definition).includes(q)
+        );
+      }
+
+      let tipsMatch = false;
+      if (item.extraTips && Array.isArray(item.extraTips)) {
+        tipsMatch = item.extraTips.some((t: string) => normalize(t).includes(q));
+      }
+
+      if (!titleMatch && !badgeMatch && !catMatch && !authorMatch && !descMatch && !deepContentMatch && !glossaryMatch && !tipsMatch) {
         return false;
       }
     }
@@ -297,6 +647,11 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
     });
   };
 
+  // Overall catalog progress calculation
+  const totalCatalogGuides = DEMO_GUIDES_CATALOG.length;
+  const completedGuidesCount = DEMO_GUIDES_CATALOG.filter(g => readGuides.includes(g.id)).length;
+  const completionPercentage = Math.round((completedGuidesCount / totalCatalogGuides) * 100) || 0;
+
   return (
     <div className="w-full bg-[#fbf9f5] min-h-screen pb-20 pt-4 px-4 sm:px-6 lg:px-8">
       <div className="max-w-[1360px] mx-auto">
@@ -356,19 +711,88 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
           </p>
         </div>
 
-        {/* Global Learning Banner */}
-        <div className="max-w-4xl mx-auto mb-6 p-3.5 sm:p-4 rounded-2xl bg-brand-sand-100 border border-brand-sand-300 text-stone-800 text-xs sm:text-sm flex items-center gap-3 shadow-2xs">
-          <div className="w-8 h-8 rounded-xl bg-brand-terracotta-100 text-brand-terracotta-700 flex items-center justify-center shrink-0">
-            <Sparkles className="w-4 h-4" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-medium leading-relaxed">
-              <strong className="font-bold text-brand-terracotta-800">💡 Centro de Aprendizaje Emocional:</strong> Guías interactivas, prácticas en tiempo real y recursos de bienestar mental enriquecidos con IA y respaldados por principios de psicología cognitiva.
+        {/* PROGRESS & LEARNING STREAK OVERVIEW BAR */}
+        <div className="max-w-4xl mx-auto mb-6 grid grid-cols-1 md:grid-cols-3 gap-3.5">
+          {/* Progress Card */}
+          <div className="md:col-span-2 p-4 rounded-2xl bg-white border border-brand-sand-300 shadow-2xs flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold text-stone-700 uppercase tracking-wider flex items-center gap-1.5">
+                <BookOpen className="w-4 h-4 text-[#548c71]" />
+                <span>Progreso de Aprendizaje</span>
+              </span>
+              <span className="text-xs font-bold text-[#548c71] bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                {completedGuidesCount} de {totalCatalogGuides} guías ({completionPercentage}%)
+              </span>
+            </div>
+            
+            {/* Visual Progress Bar */}
+            <div className="w-full bg-stone-100 rounded-full h-2.5 overflow-hidden border border-stone-200 mb-1">
+              <div 
+                className="bg-gradient-to-r from-emerald-500 to-[#548c71] h-full rounded-full transition-all duration-500"
+                style={{ width: `${Math.max(completionPercentage, 8)}%` }}
+              />
+            </div>
+            <p className="text-[11px] text-stone-500 flex items-center justify-between">
+              <span>{completedGuidesCount === 0 ? 'Empieza tu primera lectura' : 'Excelente avance continuo'}</span>
+              <span>{Object.values(favorites).filter(Boolean).length} favoritas guardadas</span>
             </p>
+          </div>
+
+          {/* Streak Habit Card */}
+          <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-500/10 via-orange-500/10 to-amber-600/15 border border-amber-300/80 shadow-2xs flex items-center justify-between">
+            <div>
+              <span className="text-[11px] font-bold text-amber-900 uppercase tracking-wider block">
+                Racha de Aprendizaje
+              </span>
+              <div className="flex items-baseline gap-1.5 mt-0.5">
+                <span className="text-2xl font-bold font-serif text-amber-950">
+                  {learningStreak.streak} días
+                </span>
+                <span className="text-xs font-medium text-amber-800">seguidos</span>
+              </div>
+              <p className="text-[11px] text-amber-800/80 mt-0.5">
+                ¡Explora una guía hoy para mantenerla!
+              </p>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-amber-400 text-amber-950 flex items-center justify-center shadow-xs">
+              <Flame className="w-6 h-6 fill-amber-500 text-amber-900 animate-pulse" />
+            </div>
           </div>
         </div>
 
-        {/* Centered Search Pill */}
+        {/* CROSSED RECOMMENDATION FROM JOURNAL */}
+        {journalRecommendation && journalRecommendation.guide && (
+          <div className="max-w-4xl mx-auto mb-6 p-4 rounded-3xl bg-gradient-to-r from-emerald-50 via-teal-50/70 to-brand-sand-100 border-2 border-[#548c71]/40 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-in fade-in duration-300">
+            <div className="flex items-start gap-3.5">
+              <div className="w-11 h-11 rounded-2xl bg-[#548c71] text-white flex items-center justify-center shrink-0 shadow-xs">
+                <Lightbulb className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#548c71] bg-white px-2.5 py-0.5 rounded-full border border-[#548c71]/20">
+                    💡 Recomendación según tu Diario ({journalRecommendation.tag})
+                  </span>
+                </div>
+                <h4 className="text-sm font-bold text-stone-900 leading-snug">
+                  {journalRecommendation.guide.title}
+                </h4>
+                <p className="text-xs text-stone-600 mt-0.5">
+                  {journalRecommendation.reason}
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => handleOpenGuide(journalRecommendation.guide)}
+              className="bg-[#548c71] hover:bg-[#43705a] text-white px-5 py-2.5 rounded-full text-xs font-bold shadow-xs transition-all flex items-center gap-2 cursor-pointer shrink-0 whitespace-nowrap self-end sm:self-center"
+            >
+              <span>Leer Guía Sugerida</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
+        {/* Centered Search Pill with Deep Search capability */}
         <div className="max-w-xl mx-auto mb-4">
           <div className="relative flex items-center bg-white rounded-full border border-brand-sand-300 shadow-xs px-4 py-2.5 hover:border-brand-sand-400 focus-within:border-brand-sage-500 focus-within:ring-2 focus-within:ring-brand-sage-500/20 transition-all">
             <Search className="w-4 h-4 text-stone-400 shrink-0 mr-3" />
@@ -377,7 +801,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Busca por tema (ej. estrés, ansiedad, sueño, hábitos)..."
+              placeholder="Busca en títulos, conceptos (ej. cortisol, amígdala, sueño)..."
               className="w-full bg-transparent border-none text-stone-800 placeholder-stone-400 text-sm focus:outline-hidden"
             />
             {searchQuery && (
@@ -391,20 +815,20 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
             )}
             <button 
               onClick={() => {
-                const terms = ['Estrés', 'Ansiedad', 'Mindfulness', 'Autoestima', 'Sueño', 'Procrastinación'];
+                const terms = ['Estrés', 'Cortisol', 'Ansiedad', 'Mindfulness', 'Autoestima', 'Sueño', 'Procrastinación', 'Inteligencia Emocional'];
                 const randomTerm = terms[Math.floor(Math.random() * terms.length)];
                 setSearchQuery(randomTerm);
               }}
               className="text-stone-400 hover:text-brand-sage-600 p-1 shrink-0 transition-colors cursor-pointer"
-              title="💡 Sugerir tema con IA"
-              aria-label="Sugerir tema"
+              title="💡 Sugerir término o concepto"
+              aria-label="Sugerir término"
             >
               <Sparkles className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* Horizontal Quick Category Chips */}
+        {/* Horizontal Quick Category Chips (All 10 Categories covered) */}
         <div className="flex items-center justify-center gap-1.5 sm:gap-2 flex-wrap max-w-4xl mx-auto mb-6">
           <button
             onClick={() => setSelectedCategory('todos')}
@@ -482,64 +906,102 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {filteredRecommended.map((guide) => {
                 const isFav = favorites[guide.id];
+                const isRead = readGuides.includes(guide.id);
+                const hasProgress = readingProgress[guide.id];
+
                 return (
                   <div 
                     key={guide.id}
                     id={`guide-rec-${guide.id}`}
                     onClick={() => handleOpenGuide(guide)}
-                    className="group cursor-pointer flex flex-col bg-white rounded-3xl p-3.5 border border-stone-200 hover:border-stone-300 shadow-xs hover:shadow-md transition-all"
+                    className="group cursor-pointer flex flex-col bg-white rounded-3xl p-3.5 border border-stone-200 hover:border-stone-300 shadow-xs hover:shadow-md transition-all justify-between"
                   >
-                    {/* Card Box with Rounded Border */}
-                    <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-stone-100 mb-3">
-                      <img
-                        src={guide.image}
-                        alt={guide.badge}
-                        referrerPolicy="no-referrer"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      
-                      {/* Top Floating Badges */}
-                      <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 flex-wrap">
-                        {guide.isDemoContent && (
-                          <span className="bg-amber-400/95 backdrop-blur-xs text-amber-950 text-[10px] font-bold px-2 py-0.5 rounded-md border border-amber-500/40 shadow-xs flex items-center gap-1">
-                            <Sparkles className="w-2.5 h-2.5" />
-                            <span>Ejemplo IA</span>
+                    <div>
+                      {/* Card Box with Rounded Border */}
+                      <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-stone-100 mb-3">
+                        <img
+                          src={guide.image}
+                          alt={guide.badge}
+                          referrerPolicy="no-referrer"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        
+                        {/* Top Floating Badges */}
+                        <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 flex-wrap">
+                          {isRead && (
+                            <span className="bg-emerald-600/95 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-md border border-emerald-400/50 shadow-xs flex items-center gap-1">
+                              <Check className="w-2.5 h-2.5 stroke-[3]" />
+                              <span>Leída</span>
+                            </span>
+                          )}
+                          {guide.isDemoContent && (
+                            <span className="bg-amber-400/95 backdrop-blur-xs text-amber-950 text-[10px] font-bold px-2 py-0.5 rounded-md border border-amber-500/40 shadow-xs flex items-center gap-1">
+                              <Sparkles className="w-2.5 h-2.5" />
+                              <span>Ejemplo IA</span>
+                            </span>
+                          )}
+                          <span className="bg-white/95 backdrop-blur-xs text-stone-900 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border border-stone-300 shadow-xs whitespace-nowrap">
+                            {guide.badge}
                           </span>
+                        </div>
+
+                        {/* Top Right Action Buttons (Share & Favorite) */}
+                        <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5">
+                          <button
+                            onClick={(e) => handleShareGuide(guide, e)}
+                            className="w-8 h-8 rounded-full bg-white/90 shadow-sm flex items-center justify-center hover:scale-110 text-stone-600 hover:text-stone-900 transition-transform cursor-pointer"
+                            title="Compartir guía"
+                            aria-label="Compartir"
+                          >
+                            <Share2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={(e) => toggleFavorite(guide.id, e)}
+                            className="w-8 h-8 rounded-full bg-white/90 shadow-sm flex items-center justify-center hover:scale-110 transition-transform cursor-pointer"
+                            title="Guardar favorito"
+                            aria-label="Guardar favorito"
+                          >
+                            <Heart 
+                              className={`w-4 h-4 transition-colors ${
+                                isFav ? 'text-red-500 fill-red-500' : 'text-stone-400'
+                              }`} 
+                            />
+                          </button>
+                        </div>
+
+                        {/* Bottom Bookmark/Continue badge if partially read */}
+                        {hasProgress && !isRead && (
+                          <div className="absolute bottom-2.5 left-2.5 bg-stone-900/80 backdrop-blur-xs text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 border border-amber-400/30">
+                            <BookmarkCheck className="w-3 h-3 text-amber-400" />
+                            <span>En progreso</span>
+                          </div>
                         )}
-                        <span className="bg-white/95 backdrop-blur-xs text-stone-900 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border border-stone-300 shadow-xs whitespace-nowrap">
-                          {guide.badge}
-                        </span>
                       </div>
 
-                      {/* Bottom Right Favorite Heart */}
-                      <button
-                        onClick={(e) => toggleFavorite(guide.id, e)}
-                        className="absolute bottom-2.5 right-2.5 w-8 h-8 rounded-full bg-white/90 shadow-sm flex items-center justify-center hover:scale-110 transition-transform cursor-pointer"
-                        aria-label="Guardar favorito"
-                      >
-                        <Heart 
-                          className={`w-4 h-4 transition-colors ${
-                            isFav ? 'text-red-500 fill-red-500' : 'text-stone-400'
-                          }`} 
-                        />
-                      </button>
+                      {/* Subtitle / Description text below card */}
+                      <div>
+                        <div className="flex items-center justify-between text-[11px] font-bold text-[#548c71] uppercase tracking-wider mb-1">
+                          <span>{guide.category}</span>
+                          <span className="text-stone-400 font-medium lowercase flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {guide.readTime}
+                          </span>
+                        </div>
+                        <h3 className="text-sm font-bold text-stone-900 leading-snug line-clamp-2 group-hover:text-[#548c71] transition-colors">
+                          {guide.title}
+                        </h3>
+                        <p className="text-xs text-stone-500 mt-1 line-clamp-2 leading-relaxed">
+                          {guide.simpleSummary}
+                        </p>
+                      </div>
                     </div>
 
-                    {/* Subtitle / Description text below card */}
-                    <div>
-                      <div className="flex items-center justify-between text-[11px] font-bold text-[#548c71] uppercase tracking-wider mb-1">
-                        <span>{guide.category}</span>
-                        <span className="text-stone-400 font-medium lowercase flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          {guide.readTime}
-                        </span>
-                      </div>
-                      <h3 className="text-sm font-bold text-stone-900 leading-snug line-clamp-2 group-hover:text-[#548c71] transition-colors">
-                        {guide.title}
-                      </h3>
-                      <p className="text-xs text-stone-500 mt-1 line-clamp-2 leading-relaxed">
-                        {guide.simpleSummary}
-                      </p>
+                    {/* Bottom Status Footnote */}
+                    <div className="mt-3 pt-2 border-t border-stone-100 flex items-center justify-between text-[11px]">
+                      <span className="text-stone-400 font-medium">{guide.author.split('•')[0]}</span>
+                      <span className="text-[#548c71] font-bold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+                        {isRead ? 'Repasar →' : 'Explorar →'}
+                      </span>
                     </div>
                   </div>
                 );
@@ -563,64 +1025,100 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {filteredPopular.map((guide) => {
                 const isFav = favorites[guide.id];
+                const isRead = readGuides.includes(guide.id);
+                const hasProgress = readingProgress[guide.id];
+
                 return (
                   <div 
                     key={guide.id}
                     id={`guide-pop-${guide.id}`}
                     onClick={() => handleOpenGuide(guide)}
-                    className="group cursor-pointer flex flex-col bg-white rounded-3xl p-3.5 border border-stone-200 hover:border-stone-300 shadow-xs hover:shadow-md transition-all"
+                    className="group cursor-pointer flex flex-col bg-white rounded-3xl p-3.5 border border-stone-200 hover:border-stone-300 shadow-xs hover:shadow-md transition-all justify-between"
                   >
-                    {/* Card Box with Rounded Border */}
-                    <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-stone-100 mb-3">
-                      <img
-                        src={guide.image}
-                        alt={guide.badge}
-                        referrerPolicy="no-referrer"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      
-                      {/* Top Floating Badges */}
-                      <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 flex-wrap">
-                        {guide.isDemoContent && (
-                          <span className="bg-amber-400/95 backdrop-blur-xs text-amber-950 text-[10px] font-bold px-2 py-0.5 rounded-md border border-amber-500/40 shadow-xs flex items-center gap-1">
-                            <Sparkles className="w-2.5 h-2.5" />
-                            <span>Ejemplo IA</span>
+                    <div>
+                      {/* Card Box with Rounded Border */}
+                      <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-stone-100 mb-3">
+                        <img
+                          src={guide.image}
+                          alt={guide.badge}
+                          referrerPolicy="no-referrer"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        
+                        {/* Top Floating Badges */}
+                        <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 flex-wrap">
+                          {isRead && (
+                            <span className="bg-emerald-600/95 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-md border border-emerald-400/50 shadow-xs flex items-center gap-1">
+                              <Check className="w-2.5 h-2.5 stroke-[3]" />
+                              <span>Leída</span>
+                            </span>
+                          )}
+                          {guide.isDemoContent && (
+                            <span className="bg-amber-400/95 backdrop-blur-xs text-amber-950 text-[10px] font-bold px-2 py-0.5 rounded-md border border-amber-500/40 shadow-xs flex items-center gap-1">
+                              <Sparkles className="w-2.5 h-2.5" />
+                              <span>Ejemplo IA</span>
+                            </span>
+                          )}
+                          <span className="bg-white/95 backdrop-blur-xs text-stone-900 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border border-stone-300 shadow-xs whitespace-nowrap">
+                            {guide.badge}
                           </span>
+                        </div>
+
+                        {/* Top Right Action Buttons */}
+                        <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5">
+                          <button
+                            onClick={(e) => handleShareGuide(guide, e)}
+                            className="w-8 h-8 rounded-full bg-white/90 shadow-sm flex items-center justify-center hover:scale-110 text-stone-600 hover:text-stone-900 transition-transform cursor-pointer"
+                            title="Compartir guía"
+                            aria-label="Compartir"
+                          >
+                            <Share2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={(e) => toggleFavorite(guide.id, e)}
+                            className="w-8 h-8 rounded-full bg-white/90 shadow-sm flex items-center justify-center hover:scale-110 transition-transform cursor-pointer"
+                            title="Guardar favorito"
+                            aria-label="Guardar favorito"
+                          >
+                            <Heart 
+                              className={`w-4 h-4 transition-colors ${
+                                isFav ? 'text-red-500 fill-red-500' : 'text-stone-400'
+                              }`} 
+                            />
+                          </button>
+                        </div>
+
+                        {hasProgress && !isRead && (
+                          <div className="absolute bottom-2.5 left-2.5 bg-stone-900/80 backdrop-blur-xs text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 border border-amber-400/30">
+                            <BookmarkCheck className="w-3 h-3 text-amber-400" />
+                            <span>En progreso</span>
+                          </div>
                         )}
-                        <span className="bg-white/95 backdrop-blur-xs text-stone-900 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border border-stone-300 shadow-xs whitespace-nowrap">
-                          {guide.badge}
-                        </span>
                       </div>
 
-                      {/* Bottom Right Favorite Heart */}
-                      <button
-                        onClick={(e) => toggleFavorite(guide.id, e)}
-                        className="absolute bottom-2.5 right-2.5 w-8 h-8 rounded-full bg-white/90 shadow-sm flex items-center justify-center hover:scale-110 transition-transform cursor-pointer"
-                        aria-label="Guardar favorito"
-                      >
-                        <Heart 
-                          className={`w-4 h-4 transition-colors ${
-                            isFav ? 'text-red-500 fill-red-500' : 'text-stone-400'
-                          }`} 
-                        />
-                      </button>
+                      {/* Subtitle / Description text below card */}
+                      <div>
+                        <div className="flex items-center justify-between text-[11px] font-bold text-[#de6943] uppercase tracking-wider mb-1">
+                          <span>{guide.category}</span>
+                          <span className="text-stone-400 font-medium lowercase flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {guide.readTime}
+                          </span>
+                        </div>
+                        <h3 className="text-sm font-bold text-stone-900 leading-snug line-clamp-2 group-hover:text-[#de6943] transition-colors">
+                          {guide.title}
+                        </h3>
+                        <p className="text-xs text-stone-500 mt-1 line-clamp-2 leading-relaxed">
+                          {guide.simpleSummary}
+                        </p>
+                      </div>
                     </div>
 
-                    {/* Subtitle / Description text below card */}
-                    <div>
-                      <div className="flex items-center justify-between text-[11px] font-bold text-[#de6943] uppercase tracking-wider mb-1">
-                        <span>{guide.category}</span>
-                        <span className="text-stone-400 font-medium lowercase flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          {guide.readTime}
-                        </span>
-                      </div>
-                      <h3 className="text-sm font-bold text-stone-900 leading-snug line-clamp-2 group-hover:text-[#de6943] transition-colors">
-                        {guide.title}
-                      </h3>
-                      <p className="text-xs text-stone-500 mt-1 line-clamp-2 leading-relaxed">
-                        {guide.simpleSummary}
-                      </p>
+                    <div className="mt-3 pt-2 border-t border-stone-100 flex items-center justify-between text-[11px]">
+                      <span className="text-stone-400 font-medium">{guide.author.split('•')[0]}</span>
+                      <span className="text-[#de6943] font-bold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+                        {isRead ? 'Repasar →' : 'Explorar →'}
+                      </span>
                     </div>
                   </div>
                 );
@@ -629,7 +1127,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
           </div>
         )}
 
-        {/* SECTION 3: Prácticas al Instante (Micro-ejercicios interactivos en vivo con icono diferenciador destacado) */}
+        {/* SECTION 3: Prácticas al Instante (Micro-ejercicios interactivos en vivo) */}
         {filteredPractices.length > 0 && (
           <div className="mb-12">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-5 gap-2">
@@ -654,14 +1152,15 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                 <div
                   key={practice.id}
                   id={`practice-${practice.id}`}
-                  onClick={() => setActivePractice(practice)}
+                  onClick={() => {
+                    setActivePractice(practice);
+                    recordLearningActivity();
+                  }}
                   className="group cursor-pointer flex flex-col bg-gradient-to-b from-emerald-50/40 via-white to-white rounded-3xl p-4 border-2 border-emerald-200/90 hover:border-emerald-500 hover:shadow-lg shadow-xs transition-all justify-between relative overflow-hidden"
                 >
-                  {/* Visual Accent Top Bar */}
                   <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-600 opacity-80 group-hover:opacity-100 transition-opacity" />
 
                   <div>
-                    {/* Visual Card Image with prominent badges */}
                     <div className="relative w-full aspect-[16/9] rounded-2xl overflow-hidden bg-stone-900 mb-3.5 shadow-inner">
                       <img
                         src={practice.image}
@@ -670,7 +1169,6 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 opacity-90"
                       />
                       
-                      {/* Prominent High-Visibility Floating Icon Badge */}
                       <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 z-10">
                         <span className="bg-emerald-700/95 backdrop-blur-xs text-white text-[11px] font-bold px-3 py-1 rounded-full shadow-md border border-emerald-400/60 flex items-center gap-1.5">
                           <Zap className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
@@ -684,7 +1182,6 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                       </div>
                     </div>
 
-                    {/* Noticeable Identifier Header with Distinct Tool Icon */}
                     <div className="flex items-start gap-3 mb-2.5">
                       <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0 border border-emerald-300 shadow-2xs group-hover:scale-110 group-hover:bg-emerald-200 transition-transform">
                         {practice.category.toLowerCase().includes('respiraci') ? (
@@ -712,7 +1209,6 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                       {practice.shortDesc}
                     </p>
 
-                    {/* Benefit bullets */}
                     <div className="space-y-1 mb-4 pt-2 border-t border-emerald-100">
                       {practice.benefits.slice(0, 2).map((b, bIdx) => (
                         <div key={bIdx} className="text-[11px] text-stone-600 flex items-start gap-1.5">
@@ -727,6 +1223,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                     onClick={(e) => {
                       e.stopPropagation();
                       setActivePractice(practice);
+                      recordLearningActivity();
                     }}
                     className="w-full bg-emerald-700 hover:bg-emerald-800 text-white py-2.5 rounded-2xl text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer mt-2"
                   >
@@ -739,7 +1236,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
           </div>
         )}
 
-        {/* SECTION 3: Videos y podcast de psicólogos verificados */}
+        {/* SECTION 4: Videos y podcasts de psicólogos verificados */}
         {filteredMedia.length > 0 && (
           <div className="mb-12">
             <div className="flex items-center justify-between mb-5">
@@ -751,49 +1248,61 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredMedia.map((media) => (
                 <div 
                   key={media.id}
                   id={`media-${media.id}`}
-                  onClick={() => setActiveMedia(media)}
-                  className="group cursor-pointer flex flex-col bg-white rounded-3xl p-3.5 border border-stone-200 hover:border-stone-300 shadow-xs hover:shadow-md transition-all"
+                  onClick={() => {
+                    setActiveMedia(media);
+                    recordLearningActivity();
+                  }}
+                  className="group cursor-pointer flex flex-col bg-white rounded-3xl p-3.5 border border-stone-200 hover:border-stone-300 shadow-xs hover:shadow-md transition-all justify-between"
                 >
-                  <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-stone-900 mb-3">
-                    <img
-                      src={media.image}
-                      alt={media.title}
-                      referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 opacity-90"
-                    />
-                    
-                    {/* Media Type Badge */}
-                    <div className="absolute top-2.5 left-2.5">
-                      <span className="bg-black/75 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">
-                        {media.type === 'video' ? '🎬 Video' : '🎙️ Podcast'}
-                      </span>
-                    </div>
-
-                    {/* Duration Badge */}
-                    <div className="absolute bottom-2.5 right-2.5 bg-black/80 text-white font-mono text-[11px] px-2 py-0.5 rounded-md">
-                      {media.duration}
-                    </div>
-
-                    {/* Play Icon in Center */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-10 h-10 rounded-full bg-white/90 text-stone-900 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                        <Play className="w-4 h-4 ml-0.5 fill-stone-900" />
+                  <div>
+                    <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-stone-900 mb-3">
+                      <img
+                        src={media.image}
+                        alt={media.title}
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 opacity-90"
+                      />
+                      
+                      <div className="absolute top-2.5 left-2.5">
+                        <span className="bg-black/75 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">
+                          {media.type === 'video' ? '🎬 Video' : '🎙️ Podcast'}
+                        </span>
                       </div>
+
+                      <div className="absolute bottom-2.5 right-2.5 bg-black/80 text-white font-mono text-[11px] px-2.5 py-0.5 rounded-md">
+                        {media.duration}
+                      </div>
+
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-full bg-white/90 text-stone-900 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                          <Play className="w-4 h-4 ml-0.5 fill-stone-900" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-[#548c71] mb-1">
+                        {media.category}
+                      </div>
+                      <h4 className="text-xs sm:text-sm font-bold text-stone-900 line-clamp-2 group-hover:text-[#548c71] transition-colors leading-snug">
+                        {media.title}
+                      </h4>
+                      <p className="text-[11px] text-stone-500 mt-1">
+                        Por <strong>{media.author}</strong> • {media.views}
+                      </p>
                     </div>
                   </div>
 
-                  <div>
-                    <h4 className="text-xs sm:text-sm font-bold text-stone-900 line-clamp-2 group-hover:text-[#548c71] transition-colors leading-snug">
-                      {media.title}
-                    </h4>
-                    <p className="text-[11px] text-stone-500 mt-1">
-                      Por <strong>{media.author}</strong> • {media.views}
-                    </p>
+                  <div className="mt-3 pt-2 border-t border-stone-100 flex items-center justify-between text-[11px]">
+                    <span className="text-stone-400">{media.timeAgo}</span>
+                    <span className="text-[#548c71] font-bold flex items-center gap-1">
+                      Reproducir →
+                    </span>
                   </div>
                 </div>
               ))}
@@ -801,7 +1310,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
           </div>
         )}
 
-        {/* SECTION 4: Tests Psicológicos Orientativos */}
+        {/* SECTION 5: Tests Psicológicos Orientativos */}
         <div className="mb-12">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight flex items-center gap-2">
@@ -835,7 +1344,10 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                 </div>
 
                 <button
-                  onClick={() => handleStartTest(test)}
+                  onClick={() => {
+                    handleStartTest(test);
+                    recordLearningActivity();
+                  }}
                   className="w-full bg-[#548c71] hover:bg-[#43705a] text-white py-2.5 rounded-2xl text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <span>Iniciar Test ({test.questionsCount} preguntas)</span>
@@ -856,6 +1368,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
             <div className="flex items-center gap-3">
               <button
                 onClick={() => {
+                  stopGuideAudio();
                   setActiveGuide(null);
                   setUnlockedMissions(null);
                 }}
@@ -872,10 +1385,29 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                 <span className="text-xs text-stone-400 font-medium">
                   {activeGuide.readTime} de lectura
                 </span>
+                {readGuides.includes(activeGuide.id) && (
+                  <span className="text-[11px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <Check className="w-3 h-3 stroke-[3]" />
+                    <span>Leída</span>
+                  </span>
+                )}
               </div>
             </div>
 
+            {/* Top Reader Actions (Audio, Share, Favorite, Help, Close) */}
             <div className="flex items-center gap-2">
+              
+              {/* Share Button */}
+              <button
+                onClick={(e) => handleShareGuide(activeGuide, e)}
+                className="p-2 text-stone-600 hover:text-stone-900 bg-white border border-stone-200 hover:bg-stone-50 rounded-full transition-all cursor-pointer flex items-center gap-1.5 text-xs font-semibold"
+                title="Compartir guía"
+              >
+                <Share2 className="w-4 h-4" />
+                <span className="hidden sm:inline">Compartir</span>
+              </button>
+
+              {/* Favorite Button */}
               <button
                 onClick={(e) => toggleFavorite(activeGuide.id, e)}
                 className={`p-2 rounded-full border transition-all cursor-pointer flex items-center gap-1.5 text-xs font-semibold ${
@@ -902,6 +1434,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
 
               <button
                 onClick={() => {
+                  stopGuideAudio();
                   setActiveGuide(null);
                   setUnlockedMissions(null);
                 }}
@@ -913,9 +1446,122 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
             </div>
           </div>
 
+          {/* DEDICATED FULL-GUIDE AUDIO PLAYER BAR */}
+          <div className="bg-gradient-to-r from-emerald-900 via-teal-900 to-stone-900 text-white px-4 sm:px-8 py-3 sticky top-[53px] z-30 shadow-md border-b border-emerald-800/50 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-300">
+                <Headphones className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-emerald-200 flex items-center gap-2">
+                  <span>Versión de Audio Completa (Texto a Voz)</span>
+                  {isAudioPlaying && !isAudioPaused && (
+                    <span className="flex items-center gap-0.5">
+                      <span className="w-1 h-3 bg-emerald-400 rounded-full animate-bounce"></span>
+                      <span className="w-1 h-4 bg-emerald-300 rounded-full animate-bounce [animation-delay:0.15s]"></span>
+                      <span className="w-1 h-2 bg-emerald-400 rounded-full animate-bounce [animation-delay:0.3s]"></span>
+                    </span>
+                  )}
+                </p>
+                <p className="text-[11px] text-stone-300">
+                  {isAudioPlaying ? (isAudioPaused ? 'Pausado' : 'Reproduciendo narración guiada...') : 'Escucha esta guía completa mientras realizas tus actividades.'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Play / Pause / Stop Controls */}
+              {!isAudioPlaying ? (
+                <button
+                  onClick={() => startGuideAudio(activeGuide)}
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-1.5 rounded-full text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Play className="w-3.5 h-3.5 fill-white" />
+                  <span>Escuchar Guía</span>
+                </button>
+              ) : (
+                <div className="flex items-center gap-1.5">
+                  {isAudioPaused ? (
+                    <button
+                      onClick={() => startGuideAudio(activeGuide)}
+                      className="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                    >
+                      <Play className="w-3.5 h-3.5 fill-white" />
+                      <span>Reanudar</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={pauseGuideAudio}
+                      className="bg-amber-600 hover:bg-amber-500 text-white px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                    >
+                      <Pause className="w-3.5 h-3.5 fill-white" />
+                      <span>Pausar</span>
+                    </button>
+                  )}
+
+                  <button
+                    onClick={stopGuideAudio}
+                    className="bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white p-1.5 rounded-full transition-all cursor-pointer"
+                    title="Detener audio"
+                  >
+                    <Square className="w-3.5 h-3.5 fill-current" />
+                  </button>
+                </div>
+              )}
+
+              {/* Speed Selector */}
+              <div className="flex items-center bg-stone-800/80 rounded-full border border-stone-700/60 p-0.5 text-[10px] font-bold">
+                {[1.0, 1.25, 1.5].map((spd) => (
+                  <button
+                    key={spd}
+                    onClick={() => handleChangeSpeed(spd)}
+                    className={`px-2 py-0.5 rounded-full transition-all cursor-pointer ${
+                      audioSpeed === spd 
+                        ? 'bg-emerald-500 text-white shadow-2xs' 
+                        : 'text-stone-400 hover:text-white'
+                    }`}
+                  >
+                    {spd}x
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
           {/* Full Screen Reader Content */}
           <div className="flex-1 w-full max-w-4xl mx-auto py-8 sm:py-12 px-4 sm:px-8 pb-32">
             
+            {/* RESUME READING / CONTINUAR DONDE LO DEJASTE PROMPT */}
+            {readingProgress[activeGuide.id] && readingProgress[activeGuide.id].sectionIndex > 0 && (
+              <div className="mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-300 text-amber-950 flex items-center justify-between gap-3 shadow-2xs">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-amber-200 text-amber-900 flex items-center justify-center shrink-0">
+                    <BookmarkCheck className="w-4 h-4" />
+                  </div>
+                  <div className="text-xs">
+                    <span className="font-bold block">Continuar donde lo dejaste:</span>
+                    <span className="text-amber-800">
+                      Sección {readingProgress[activeGuide.id].sectionIndex + 1}: {activeGuide.explainedContent[readingProgress[activeGuide.id].sectionIndex]?.heading || 'Punto guardado'}
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    const idx = readingProgress[activeGuide.id].sectionIndex;
+                    const el = document.getElementById(`guide-sec-${idx}`);
+                    if (el) {
+                      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                      success('Saltando a tu sección', 'Has retomado la lectura exactamente donde te quedaste.');
+                    }
+                  }}
+                  className="bg-amber-700 hover:bg-amber-800 text-white px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer shrink-0"
+                >
+                  Ir a la sección →
+                </button>
+              </div>
+            )}
+
             {/* Guide Header Information */}
             <div className="mb-8">
               <div className="flex items-center gap-2 flex-wrap mb-3">
@@ -932,6 +1578,12 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                   <Clock className="w-3.5 h-3.5" />
                   {activeGuide.readTime}
                 </span>
+                {readGuides.includes(activeGuide.id) && (
+                  <span className="text-xs font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 px-3 py-0.5 rounded-full flex items-center gap-1">
+                    <Check className="w-3.5 h-3.5 stroke-[3]" />
+                    <span>Guía Completada</span>
+                  </span>
+                )}
               </div>
 
               <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-stone-900 leading-tight mb-4">
@@ -941,7 +1593,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
               <div className="flex items-center justify-between pb-6 border-b border-stone-200 text-xs sm:text-sm text-stone-500">
                 <span>Por <strong className="text-stone-800">{activeGuide.author}</strong></span>
                 <span className="bg-stone-100 text-stone-600 px-3 py-1 rounded-full text-xs font-semibold">
-                  Lectura Interactiva
+                  Lectura Interactiva Respaldada
                 </span>
               </div>
             </div>
@@ -983,10 +1635,29 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
             {/* Step 3: Contenido Explicado en Detalle */}
             <div className="space-y-8 text-stone-800 text-base leading-relaxed mb-10">
               {activeGuide.explainedContent.map((section, idx) => (
-                <div key={idx} className="bg-white p-6 sm:p-8 rounded-3xl border border-stone-200/90 shadow-xs">
-                  <h3 className="font-serif font-bold text-stone-900 text-xl sm:text-2xl mb-3">
-                    {section.heading}
-                  </h3>
+                <div 
+                  key={idx} 
+                  id={`guide-sec-${idx}`}
+                  onClick={() => updateSectionProgress(activeGuide.id, idx)}
+                  className="bg-white p-6 sm:p-8 rounded-3xl border border-stone-200/90 shadow-xs transition-all hover:border-[#548c71]/40"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-serif font-bold text-stone-900 text-xl sm:text-2xl">
+                      {section.heading}
+                    </h3>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        updateSectionProgress(activeGuide.id, idx);
+                        success('Punto de lectura guardado', `Se guardó tu avance en la sección ${idx + 1}.`);
+                      }}
+                      className="text-stone-300 hover:text-amber-600 p-1 cursor-pointer transition-colors"
+                      title="Guardar marcador aquí"
+                    >
+                      <BookmarkCheck className={`w-5 h-5 ${readingProgress[activeGuide.id]?.sectionIndex === idx ? 'text-amber-600' : ''}`} />
+                    </button>
+                  </div>
+
                   <p className="text-stone-700 text-sm sm:text-base leading-relaxed">
                     {section.text}
                   </p>
@@ -1040,27 +1711,53 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
               </div>
             )}
 
+            {/* RATING WIDGET: ¿TE SIRVIÓ ESTA GUÍA? */}
+            <div className="mb-10 p-5 rounded-3xl bg-white border border-stone-200 shadow-2xs text-center">
+              <span className="text-xs font-bold uppercase tracking-wider text-stone-500 block mb-2">
+                Evaluación de Contenido
+              </span>
+              <h4 className="font-serif text-lg font-bold text-stone-900 mb-3">
+                ¿Te ha resultado útil esta guía?
+              </h4>
+              <div className="flex items-center justify-center gap-3 flex-wrap">
+                <button
+                  onClick={() => handleRateGuide(activeGuide.id, 'positive')}
+                  className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                    guideRatings[activeGuide.id] === 'positive'
+                      ? 'bg-emerald-600 text-white shadow-xs'
+                      : 'bg-stone-100 hover:bg-emerald-50 text-stone-700 hover:text-emerald-700 border border-stone-200'
+                  }`}
+                >
+                  <ThumbsUp className="w-4 h-4" />
+                  <span>👍 Me sirvió mucho</span>
+                </button>
+
+                <button
+                  onClick={() => handleRateGuide(activeGuide.id, 'negative')}
+                  className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                    guideRatings[activeGuide.id] === 'negative'
+                      ? 'bg-stone-800 text-white shadow-xs'
+                      : 'bg-stone-100 hover:bg-stone-200 text-stone-700 border border-stone-200'
+                  }`}
+                >
+                  <ThumbsDown className="w-4 h-4" />
+                  <span>👎 Podría mejorar</span>
+                </button>
+              </div>
+            </div>
+
             {/* PROMINENT BUTTON: HE TERMINADO DE LEER LA GUÍA */}
             <div className="my-10 p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-[#f2ece1] to-[#e8f1ec] border border-[#548c71]/40 text-center shadow-sm">
               <h3 className="font-serif text-2xl sm:text-3xl font-bold text-stone-900 mb-2">
                 ¿Has asimilado los conceptos de esta guía?
               </h3>
               <p className="text-stone-600 text-xs sm:text-sm max-w-lg mx-auto mb-6">
-                Haz clic a continuación para registrar la lectura completa y desbloquear de inmediato tus <strong>3 misiones diarias prácticas</strong> asociadas a este tema.
+                Haz clic a continuación para registrar la lectura completa y activar tus <strong>3 misiones prácticas</strong> en tu plan diario para ejercitarlas durante tu jornada.
               </p>
 
               <button
                 id="finish-reading-guide-btn"
-                onClick={() => {
-                  const activated = activateAllMissionsFromGuide(activeGuide);
-                  setUnlockedMissions(activated);
-                  confetti({
-                    particleCount: 90,
-                    spread: 80,
-                    origin: { y: 0.6 }
-                  });
-                  success('¡Lectura completada con éxito! 🎉', 'Has desbloqueado 3 misiones diarias. Se han guardado en tu apartado de Misiones Diarias.');
-                }}
+                onClick={() => handleFinishReading(activeGuide)}
                 className="bg-[#548c71] hover:bg-[#43705a] active:scale-98 text-white px-8 sm:px-10 py-4 rounded-full font-bold text-base sm:text-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-3 mx-auto cursor-pointer"
               >
                 <CheckCircle2 className="w-5 h-5" />
@@ -1069,7 +1766,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
               </button>
             </div>
 
-            {/* UNLOCKED 3 DAILY MISSIONS CELEBRATION PANEL */}
+            {/* UNLOCKED 3 DAILY MISSIONS PANEL (FOCUSED ON REAL DAILY PRACTICE) */}
             {unlockedMissions && unlockedMissions.length > 0 && (
               <div className="my-8 p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-amber-50 via-orange-50/70 to-amber-100/50 border-2 border-amber-300 shadow-md animate-in zoom-in-95 duration-200">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-amber-200 mb-6">
@@ -1079,10 +1776,10 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                     </div>
                     <div>
                       <span className="text-[11px] font-bold uppercase tracking-wider text-amber-800">
-                        ¡Misiones Desbloqueadas!
+                        ¡Misiones Desbloqueadas y Listas para tu Día!
                       </span>
                       <h4 className="font-serif text-xl sm:text-2xl font-bold text-stone-900">
-                        3 Misiones Diarias Asignadas
+                        3 Retos Prácticos Asignados
                       </h4>
                     </div>
                   </div>
@@ -1090,6 +1787,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                   {onNavigate && (
                     <button
                       onClick={() => {
+                        stopGuideAudio();
                         setActiveGuide(null);
                         setUnlockedMissions(null);
                         onNavigate('missions');
@@ -1102,8 +1800,8 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                   )}
                 </div>
 
-                <p className="text-stone-700 text-xs sm:text-sm mb-4">
-                  Estas 3 misiones se han guardado automáticamente en tu nuevo apartado <strong>Misiones Diarias</strong>. Puedes completarlas hoy para ganar XP y mantener tu racha:
+                <p className="text-stone-700 text-xs sm:text-sm mb-4 leading-relaxed">
+                  💡 <strong>Propósito de las misiones:</strong> Estas acciones están diseñadas para trasladar la teoría a la práctica en tu día a día. Las encontrarás activas en tu apartado de <strong>Misiones Diarias</strong> para completarlas y registrar tus XP conforme las realices.
                 </p>
 
                 {/* 3 Missions Cards Grid */}
@@ -1112,7 +1810,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                     <div key={m.id || mIdx} className="bg-white/95 rounded-2xl p-4 border border-amber-200 shadow-2xs flex flex-col justify-between">
                       <div>
                         <div className="flex items-center justify-between text-[11px] font-bold text-amber-900 mb-2">
-                          <span className="bg-amber-100 px-2 py-0.5 rounded-md">Misión {mIdx + 1}</span>
+                          <span className="bg-amber-100 px-2 py-0.5 rounded-md">Reto {mIdx + 1}</span>
                           <span className="text-stone-400 font-medium flex items-center gap-1">
                             <Clock className="w-3 h-3" />
                             {m.timeEstimate}
@@ -1131,37 +1829,32 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                           +{m.xp || 30} XP
                         </span>
 
-                        <button
-                          onClick={() => {
-                            completeDailyMission(m.id);
-                            confetti({ particleCount: 50, spread: 60, origin: { y: 0.7 } });
-                            success('¡Misión completada!', 'Sumaste tus puntos de experiencia.');
-                          }}
-                          className="text-[11px] font-bold text-[#548c71] hover:text-[#43705a] bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1 rounded-full transition-colors cursor-pointer flex items-center gap-1"
-                        >
-                          <CheckCircle2 className="w-3 h-3" />
-                          <span>Hacer ahora</span>
-                        </button>
+                        <span className="text-[11px] font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full flex items-center gap-1">
+                          <Check className="w-3 h-3 stroke-[3]" />
+                          <span>Activada en tu día</span>
+                        </span>
                       </div>
                     </div>
                   ))}
                 </div>
 
-                <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-amber-900">
+                <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-amber-900 pt-2 border-t border-amber-200/60">
                   <span className="font-semibold">
-                    💡 Podrás dar seguimiento a todas tus misiones pendientes en la sección "Misiones Diarias".
+                    🌱 Ponlas en práctica durante tu jornada y márcalas como completadas en tu panel.
                   </span>
                   
                   {onNavigate && (
                     <button
                       onClick={() => {
+                        stopGuideAudio();
                         setActiveGuide(null);
                         setUnlockedMissions(null);
                         onNavigate('missions');
                       }}
-                      className="font-bold underline hover:text-amber-950 cursor-pointer"
+                      className="font-bold underline hover:text-amber-950 cursor-pointer flex items-center gap-1"
                     >
-                      Ver todas mis misiones pendientes →
+                      <span>Ver todas mis misiones en curso</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                   )}
                 </div>
