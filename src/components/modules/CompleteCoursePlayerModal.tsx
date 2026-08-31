@@ -268,7 +268,7 @@ INSTRUCCIONES:
   // Helper to get step label
   const getPageTitle = (pageIdx: number): string => {
     if (pageIdx < currentDayLesson.sections.length) {
-      return currentDayLesson.sections[pageIdx]?.title || `Paso ${pageIdx + 1}`;
+      return currentDayLesson.sections[pageIdx]?.title || `Concepto ${pageIdx + 1}`;
     }
     if (pageIdx === QUIZ_PAGE_INDEX) return 'Comprobación del Día';
     if (pageIdx === MISSIONS_PAGE_INDEX) return 'Misiones Prácticas';
@@ -286,16 +286,20 @@ INSTRUCCIONES:
             <BookOpen className="w-5 h-5 text-brand-gold-300" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[10px] font-bold uppercase tracking-wider bg-brand-gold-400 text-brand-sage-950 px-2.5 py-0.5 rounded-full shadow-xs flex items-center gap-1">
+                <Sparkles className="w-3 h-3 fill-brand-sage-950" />
+                Ejemplo Demostrativo IA
+              </span>
               <span className="text-[10px] font-bold uppercase tracking-wider bg-brand-sage-800 text-brand-gold-300 px-2.5 py-0.5 rounded-full border border-brand-gold-400/30">
-                Guía Completa de 1 Semana
+                Guía Completa 1 Semana
               </span>
               <span className="text-xs text-brand-sand-300 flex items-center gap-1">
                 <Clock className="w-3.5 h-3.5" />
                 {course.totalDays} Días
               </span>
             </div>
-            <h1 className="text-base sm:text-lg font-bold text-white leading-snug line-clamp-1">
+            <h1 className="text-base sm:text-lg font-bold text-white leading-snug line-clamp-1 mt-0.5">
               {course.title}
             </h1>
           </div>
@@ -386,7 +390,7 @@ INSTRUCCIONES:
                   : 'bg-stone-100 hover:bg-stone-200 text-stone-600'
               }`}
             >
-              <span>Paso {idx + 1}</span>
+              <span>Concepto {idx + 1}</span>
             </button>
           ))}
 
@@ -443,7 +447,7 @@ INSTRUCCIONES:
       >
         
         {/* ======================================================== */}
-        {/* CASE A: CONTENT SECTION PAGE (Step 1, Step 2, Step 3...) */}
+        {/* CASE A: CONTENT SECTION PAGE (Concepto 1, Concepto 2...) */}
         {/* ======================================================== */}
         {activePageIndex < currentDayLesson.sections.length && (() => {
           const currentSection = currentDayLesson.sections[activePageIndex];
@@ -463,7 +467,7 @@ INSTRUCCIONES:
                     {currentDayLesson.readTime}
                   </span>
                   <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
-                    Paso {activePageIndex + 1} de {currentDayLesson.sections.length}
+                    Concepto {activePageIndex + 1} de {currentDayLesson.sections.length}
                   </span>
                 </div>
 

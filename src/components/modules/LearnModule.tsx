@@ -954,8 +954,12 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-900/40 to-transparent" />
                       
-                      <div className="absolute top-3 left-3 flex items-center gap-2">
-                        <span className="bg-white/95 backdrop-blur-xs text-stone-900 text-[11px] font-bold px-3 py-1 rounded-full shadow-xs">
+                      <div className="absolute top-3 left-3 flex items-center gap-2 flex-wrap">
+                        <span className="bg-brand-gold-400 text-brand-sage-950 text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-xs flex items-center gap-1">
+                          <Sparkles className="w-3 h-3 fill-brand-sage-950" />
+                          Ejemplo Demostrativo IA
+                        </span>
+                        <span className="bg-white/95 backdrop-blur-xs text-stone-900 text-[11px] font-bold px-3 py-0.5 rounded-full shadow-xs">
                           {course.category}
                         </span>
                         <span className="bg-amber-400 text-amber-950 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs flex items-center gap-1">
