@@ -75,7 +75,7 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
   const [selectedMoodContext, setSelectedMoodContext] = useState<string>('');
   const [activePractice, setActivePractice] = useState<InstantPracticeItem | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { showToast } = useToast();
+  const { info, success } = useToast();
 
   const AI_MODES = [
     { id: 'calm' as AiMode, label: '🌿 Acompañamiento', desc: 'Validación empática y comprensión sin juicios' },
@@ -149,7 +149,7 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
       console.error(e);
     }
 
-    showToast('Nueva conversación iniciada.', 'info');
+    info('Nueva conversación iniciada.');
   };
 
   const handleRestoreSession = (session: ArchivedSession) => {
@@ -173,7 +173,7 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
 
     setMessages(session.messages || []);
     setShowHistoryModal(false);
-    showToast('Conversación anterior cargada.', 'success');
+    success('Conversación anterior cargada.');
   };
 
   const handleSendMessage = async (textToSend?: string) => {
@@ -248,7 +248,7 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
   const handleCopyText = (id: string, text: string) => {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
-    showToast('Texto copiado al portapapeles', 'success');
+    success('Texto copiado al portapapeles');
     setTimeout(() => setCopiedId(null), 2000);
   };
 
@@ -276,7 +276,7 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
     link.download = `fluxai-conversacion-${Date.now()}.txt`;
     link.click();
     URL.revokeObjectURL(url);
-    showToast('Conversación descargada en archivo de texto.', 'success');
+    success('Conversación descargada en archivo de texto.');
   };
 
   const getFallbackResponse = (query: string, mode: AiMode): string => {
@@ -780,12 +780,11 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
       )}
 
       {/* Instant Practice Modal if launched from Flux AI */}
-      {activePractice && (
-        <InstantPracticeModal
-          practice={activePractice}
-          onClose={() => setActivePractice(null)}
-        />
-      )}
+      <InstantPracticeModal
+        practice={activePractice}
+        isOpen={!!activePractice}
+        onClose={() => setActivePractice(null)}
+      />
 
     </div>
   );

@@ -13,6 +13,7 @@ import { ProfileModule } from './components/modules/ProfileModule';
 import { CommunityModule } from './components/modules/CommunityModule';
 import { MissionsModule } from './components/modules/MissionsModule';
 import { OnboardingModal } from './components/common/OnboardingModal';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { soundEngine } from './utils/audioSynth';
 
 const DEFAULT_USER_PROFILE: UserProfileData = {
@@ -164,57 +165,75 @@ export default function App() {
             className="w-full h-full"
           >
             {currentView === 'landing' && (
-              <LandingPage 
-                onNavigate={handleNavigate} 
-                currentUser={userProfile}
-                onAuthSuccess={handleAuthSuccess}
-                isAudioPlaying={isAudioPlaying}
-                onToggleAudio={handleToggleAmbientAudio}
-              />
+              <ErrorBoundary fallbackTitle="Inconveniente en la Página de Inicio">
+                <LandingPage 
+                  onNavigate={handleNavigate} 
+                  currentUser={userProfile}
+                  onAuthSuccess={handleAuthSuccess}
+                  isAudioPlaying={isAudioPlaying}
+                  onToggleAudio={handleToggleAmbientAudio}
+                />
+              </ErrorBoundary>
             )}
 
             {currentView === 'learn' && (
-              <LearnModule 
-                onNavigate={handleNavigate} 
-                initialGuideId={activeGuideId} 
-              />
+              <ErrorBoundary fallbackTitle="Inconveniente en el Centro de Aprendizaje">
+                <LearnModule 
+                  onNavigate={handleNavigate} 
+                  initialGuideId={activeGuideId} 
+                />
+              </ErrorBoundary>
             )}
 
             {currentView === 'journal' && (
-              <JournalModule 
-                onNavigate={handleNavigate} 
-              />
+              <ErrorBoundary fallbackTitle="Inconveniente en el Diario Emocional">
+                <JournalModule 
+                  onNavigate={handleNavigate} 
+                />
+              </ErrorBoundary>
             )}
 
             {currentView === 'missions' && (
-              <MissionsModule 
-                onNavigate={handleNavigate} 
-                onOpenGuideById={handleOpenGuideById} 
-              />
+              <ErrorBoundary fallbackTitle="Inconveniente en el Panel de Misiones">
+                <MissionsModule 
+                  onNavigate={handleNavigate} 
+                  onOpenGuideById={handleOpenGuideById} 
+                />
+              </ErrorBoundary>
             )}
 
             {currentView === 'analytics' && (
-              <AnalyticsModule onNavigate={handleNavigate} />
+              <ErrorBoundary fallbackTitle="Inconveniente en el Análisis Predictivo">
+                <AnalyticsModule onNavigate={handleNavigate} />
+              </ErrorBoundary>
             )}
 
             {currentView === 'ai' && (
-              <FluxAiModule userProfile={userProfile} />
+              <ErrorBoundary fallbackTitle="Inconveniente en Flux AI">
+                <FluxAiModule userProfile={userProfile} />
+              </ErrorBoundary>
             )}
 
             {currentView === 'alert' && (
-              <AlertModule />
+              <ErrorBoundary fallbackTitle="Inconveniente en Alerta Emocional">
+                <AlertModule />
+              </ErrorBoundary>
             )}
 
             {currentView === 'profile' && (
-              <ProfileModule 
-                userProfile={userProfile} 
-                onUpdateProfile={handleUpdateProfile} 
-                onNavigate={handleNavigate}
-              />
+              <ErrorBoundary fallbackTitle="Inconveniente en el Perfil">
+                <ProfileModule 
+                  userProfile={userProfile} 
+                  onUpdateProfile={handleUpdateProfile} 
+                  onNavigate={handleNavigate}
+                />
+              </ErrorBoundary>
             )}
 
             {currentView === 'community' && (
-              <CommunityModule />
+              <ErrorBoundary fallbackTitle="Inconveniente en la Comunidad">
+                <CommunityModule />
+              </ErrorBoundary>
             )}
           </motion.div>
         </AnimatePresence>

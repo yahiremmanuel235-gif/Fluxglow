@@ -9,7 +9,10 @@ export function getStoredMissions(): UserDailyMissionRecord[] {
   try {
     const raw = localStorage.getItem(MISSIONS_STORAGE_KEY);
     if (raw) {
-      return JSON.parse(raw);
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed.filter(item => item && typeof item === 'object');
+      }
     }
   } catch (e) {
     console.error('Error loading missions from localStorage:', e);
@@ -19,8 +22,9 @@ export function getStoredMissions(): UserDailyMissionRecord[] {
 
 export function saveStoredMissions(missions: UserDailyMissionRecord[]): void {
   try {
-    localStorage.setItem(MISSIONS_STORAGE_KEY, JSON.stringify(missions));
-    window.dispatchEvent(new CustomEvent('fluxglow_missions_updated', { detail: missions }));
+    const safeList = Array.isArray(missions) ? missions : [];
+    localStorage.setItem(MISSIONS_STORAGE_KEY, JSON.stringify(safeList));
+    window.dispatchEvent(new CustomEvent('fluxglow_missions_updated', { detail: safeList }));
   } catch (e) {
     console.error('Error saving missions to localStorage:', e);
   }
@@ -128,14 +132,28 @@ export function completeDailyMission(recordId: string): { success: boolean; miss
 }
 
 export function calculateMissionStreak(missions: UserDailyMissionRecord[]): number {
-  const completedMissions = missions.filter(m => m.status === 'completed' && m.completedAt);
+  if (!Array.isArray(missions)) return 0;
+  const completedMissions = missions.filter(m => m && m.status === 'completed' && m.completedAt);
   if (completedMissions.length === 0) return 0;
 
-  // Group completed dates (YYYY-MM-DD)
-  const daysSet = new Set(
-    completedMissions.map(m => new Date(m.completedAt!).toISOString().split('T')[0])
-  );
+  // Group valid completed dates (YYYY-MM-DD)
+  const validDates: string[] = [];
+  completedMissions.forEach(m => {
+    try {
+      if (m.completedAt) {
+        const d = new Date(m.completedAt);
+        if (!isNaN(d.getTime())) {
+          validDates.push(d.toISOString().split('T')[0]);
+        }
+      }
+    } catch {
+      // ignore invalid dates safely
+    }
+  });
 
+  if (validDates.length === 0) return 0;
+
+  const daysSet = new Set(validDates);
   const todayStr = new Date().toISOString().split('T')[0];
   const yesterdayDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const yesterdayStr = yesterdayDate.toISOString().split('T')[0];

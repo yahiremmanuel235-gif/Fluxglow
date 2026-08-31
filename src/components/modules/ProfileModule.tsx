@@ -331,7 +331,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
       type: 'mission',
       title: `Misión completada: ${m.title}`,
       desc: `+${m.xp || 30} XP sumados a tu progreso`,
-      date: m.completedDate || 'Completado',
+      date: m.completedAt ? new Date(m.completedAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : 'Completado',
       icon: '🎯',
       color: 'bg-brand-terracotta-100 text-brand-terracotta-700 border-brand-terracotta-300'
     }))

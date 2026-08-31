@@ -93,19 +93,55 @@ const MOOD_TO_LABEL: Record<string, string> = {
   Enojado: 'Tensión'
 };
 
+// Helper to sanitize journal entries from localStorage or mock data
+const sanitizeJournalEntry = (raw: any): JournalEntry => {
+  const safeMood = typeof raw?.mood === 'string' && raw.mood.trim() ? raw.mood : 'Tranquilo';
+  const safeDate = typeof raw?.date === 'string' && raw.date.trim() ? raw.date : new Date().toISOString().split('T')[0];
+  const safeIntensity = typeof raw?.intensity === 'number' && !isNaN(raw.intensity) ? raw.intensity : 5;
+  const safeNotes = typeof raw?.notes === 'string' ? raw.notes : '';
+  const safeTriggers = Array.isArray(raw?.triggers) 
+    ? raw.triggers 
+    : Array.isArray(raw?.tags) 
+      ? raw.tags 
+      : [];
+
+  return {
+    id: raw?.id || `entry-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+    date: safeDate,
+    time: raw?.time || raw?.timestamp || '12:00 PM',
+    mood: safeMood as MoodType,
+    intensity: safeIntensity,
+    notes: safeNotes,
+    triggers: safeTriggers,
+    habits: raw?.habits || {
+      sleepHours: raw?.sleepHours || 7,
+      waterGlasses: raw?.waterGlasses || 6,
+      exercised: !!raw?.physicalActivity,
+      energyLevel: raw?.energyLevel || 3
+    },
+    aiFeedback: raw?.aiFeedback || raw?.aiAnalysis?.aiInsight
+  };
+};
+
 export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) => {
   const { success, info } = useToast();
   const [showWeeklySummaryModal, setShowWeeklySummaryModal] = useState(false);
   const [forecastPeriod, setForecastPeriod] = useState<'7d' | '14d' | '30d'>('7d');
   const [selectedTrigger, setSelectedTrigger] = useState<string | null>('ejercicio');
   
-  // Real Journal entries
+  // Real Journal entries with robust parsing and validation
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>(() => {
     try {
       const saved = localStorage.getItem('fluxglow_journal_entries');
-      return saved ? JSON.parse(saved) : MOCK_JOURNAL_ENTRIES;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return parsed.map(sanitizeJournalEntry);
+        }
+      }
+      return (MOCK_JOURNAL_ENTRIES as any[]).map(sanitizeJournalEntry);
     } catch {
-      return MOCK_JOURNAL_ENTRIES;
+      return (MOCK_JOURNAL_ENTRIES as any[]).map(sanitizeJournalEntry);
     }
   });
 
@@ -125,7 +161,7 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
 
   useEffect(() => {
     const handleMissionsUpdate = (e: any) => {
-      if (e.detail) {
+      if (e.detail && Array.isArray(e.detail)) {
         setMissions(e.detail);
       } else {
         setMissions(getStoredMissions());
@@ -135,9 +171,14 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
     const handleJournalUpdate = () => {
       try {
         const saved = localStorage.getItem('fluxglow_journal_entries');
-        if (saved) setJournalEntries(JSON.parse(saved));
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            setJournalEntries(parsed.map(sanitizeJournalEntry));
+          }
+        }
       } catch (err) {
-        console.error(err);
+        console.error('Error parsing journal entries in AnalyticsModule:', err);
       }
     };
 
@@ -162,8 +203,9 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
   };
 
   const streakDays = calculateMissionStreak(missions);
-  const completedMissionsCount = missions.filter(m => m.status === 'completed').length;
+  const completedMissionsCount = missions.filter(m => m && m.status === 'completed').length;
   const filteredMissions = missions.filter(m => {
+    if (!m) return false;
     if (missionFilter === 'pending') return m.status === 'pending';
     if (missionFilter === 'completed') return m.status === 'completed';
     return true;
@@ -189,23 +231,28 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
       'estudio': { count: 2, totalIntensity: 13, moods: { 'ansioso': 1, 'tranquilo': 1 } },
     };
 
-    journalEntries.forEach(entry => {
-      const triggers = entry.triggers || [];
-      const tags = (entry as any).tags || [];
-      const combined = Array.from(new Set([...triggers, ...tags]));
-      const val = entry.intensity || 5;
-      const moodKey = entry.mood.toLowerCase();
+    if (Array.isArray(journalEntries)) {
+      journalEntries.forEach(entry => {
+        if (!entry) return;
+        const triggers = Array.isArray(entry.triggers) ? entry.triggers : [];
+        const tags = Array.isArray((entry as any).tags) ? (entry as any).tags : [];
+        const combined = Array.from(new Set([...triggers, ...tags]));
+        const val = typeof entry.intensity === 'number' ? entry.intensity : 5;
+        const moodKey = (entry.mood || 'tranquilo').toString().toLowerCase();
 
-      combined.forEach(t => {
-        const clean = t.replace('#', '').toLowerCase();
-        if (!triggerMap[clean]) {
-          triggerMap[clean] = { count: 0, totalIntensity: 0, moods: {} };
-        }
-        triggerMap[clean].count += 1;
-        triggerMap[clean].totalIntensity += val;
-        triggerMap[clean].moods[moodKey] = (triggerMap[clean].moods[moodKey] || 0) + 1;
+        combined.forEach(t => {
+          if (!t) return;
+          const clean = t.toString().replace('#', '').trim().toLowerCase();
+          if (!clean) return;
+          if (!triggerMap[clean]) {
+            triggerMap[clean] = { count: 0, totalIntensity: 0, moods: {} };
+          }
+          triggerMap[clean].count += 1;
+          triggerMap[clean].totalIntensity += val;
+          triggerMap[clean].moods[moodKey] = (triggerMap[clean].moods[moodKey] || 0) + 1;
+        });
       });
-    });
+    }
 
     return Object.entries(triggerMap).map(([tag, data]) => {
       const avgIntensity = (data.totalIntensity / (data.count || 1)).toFixed(1);
@@ -245,15 +292,25 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
       'Mindfulness': 3,
     };
 
-    journalEntries.forEach(entry => {
-      if (entry.triggers && Array.isArray(entry.triggers)) {
-        entry.triggers.forEach(t => {
-          counts[t] = (counts[t] || 0) + 2;
+    if (Array.isArray(journalEntries)) {
+      journalEntries.forEach(entry => {
+        if (!entry) return;
+        const allTriggers = [
+          ...(Array.isArray(entry.triggers) ? entry.triggers : []),
+          ...(Array.isArray((entry as any).tags) ? (entry as any).tags : [])
+        ];
+        allTriggers.forEach(t => {
+          if (t && typeof t === 'string') {
+            const clean = t.replace('#', '').trim();
+            if (clean) {
+              counts[clean] = (counts[clean] || 0) + 2;
+            }
+          }
         });
-      }
-    });
+      });
+    }
 
-    const total = Object.values(counts).reduce((acc, c) => acc + c, 0);
+    const total = Object.values(counts).reduce((acc, c) => acc + c, 0) || 1;
     const colors = ['#548c71', '#3d6753', '#de6943', '#d97706', '#0284c7', '#84cc16'];
 
     return Object.entries(counts)
@@ -301,12 +358,16 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
       { day: 30, val: 5, mood: 'Felicidad', date: '30 Jun', note: 'Reflexión y cierre positivo' }
     ];
 
-    if (journalEntries && journalEntries.length > 0) {
+    if (Array.isArray(journalEntries) && journalEntries.length > 0) {
       journalEntries.forEach((entry) => {
-        const dayNum = parseInt(entry.date.split('-')[2] || '30', 10);
-        const targetDay = isNaN(dayNum) ? 30 : Math.min(30, Math.max(1, dayNum));
-        const entryVal = MOOD_TO_VAL[entry.mood] || 4;
-        const entryMood = MOOD_TO_LABEL[entry.mood] || 'Tranquilidad';
+        if (!entry) return;
+        const dateStr = typeof entry.date === 'string' ? entry.date : '';
+        const parts = dateStr.split('-');
+        const rawDay = parts.length > 2 ? parseInt(parts[2], 10) : NaN;
+        const targetDay = isNaN(rawDay) ? 30 : Math.min(30, Math.max(1, rawDay));
+        const moodKey = entry.mood || 'tranquilo';
+        const entryVal = MOOD_TO_VAL[moodKey] || 4;
+        const entryMood = MOOD_TO_LABEL[moodKey] || 'Tranquilidad';
         const entryNote = entry.notes ? entry.notes.slice(0, 35) + '...' : 'Registro en diario';
 
         const index = baseDays.findIndex(d => d.day === targetDay);
@@ -956,6 +1017,12 @@ Generado con FluxGlow • Cuidado emocional consciente`;
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-2">
             {filteredMissions.map((item) => {
               const isDone = item.status === 'completed';
+              const guideTitle = item.guideTitle || (item as any).mission?.guideTitle || 'Misión Práctica';
+              const xpVal = item.xp || (item as any).mission?.xp || 30;
+              const missionTitle = item.title || (item as any).mission?.title || 'Misión diaria';
+              const missionDesc = item.description || (item as any).mission?.description || '';
+              const timeEst = item.timeEstimate || ((item as any).mission?.durationMinutes ? `${(item as any).mission.durationMinutes} min` : '5 min');
+
               return (
                 <div
                   key={item.id}
@@ -967,23 +1034,23 @@ Generado con FluxGlow • Cuidado emocional consciente`;
                 >
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-brand-sage-700 bg-brand-sage-50 px-2 py-0.5 rounded-full border border-brand-sage-200">
-                      {item.mission.guideTitle}
+                      {guideTitle}
                     </span>
                     <span className="text-xs font-black text-brand-terracotta-600">
-                      +{item.mission.xp} XP
+                      +{xpVal} XP
                     </span>
                   </div>
 
                   <h3 className="text-sm font-bold text-stone-900 mb-1">
-                    {item.mission.title}
+                    {missionTitle}
                   </h3>
                   <p className="text-xs text-stone-600 mb-3 leading-relaxed">
-                    {item.mission.description}
+                    {missionDesc}
                   </p>
 
                   <div className="flex items-center justify-between pt-2 border-t border-brand-sand-200">
                     <span className="text-[11px] text-stone-500 font-medium">
-                      ⏱️ {item.mission.durationMinutes} min
+                      ⏱️ {timeEst}
                     </span>
 
                     {isDone ? (

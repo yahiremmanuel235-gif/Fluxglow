@@ -82,8 +82,30 @@ const INSPIRATIONAL_QUOTES: Record<string, EmotionQuote> = {
 export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, onNavigate }) => {
   const { success, warning } = useToast();
   const [entries, setEntries] = useState<JournalEntry[]>(() => {
-    const saved = localStorage.getItem('fluxglow_journal_entries');
-    return saved ? JSON.parse(saved) : MOCK_JOURNAL_ENTRIES;
+    const sanitize = (raw: any): JournalEntry => ({
+      id: raw?.id || `entry-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      date: typeof raw?.date === 'string' ? raw.date : new Date().toISOString().split('T')[0],
+      time: raw?.time || raw?.timestamp || '12:00 PM',
+      mood: (typeof raw?.mood === 'string' ? raw.mood : 'tranquilo') as MoodType,
+      intensity: typeof raw?.intensity === 'number' ? raw.intensity : 5,
+      notes: typeof raw?.notes === 'string' ? raw.notes : '',
+      triggers: Array.isArray(raw?.triggers) ? raw.triggers : Array.isArray(raw?.tags) ? raw.tags : [],
+      habits: raw?.habits || { sleepHours: 7, waterGlasses: 6, exercised: false, energyLevel: 3 },
+      aiFeedback: raw?.aiFeedback || raw?.aiAnalysis?.aiInsight
+    });
+
+    try {
+      const saved = localStorage.getItem('fluxglow_journal_entries');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return parsed.map(sanitize);
+        }
+      }
+    } catch {
+      // ignore
+    }
+    return (MOCK_JOURNAL_ENTRIES as any[]).map(sanitize);
   });
 
   const [selectedMood, setSelectedMood] = useState<MoodType>('feliz');

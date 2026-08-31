@@ -1892,15 +1892,6 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
         </div>
       )}
 
-      {/* YouTube Video / Podcast Player Modal */}
-      <YouTubePlayerModal
-        media={activeMedia}
-        isOpen={!!activeMedia}
-        onClose={() => setActiveMedia(null)}
-        onSelectMedia={(media) => setActiveMedia(media)}
-        allMedia={VERIFIED_MEDIA_CATALOG}
-      />
-
       {/* Psychological Test Modal */}
       {activeTest && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
