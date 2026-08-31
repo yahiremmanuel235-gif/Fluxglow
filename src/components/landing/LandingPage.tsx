@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { ViewMode, UserProfileData } from '../../types';
 import { TeamSection } from './TeamSection';
-import { InterfacesShowcase } from './InterfacesShowcase';
+import { PlatformFeaturesAndAdvantages } from './PlatformFeaturesAndAdvantages';
 import { ContactSection } from './ContactSection';
 import { FluxGlowLogo } from '../common/FluxGlowLogo';
 import { AuthModals } from '../common/AuthModals';
-import { soundEngine } from '../../utils/audioSynth';
 import heroImg from '../../assets/images/mental_health_hero_1787964175044.jpg';
 import calmMindImg from '../../assets/images/calm_mind_wellness_1787964189019.jpg';
 import { 
@@ -18,22 +17,8 @@ import {
   SunMedium, 
   ShieldCheck, 
   Zap,
-  Info,
   User,
-  Layers,
   ChevronDown,
-  Volume2,
-  VolumeX,
-  Play,
-  Pause,
-  Smile,
-  Frown,
-  Meh,
-  Flame,
-  BatteryCharging,
-  Heart,
-  BookOpen,
-  MessageSquare,
   HelpCircle,
   ChevronUp
 } from 'lucide-react';
@@ -42,57 +27,36 @@ interface LandingPageProps {
   onNavigate: (view: ViewMode) => void;
   currentUser?: UserProfileData;
   onAuthSuccess?: (targetView: ViewMode, userProfile?: Partial<UserProfileData>) => void;
-  isAudioPlaying?: boolean;
-  onToggleAudio?: () => void;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ 
   onNavigate,
   currentUser,
-  onAuthSuccess,
-  isAudioPlaying = false,
-  onToggleAudio
+  onAuthSuccess
 }) => {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('register');
-  const [selectedQuickMood, setSelectedQuickMood] = useState<string | null>(null);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
 
-  // Mini breathing pacer state
+  // Breathing pacer state (Pure visual animation, no audio)
   const [isBreathingActive, setIsBreathingActive] = useState(false);
   const [breathingPhase, setBreathingPhase] = useState<'Inhala' | 'Sostén' | 'Exhala'>('Inhala');
   const [breathingSeconds, setBreathingSeconds] = useState(4);
-
-  const openAuth = (mode: 'login' | 'register') => {
-    setAuthMode(mode);
-    setAuthModalOpen(true);
-  };
-
-  const handleAudioToggle = () => {
-    if (onToggleAudio) {
-      onToggleAudio();
-    } else {
-      soundEngine.toggleAmbient('zen');
-    }
-  };
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (isBreathingActive) {
       if (breathingPhase === 'Inhala') {
-        soundEngine.playBreathingCue('inhale');
         timer = setTimeout(() => {
           setBreathingPhase('Sostén');
           setBreathingSeconds(4);
         }, 4000);
       } else if (breathingPhase === 'Sostén') {
-        soundEngine.playBreathingCue('hold');
         timer = setTimeout(() => {
           setBreathingPhase('Exhala');
           setBreathingSeconds(4);
         }, 4000);
       } else if (breathingPhase === 'Exhala') {
-        soundEngine.playBreathingCue('exhale');
         timer = setTimeout(() => {
           setBreathingPhase('Inhala');
           setBreathingSeconds(4);
@@ -102,13 +66,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     return () => clearTimeout(timer);
   }, [isBreathingActive, breathingPhase]);
 
-  const quickMoods = [
-    { id: 'calm', label: 'En Calma', icon: Smile, color: 'text-[#548c71]', bg: 'bg-[#e2eee6]', tip: '¡Excelente! Mantén este estado con una breve reflexión o diario de gratitud.', targetView: 'journal' as ViewMode },
-    { id: 'stressed', label: 'Estresado/a', icon: Flame, color: 'text-[#de6943]', bg: 'bg-[#fbeae2]', tip: 'Hagamos una pausa de 2 minutos. Te recomendamos la respiración guiada o el módulo de alerta emocional.', targetView: 'alert' as ViewMode },
-    { id: 'tired', label: 'Cansado/a', icon: BatteryCharging, color: 'text-amber-600', bg: 'bg-amber-100', tip: 'La fatiga mental es una señal de tu cuerpo. Prueba nuestros podcasts de descanso mental.', targetView: 'learn' as ViewMode },
-    { id: 'anxious', label: 'Con Ansiedad', icon: Meh, color: 'text-purple-600', bg: 'bg-purple-100', tip: 'Respira conmigo. Escribe tus pensamientos en el Diario o platica con Flux AI.', targetView: 'ai' as ViewMode },
-    { id: 'motivated', label: 'Motivado/a', icon: Heart, color: 'text-rose-600', bg: 'bg-rose-100', tip: '¡Aprovecha esta energía para fijar tus metas en el perfil y aprender algo nuevo!', targetView: 'profile' as ViewMode },
-  ];
+  const openAuth = (mode: 'login' | 'register') => {
+    setAuthMode(mode);
+    setAuthModalOpen(true);
+  };
 
   const combinedFeatures = [
     { title: 'Educación emocional', desc: 'Recursos interactivos para comprender la mente y el cuerpo.' },
@@ -168,27 +129,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <a href="#origen" className="hover:text-[#4a7c59] transition-colors">Origen</a>
               <a href="#objetivos" className="hover:text-[#4a7c59] transition-colors">Objetivos</a>
               <a href="#mision-vision" className="hover:text-[#4a7c59] transition-colors">Misión</a>
-              <a href="#diseno" className="hover:text-[#4a7c59] transition-colors">7 Módulos</a>
+              <a href="#funciones-y-ventajas" className="hover:text-[#4a7c59] transition-colors">Funciones y Ventajas</a>
               <a href="#equipo" className="hover:text-[#4a7c59] transition-colors">Equipo</a>
             </div>
 
-            {/* Right actions matching screenshot: Soundscape | (i) Regístrate | 👤 Iniciar sesión */}
+            {/* Right actions matching user request: Only Regístrate and Iniciar sesión */}
             <div className="flex items-center gap-2.5 sm:gap-4">
-              <button
-                id="header-sound-btn"
-                onClick={handleAudioToggle}
-                className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
-                  isAudioPlaying 
-                    ? 'bg-amber-100/80 border-amber-300 text-amber-900 shadow-xs animate-pulse' 
-                    : 'bg-stone-50 border-stone-200 text-stone-600 hover:bg-stone-100'
-                }`}
-                title={isAudioPlaying ? 'Silenciar música relajante' : 'Sonido ambiental relajante (Cuencos Tibetanos)'}
-                aria-label={isAudioPlaying ? 'Silenciar música relajante' : 'Activar sonido ambiental relajante'}
-              >
-                {isAudioPlaying ? <Volume2 className="w-3.5 h-3.5 text-amber-700" /> : <VolumeX className="w-3.5 h-3.5" />}
-                <span className="hidden sm:inline">{isAudioPlaying ? 'Sonido Zen Activo' : 'Música Zen'}</span>
-              </button>
-
               <button
                 id="top-nav-register-btn"
                 onClick={() => openAuth('register')}
@@ -237,7 +183,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             Transforma tu salud emocional con una plataforma que te entiende. Centraliza tu aprendizaje, registra tu progreso y recibe apoyo personalizado, todo en un solo lugar.
           </p>
 
-          {/* Two Pill Buttons with pristine text-white contrast */}
+          {/* Two Main Primary Pill Buttons: Regístrate e Iniciar sesión */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 max-w-xl mx-auto">
             
             {/* Green / Sage Pill Button: Regístrate */}
@@ -260,7 +206,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
           </div>
 
-          {/* Direct interactive demo bypass */}
+          {/* Acceso directo único permitido: explorar la aplicación interactiva de inmediato */}
           <div className="mt-8 flex items-center justify-center gap-3">
             <button
               id="hero-guest-explore-btn"
@@ -270,61 +216,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <span>O explora la aplicación interactiva de inmediato</span>
               <ArrowRight className="w-4 h-4" />
             </button>
-          </div>
-
-          {/* Interactive Instant Mood Check Bar */}
-          <div className="mt-12 max-w-2xl mx-auto bg-[#faf7f2] border border-stone-200/90 rounded-3xl p-5 sm:p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold text-stone-700 uppercase tracking-wider flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-[#de6943]" />
-                <span>¿Cómo te sientes en este instante?</span>
-              </span>
-              <span className="text-[11px] text-stone-400">Prueba interactiva</span>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-              {quickMoods.map((m) => {
-                const IconComponent = m.icon;
-                const isSelected = selectedQuickMood === m.id;
-                return (
-                  <button
-                    key={m.id}
-                    onClick={() => {
-                      setSelectedQuickMood(m.id);
-                      soundEngine.playBell(528, 1.0);
-                    }}
-                    className={`flex flex-col items-center gap-1.5 p-2.5 rounded-2xl border transition-all cursor-pointer ${
-                      isSelected
-                        ? 'bg-white border-[#548c71] shadow-sm scale-105 ring-2 ring-[#548c71]/20'
-                        : 'bg-white/60 border-stone-200/70 hover:bg-white hover:border-stone-300'
-                    }`}
-                  >
-                    <div className={`p-2 rounded-xl ${m.bg}`}>
-                      <IconComponent className={`w-4 h-4 ${m.color}`} />
-                    </div>
-                    <span className="text-[11px] font-bold text-stone-800">{m.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {selectedQuickMood && (
-              <div className="mt-4 pt-3 border-t border-stone-200/80 flex flex-col sm:flex-row items-center justify-between gap-3 animate-fadeIn text-left">
-                <p className="text-xs text-stone-700 font-medium">
-                  💡 {quickMoods.find(m => m.id === selectedQuickMood)?.tip}
-                </p>
-                <button
-                  onClick={() => {
-                    const mood = quickMoods.find(m => m.id === selectedQuickMood);
-                    if (mood) onNavigate(mood.targetView);
-                  }}
-                  className="shrink-0 bg-[#548c71] hover:bg-[#42715b] text-white text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-1.5 shadow-xs transition-transform hover:scale-105 cursor-pointer"
-                >
-                  <span>Ir al módulo sugerido</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            )}
           </div>
 
           {/* High quality Hero Graphic Banner */}
@@ -522,13 +413,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 A través de algoritmos éticos y herramientas basadas en la psicología cognitivo-conductual, FluxGlow te ofrece un espacio diario de descompresión para tus estudios, metas y vida personal.
               </p>
               <div className="pt-2">
-                <button
-                  onClick={() => onNavigate('learn')}
-                  className="bg-[#e07a52] hover:bg-[#c8633c] text-white font-bold text-xs sm:text-sm px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-xs transition-all cursor-pointer"
-                >
-                  <span>Explora guías y podcasts</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
+                <div className="text-xs sm:text-sm text-stone-500 font-medium">
+                  ✨ Diseñado por jóvenes para jóvenes, integrando ciencia y calidez humana.
+                </div>
               </div>
             </div>
           </div>
@@ -536,7 +423,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </div>
       </section>
 
-      {/* SECCIÓN INTERACTIVA: OASIS DE RESPIRACIÓN Y CALMA RÁPIDA */}
+      {/* SECCIÓN INTERACTIVA: OASIS DE RESPIRACIÓN Y CALMA RÁPIDA (Visual y sin audio) */}
       <section className="py-16 bg-[#faf7f2] border-b border-stone-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#5a8c72]/15 text-[#4a7c59] text-xs font-bold uppercase tracking-wider mb-3">
@@ -580,7 +467,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   {isBreathingActive ? breathingPhase : 'Listo'}
                 </span>
                 <span className="text-xs text-white/90 mt-0.5">
-                  {isBreathingActive ? '4 segundos' : 'Toca Iniciar'}
+                  {isBreathingActive ? `${breathingSeconds}s` : 'Toca Iniciar'}
                 </span>
               </div>
             </div>
@@ -588,19 +475,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             {/* Controls */}
             <div className="flex items-center gap-4">
               <button
-                onClick={() => {
-                  if (!isBreathingActive) {
-                    soundEngine.playBell(528, 2.0);
-                  }
-                  setIsBreathingActive(!isBreathingActive);
-                }}
+                onClick={() => setIsBreathingActive(!isBreathingActive)}
                 className={`px-6 py-3 rounded-full text-sm font-extrabold flex items-center gap-2 transition-all cursor-pointer ${
                   isBreathingActive
                     ? 'bg-stone-200 text-stone-800 hover:bg-stone-300'
                     : 'bg-[#5a8c72] text-white hover:bg-[#4a7c59] shadow-md hover:scale-105'
                 }`}
               >
-                {isBreathingActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-current" />}
                 <span>{isBreathingActive ? 'Pausar Ejercicio' : 'Iniciar Respiración Guiada'}</span>
               </button>
             </div>
@@ -709,8 +590,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       {/* SECCIÓN ¿QUIÉNES SOMOS? (Equipo Fundador) */}
       <TeamSection />
 
-      {/* SECCIÓN DISEÑO: INTERFACES DE LA PLATAFORMA (7 APARTADOS) */}
-      <InterfacesShowcase onNavigate={onNavigate} />
+      {/* EXPLICACIÓN COMPLETA DE FUNCIONES, VENTAJAS Y DIFERENCIADORES DE FLUXGLOW */}
+      <PlatformFeaturesAndAdvantages />
 
       {/* SECCIÓN PREGUNTAS FRECUENTES (FAQ) */}
       <section className="py-20 bg-white border-b border-stone-200" id="faq">

@@ -170,8 +170,6 @@ export default function App() {
                   onNavigate={handleNavigate} 
                   currentUser={userProfile}
                   onAuthSuccess={handleAuthSuccess}
-                  isAudioPlaying={isAudioPlaying}
-                  onToggleAudio={handleToggleAmbientAudio}
                 />
               </ErrorBoundary>
             )}
