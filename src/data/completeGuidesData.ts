@@ -3,7 +3,7 @@ import { CompleteCourse } from '../types';
 export const COMPLETE_COURSES_CATALOG: CompleteCourse[] = [
   {
     id: 'course-ansiedad-7d',
-    badge: 'Curso Completo 7 Días',
+    badge: 'Guía Completa 1 Semana',
     title: 'Programa 7 Días: Maestría en Calma y Desactivación de la Ansiedad',
     subtitle: 'Aprende paso a paso a regular tu sistema nervioso, frenar la rumiación y cultivar serenidad cotidiana.',
     image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&auto=format&fit=crop&q=80',
@@ -12,7 +12,7 @@ export const COMPLETE_COURSES_CATALOG: CompleteCourse[] = [
     totalDays: 7,
     difficulty: 'Desde Principiante',
     targetAudience: 'Jóvenes y adultos que experimentan ansiedad, nerviosismo, palpitaciones o sobrepensamiento frecuente.',
-    description: 'Un programa formativo modular estilo clase interactiva (inspirado en la plataforma Aprendes) donde cada día desbloqueas un aprendizaje teórico, una técnica somática guiada, un cuestionario de 3 preguntas de comprobación y misiones prácticas.',
+    description: 'Una guía interactiva paso a paso de 1 semana donde cada día desbloqueas un aprendizaje práctico, una técnica somática guiada, una comprobación interactiva y misiones para tus hábitos.',
     learningOutcomes: [
       'Comprender la raíz biológica de la alarma sin juzgarte.',
       'Dominar el Suspiro Fisiológico y la técnica 4-7-8 para calmarte en menos de 2 minutos.',
@@ -558,7 +558,7 @@ Puntos clave:
   },
   {
     id: 'course-estres-7d',
-    badge: 'Curso Completo 7 Días',
+    badge: 'Guía Completa 1 Semana',
     title: 'Programa 7 Días: Productividad Consciente y Cero Burnout',
     subtitle: 'Aprende a gestionar tu carga académica y laboral cuidando tu salud mental y energía vital.',
     image: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&auto=format&fit=crop&q=80',
@@ -567,7 +567,7 @@ Puntos clave:
     totalDays: 7,
     difficulty: 'Intermedio',
     targetAudience: 'Estudiantes y profesionales que sienten sobrecarga de tareas, procrastinación o fatiga crónica.',
-    description: 'Curso estructurado en 7 lecciones interactivas para desarmar la parálisis por perfeccionismo, organizar tus bloques de trabajo con la técnica Pomodoro consciente y proteger tus tiempos de descanso sin culpa.',
+    description: 'Guía práctica de 1 semana para desarmar la parálisis por sobrepensamiento, organizar bloques de foco conscientes y proteger tus tiempos de descanso sin culpa.',
     learningOutcomes: [
       'Eliminar la fricción inicial para comenzar tareas pendientes en menos de 2 minutos.',
       'Construir un sistema de descarga mental para liberar RAM cognitiva.',

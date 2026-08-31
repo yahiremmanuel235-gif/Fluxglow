@@ -5,24 +5,23 @@ import {
   ChevronRight, 
   CheckCircle2, 
   Lock, 
-  Unlock, 
   Sparkles, 
   BookOpen, 
   Award, 
   Clock, 
   Send, 
   Bot, 
-  User, 
   ArrowRight, 
   Check, 
   AlertCircle, 
-  HelpCircle, 
   Target, 
   RotateCcw,
-  Volume2,
+  Compass,
   Calendar,
   Layers,
-  GraduationCap
+  HelpCircle,
+  Flame,
+  CheckCircle
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { CompleteCourse, DayLesson, GuideDailyMission, LessonQuizQuestion } from '../../types';
@@ -71,7 +70,7 @@ const CoursePlayerModalContent: React.FC<{
   });
 
   const [selectedDayNumber, setSelectedDayNumber] = useState<number>(1);
-  const [activeSectionIndex, setActiveSectionIndex] = useState<number>(0);
+  const [activePageIndex, setActivePageIndex] = useState<number>(0);
 
   // Quiz state for the current day
   const [quizAnswers, setQuizAnswers] = useState<{ [qId: number]: number }>({});
@@ -83,42 +82,58 @@ const CoursePlayerModalContent: React.FC<{
   const [aiInputText, setAiInputText] = useState('');
   const [isAiLoading, setIsAiLoading] = useState(false);
   const aiChatScrollRef = useRef<HTMLDivElement>(null);
+  const contentContainerRef = useRef<HTMLDivElement>(null);
 
-  // Current day lesson
+  // Current day lesson data
   const currentDayLesson: DayLesson = useMemo(() => {
     const found = course.days.find(d => d.dayNumber === selectedDayNumber);
     return found || course.days[0];
   }, [course, selectedDayNumber]);
 
+  // Define total pages for the current day:
+  // Pages 0 to (sections.length - 1): Sections
+  // Page (sections.length): Quiz Validation
+  // Page (sections.length + 1): Daily Missions
+  // Page (sections.length + 2): Flux AI Tutor
+  const totalPagesInCurrentDay = useMemo(() => {
+    return currentDayLesson.sections.length + 3;
+  }, [currentDayLesson]);
+
+  const QUIZ_PAGE_INDEX = currentDayLesson.sections.length;
+  const MISSIONS_PAGE_INDEX = currentDayLesson.sections.length + 1;
+  const AI_TUTOR_PAGE_INDEX = currentDayLesson.sections.length + 2;
+
   // Check if a day is unlocked
-  // Day 1 is always unlocked.
-  // Day N is unlocked if Day N-1 is completed.
   const isDayUnlocked = (dayNum: number): boolean => {
     if (dayNum === 1) return true;
     const prevDayCompleted = progress.completedDays.includes(dayNum - 1);
-    if (!prevDayCompleted) return false;
-    
-    // Check if next day unlocked
-    return true;
+    return prevDayCompleted;
   };
 
-  // Reset day section and quiz when switching days
+  // Reset page index and quiz state when switching days
   useEffect(() => {
-    setActiveSectionIndex(0);
+    setActivePageIndex(0);
     setQuizAnswers({});
     setQuizSubmitted(progress.completedDays.includes(selectedDayNumber));
     
-    // Initialize AI initial greeting for this specific day
+    // Initialize AI contextual greeting for this specific day
     setAiChatMessages([
       {
         role: 'model',
-        text: `Hola, soy Flux AI, tu tutor en este curso. ¿Tienes alguna duda o pregunta sobre el texto que acabas de leer en "${currentDayLesson.title}"? Responderé basándome exclusivamente en el contenido de esta lección.`,
+        text: `Hola, soy Flux AI. ¿Tienes alguna duda sobre lo que acabas de leer en "${currentDayLesson.title}"? Responderé con base en el contenido de esta guía.`,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }
     ]);
   }, [selectedDayNumber, currentDayLesson.title, progress.completedDays]);
 
-  // Auto-scroll AI chat
+  // Auto-scroll top when switching pages
+  useEffect(() => {
+    if (contentContainerRef.current) {
+      contentContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [activePageIndex, selectedDayNumber]);
+
+  // Auto-scroll AI chat internally
   useEffect(() => {
     if (aiChatScrollRef.current) {
       aiChatScrollRef.current.scrollTop = aiChatScrollRef.current.scrollHeight;
@@ -157,7 +172,6 @@ const CoursePlayerModalContent: React.FC<{
     setQuizScore(score);
     setQuizSubmitted(true);
 
-    // If passed at least 2/3, mark day as completed
     const isCompleted = !progress.completedDays.includes(selectedDayNumber);
     if (isCompleted) {
       const todayStr = new Date().toISOString().split('T')[0];
@@ -168,16 +182,15 @@ const CoursePlayerModalContent: React.FC<{
       };
       saveProgress(updatedProg);
       confetti({
-        particleCount: 50,
-        spread: 65,
+        particleCount: 60,
+        spread: 70,
         origin: { y: 0.6 }
       });
-      success(`¡Día ${selectedDayNumber} completado con éxito!`, `Obtuviste ${score}/3 aciertos. Se han desbloqueado tus misiones diarias.`);
+      success(`¡Día ${selectedDayNumber} completado con éxito!`, `Obtuviste ${score}/3 aciertos. Puedes revisar tus misiones prácticas en la siguiente página.`);
     }
   };
 
   const handleActivateMission = (mission: GuideDailyMission) => {
-    // Adapt to guide item to store in daily missions
     const guideItemAdapt: any = {
       id: `${course.id}-day-${selectedDayNumber}`,
       title: `${course.title} (${currentDayLesson.title})`,
@@ -185,11 +198,11 @@ const CoursePlayerModalContent: React.FC<{
       dailyMissions: [mission]
     };
     activateMissionFromGuide(guideItemAdapt, mission.id);
-    confetti({ particleCount: 30, spread: 50 });
+    confetti({ particleCount: 35, spread: 55 });
     success('¡Misión activada!', `"${mission.title}" se ha añadido a tu panel de misiones diarias.`);
   };
 
-  // Send question to Flux AI (strictly grounded in current day context)
+  // Send question to Flux AI (grounded in current day context)
   const handleSendAiQuestion = async (textToSend?: string) => {
     const question = (textToSend || aiInputText).trim();
     if (!question || isAiLoading) return;
@@ -205,20 +218,19 @@ const CoursePlayerModalContent: React.FC<{
     setIsAiLoading(true);
 
     try {
-      const strictContextPrompt = `Eres Flux AI, el tutor pedagógico del curso de bienestar "${course.title}".
+      const strictContextPrompt = `Eres Flux AI, el guía empático de bienestar de la guía "${course.title}".
 
-REGLA ESTRICTA DE SEGURIDAD Y GROUNDING:
-Tu ÚNICA fuente de información para responder al usuario es el contenido de la lección del Día ${selectedDayNumber}: "${currentDayLesson.title}", provisto textualmente a continuación:
+REGLA ESTRICTA DE GROUNDING:
+Tu principal referencia es el contenido del Día ${selectedDayNumber}: "${currentDayLesson.title}", provisto textualmente a continuación:
 
---- TEXTO DE LA LECCIÓN ---
+--- TEXTO DEL DÍA ---
 ${currentDayLesson.fullContextForAI}
 --- FIN DEL TEXTO ---
 
 INSTRUCCIONES:
-1. Responde a la duda del usuario basándote EXCLUSIVAMENTE en el texto de la lección.
-2. Si la duda o tema NO está contemplado en el texto de la lección, responde amablemente indicando que esa información no forma parte de este módulo y sugiérele repasar los puntos clave de la lección.
-3. Mantén un tono cálido, empático, claro y pedagógico (estilo docente de Aprendes).
-4. No menciones fuentes externas ni agregues datos que contradigan o expandan fuera del texto provisto.`;
+1. Responde a la duda del usuario de forma clara, empática y práctica basándote en el texto.
+2. Mantén un tono cálido, cercano, estructurado y alentador.
+3. Si el usuario pregunta algo complementario de bienestar, respóndele brevemente y anímalo a seguir con los ejercicios del día.`;
 
       const responseText = await sendChatMessageToGemini({
         message: question,
@@ -226,22 +238,22 @@ INSTRUCCIONES:
         mode: 'educativo',
         userMood: 'Curioso',
         userContext: {
-          name: 'Estudiante de FluxGlow',
-          emotionalState: `Estudiando ${currentDayLesson.title}`
+          name: 'Usuario de FluxGlow',
+          emotionalState: `Revisando ${currentDayLesson.title}`
         }
       });
 
       const botMsg = {
         role: 'model' as const,
-        text: responseText || `En la lección del Día ${selectedDayNumber}, el punto central es aplicar las técnicas prácticas descritas paso a paso. Recuerda revisar la sección de fundamentos y ejercicios.`,
+        text: responseText || `En este Día ${selectedDayNumber}, lo esencial es poner en práctica las técnicas explicadas. Recuerda que la constancia y la amabilidad contigo mismo marcan la diferencia.`,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       setAiChatMessages(prev => [...prev, botMsg]);
     } catch (e) {
-      console.warn('Error respondiendo duda de curso:', e);
+      console.warn('Error respondiendo duda en guía:', e);
       const fallbackMsg = {
         role: 'model' as const,
-        text: `Basado en la lección "${currentDayLesson.title}", recuerda que lo más importante es aplicar los ejercicios prácticos con calma y constancia.`,
+        text: `Basado en el Día ${selectedDayNumber} ("${currentDayLesson.title}"), recuerda aplicar los ejercicios paso a paso y con calma.`,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       setAiChatMessages(prev => [...prev, fallbackMsg]);
@@ -253,245 +265,323 @@ INSTRUCCIONES:
   const totalCompleted = progress.completedDays.length;
   const progressPercent = Math.round((totalCompleted / course.totalDays) * 100);
 
+  // Helper to get step label
+  const getPageTitle = (pageIdx: number): string => {
+    if (pageIdx < currentDayLesson.sections.length) {
+      return currentDayLesson.sections[pageIdx]?.title || `Paso ${pageIdx + 1}`;
+    }
+    if (pageIdx === QUIZ_PAGE_INDEX) return 'Comprobación del Día';
+    if (pageIdx === MISSIONS_PAGE_INDEX) return 'Misiones Prácticas';
+    if (pageIdx === AI_TUTOR_PAGE_INDEX) return 'Consultas Flux AI';
+    return '';
+  };
+
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-stone-900/75 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 md:p-6 animate-fadeIn">
-      <div className="bg-white w-full max-w-5xl rounded-3xl shadow-2xl border border-stone-200 overflow-hidden flex flex-col max-h-[92vh]">
-        
-        {/* Top Header Bar */}
-        <div className="bg-brand-sage-900 text-white px-5 sm:px-8 py-4 flex items-center justify-between border-b border-brand-sage-800 flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-brand-sage-800/80 border border-brand-sage-700 flex items-center justify-center text-brand-gold-300 font-bold text-lg">
-              <GraduationCap className="w-5 h-5 text-brand-gold-300" />
+    <div className="fixed inset-0 z-50 bg-[#faf8f4] flex flex-col w-screen h-screen overflow-hidden animate-fadeIn select-text">
+      
+      {/* 1. TOP MAIN HEADER BAR (Brand Dark Sage) */}
+      <header className="bg-brand-sage-900 text-white px-4 sm:px-8 py-3.5 flex items-center justify-between border-b border-brand-sage-800 shrink-0 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-brand-sage-800 border border-brand-sage-700 flex items-center justify-center text-brand-gold-300 font-bold shadow-xs">
+            <BookOpen className="w-5 h-5 text-brand-gold-300" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider bg-brand-sage-800 text-brand-gold-300 px-2.5 py-0.5 rounded-full border border-brand-gold-400/30">
+                Guía Completa de 1 Semana
+              </span>
+              <span className="text-xs text-brand-sand-300 flex items-center gap-1">
+                <Clock className="w-3.5 h-3.5" />
+                {course.totalDays} Días
+              </span>
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider bg-brand-sage-800 text-brand-gold-300 px-2.5 py-0.5 rounded-full border border-brand-gold-300/30">
-                  {course.badge}
-                </span>
-                <span className="text-xs text-brand-sand-300 flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5" />
-                  {course.totalDays} Días
-                </span>
-              </div>
-              <h2 className="text-base sm:text-lg font-bold text-white leading-snug line-clamp-1">
-                {course.title}
-              </h2>
-            </div>
+            <h1 className="text-base sm:text-lg font-bold text-white leading-snug line-clamp-1">
+              {course.title}
+            </h1>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          {/* Progress badge */}
+          <div className="hidden md:flex items-center gap-2 bg-brand-sage-950/70 border border-brand-sage-700/60 px-3 py-1.5 rounded-full text-xs text-brand-sand-200">
+            <span>Progreso:</span>
+            <span className="font-bold text-brand-gold-300">{totalCompleted}/{course.totalDays} Días ({progressPercent}%)</span>
           </div>
 
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-brand-sand-300 hover:text-white hover:bg-brand-sage-800 transition-colors"
-            title="Cerrar curso"
+            className="p-2 rounded-full text-brand-sand-300 hover:text-white hover:bg-brand-sage-800 transition-colors cursor-pointer"
+            title="Cerrar guía completa"
+            aria-label="Cerrar"
           >
             <X className="w-6 h-6" />
           </button>
         </div>
+      </header>
 
-        {/* Course Progress Bar */}
-        <div className="bg-brand-sage-950 px-5 sm:px-8 py-2.5 flex items-center justify-between border-b border-brand-sage-800/60 text-xs text-brand-sand-300 flex-shrink-0">
-          <div className="flex items-center gap-2">
-            <span>Progreso del Curso:</span>
-            <span className="font-bold text-brand-gold-300">{totalCompleted} de {course.totalDays} días completados ({progressPercent}%)</span>
-          </div>
-          <div className="w-36 sm:w-56 bg-brand-sage-800 rounded-full h-2 overflow-hidden">
-            <div 
-              className="bg-brand-gold-400 h-full rounded-full transition-all duration-500"
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
+      {/* 2. DAYS SELECTOR BAR (Día 1 to Día 7) */}
+      <nav aria-label="Navegación de días" className="bg-brand-sand-100/90 px-4 sm:px-8 py-2.5 border-b border-brand-sand-300 overflow-x-auto flex items-center gap-2 shrink-0 scrollbar-thin">
+        <span className="text-xs font-bold uppercase tracking-wider text-stone-500 mr-1 shrink-0 hidden sm:inline">
+          Días:
+        </span>
+        {course.days.map((day) => {
+          const isUnlocked = isDayUnlocked(day.dayNumber);
+          const isCompleted = progress.completedDays.includes(day.dayNumber);
+          const isSelected = selectedDayNumber === day.dayNumber;
+
+          return (
+            <button
+              key={day.dayNumber}
+              onClick={() => {
+                if (isUnlocked) {
+                  setSelectedDayNumber(day.dayNumber);
+                } else {
+                  info('Día bloqueado', `Completa el Día ${day.dayNumber - 1} para desbloquear este día.`);
+                }
+              }}
+              disabled={!isUnlocked}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                isSelected
+                  ? 'bg-brand-sage-700 text-white shadow-sm border border-brand-sage-800 ring-2 ring-brand-sage-500/30'
+                  : isCompleted
+                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100'
+                  : isUnlocked
+                  ? 'bg-white text-stone-700 border border-stone-200 hover:bg-stone-50'
+                  : 'bg-stone-100 text-stone-400 border border-stone-200 cursor-not-allowed opacity-60'
+              }`}
+            >
+              {isCompleted ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              ) : isUnlocked ? (
+                <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                  isSelected ? 'bg-brand-gold-300 text-brand-sage-900' : 'bg-brand-sage-200 text-brand-sage-800'
+                }`}>
+                  {day.dayNumber}
+                </span>
+              ) : (
+                <Lock className="w-3.5 h-3.5 text-stone-400" />
+              )}
+              <span>Día {day.dayNumber}</span>
+            </button>
+          );
+        })}
+      </nav>
+
+      {/* 3. STEP PAGE BREADCRUMB / TABS STRIP (Pages within current Day) */}
+      <div className="bg-white/95 backdrop-blur-md px-4 sm:px-8 py-2.5 border-b border-stone-200 flex items-center justify-between gap-4 shrink-0 shadow-2xs">
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-thin py-0.5">
+          <span className="text-xs font-bold text-brand-sage-800 uppercase tracking-wider bg-brand-sage-50 px-2.5 py-1 rounded-lg border border-brand-sage-200 shrink-0">
+            Día {currentDayLesson.dayNumber}
+          </span>
+          <span className="text-stone-300 shrink-0">/</span>
+
+          {/* Section Pills */}
+          {currentDayLesson.sections.map((sec, idx) => (
+            <button
+              key={sec.id || idx}
+              onClick={() => setActivePageIndex(idx)}
+              className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
+                activePageIndex === idx
+                  ? 'bg-brand-sage-600 text-white shadow-2xs font-bold'
+                  : 'bg-stone-100 hover:bg-stone-200 text-stone-600'
+              }`}
+            >
+              <span>Paso {idx + 1}</span>
+            </button>
+          ))}
+
+          {/* Quiz Page Pill */}
+          <button
+            onClick={() => setActivePageIndex(QUIZ_PAGE_INDEX)}
+            className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
+              activePageIndex === QUIZ_PAGE_INDEX
+                ? 'bg-amber-500 text-white shadow-2xs font-bold'
+                : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200'
+            }`}
+          >
+            <Award className="w-3.5 h-3.5" />
+            <span>Comprobación (3)</span>
+          </button>
+
+          {/* Missions Page Pill */}
+          <button
+            onClick={() => setActivePageIndex(MISSIONS_PAGE_INDEX)}
+            className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
+              activePageIndex === MISSIONS_PAGE_INDEX
+                ? 'bg-emerald-600 text-white shadow-2xs font-bold'
+                : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200'
+            }`}
+          >
+            <Target className="w-3.5 h-3.5" />
+            <span>Misiones ({currentDayLesson.missions.length})</span>
+          </button>
+
+          {/* AI Tutor Page Pill */}
+          <button
+            onClick={() => setActivePageIndex(AI_TUTOR_PAGE_INDEX)}
+            className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
+              activePageIndex === AI_TUTOR_PAGE_INDEX
+                ? 'bg-brand-sage-700 text-white shadow-2xs font-bold'
+                : 'bg-brand-sand-100 hover:bg-brand-sand-200 text-stone-700 border border-brand-sand-300'
+            }`}
+          >
+            <Bot className="w-3.5 h-3.5 text-brand-sage-600" />
+            <span>Flux AI</span>
+          </button>
         </div>
 
-        {/* Days Navigator Bar (Tabs 1 to 7) */}
-        <div className="bg-brand-sand-100/80 px-4 sm:px-8 py-3 border-b border-brand-sand-300 overflow-x-auto flex items-center gap-2 flex-shrink-0 scrollbar-thin">
-          {course.days.map((day) => {
-            const isUnlocked = isDayUnlocked(day.dayNumber);
-            const isCompleted = progress.completedDays.includes(day.dayNumber);
-            const isSelected = selectedDayNumber === day.dayNumber;
-
-            return (
-              <button
-                key={day.dayNumber}
-                onClick={() => {
-                  if (isUnlocked) {
-                    setSelectedDayNumber(day.dayNumber);
-                  } else {
-                    info('Día bloqueado', `Completa el Día ${day.dayNumber - 1} para desbloquear esta clase.`);
-                  }
-                }}
-                disabled={!isUnlocked}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
-                  isSelected
-                    ? 'bg-brand-sage-700 text-white shadow-sm border border-brand-sage-800'
-                    : isCompleted
-                    ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100'
-                    : isUnlocked
-                    ? 'bg-white text-stone-700 border border-stone-200 hover:bg-stone-50'
-                    : 'bg-stone-100 text-stone-400 border border-stone-200 cursor-not-allowed opacity-60'
-                }`}
-              >
-                {isCompleted ? (
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                ) : isUnlocked ? (
-                  <span className="w-4 h-4 rounded-full bg-brand-sage-200 text-brand-sage-800 flex items-center justify-center text-[10px] font-bold">
-                    {day.dayNumber}
-                  </span>
-                ) : (
-                  <Lock className="w-3.5 h-3.5 text-stone-400" />
-                )}
-                <span>Día {day.dayNumber}</span>
-              </button>
-            );
-          })}
+        {/* Current step counter */}
+        <div className="text-xs font-bold text-stone-500 shrink-0 hidden sm:flex items-center gap-1.5">
+          <span>Página {activePageIndex + 1} de {totalPagesInCurrentDay}</span>
         </div>
+      </div>
 
-        {/* Modal Main Body Scrollable */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 space-y-8 bg-brand-sand-50/50">
-          
-          {/* Day Header Banner */}
-          <div className="bg-gradient-to-r from-brand-sage-900 to-brand-sage-800 rounded-2xl p-6 text-white border border-brand-sage-700 relative overflow-hidden shadow-sm">
-            <div className="relative z-10">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="bg-brand-gold-400/20 text-brand-gold-300 border border-brand-gold-400/40 text-[11px] font-bold px-3 py-1 rounded-full">
-                  Clase Interactiva • Día {currentDayLesson.dayNumber}
-                </span>
-                <span className="text-xs text-brand-sand-300 flex items-center gap-1">
-                  <Clock className="w-3 h-3" /> {currentDayLesson.readTime}
-                </span>
-              </div>
-              <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">
-                {currentDayLesson.title}
-              </h3>
-              <p className="text-sm text-brand-sand-200 max-w-3xl leading-relaxed">
-                {currentDayLesson.subtitle}
-              </p>
+      {/* 4. MAIN CONTENT AREA (PAGINATED: Exactly ONE Section/Phase per Page) */}
+      <main 
+        ref={contentContainerRef}
+        className="flex-1 overflow-y-auto p-4 sm:p-8 md:p-12 max-w-5xl w-full mx-auto"
+      >
+        
+        {/* ======================================================== */}
+        {/* CASE A: CONTENT SECTION PAGE (Step 1, Step 2, Step 3...) */}
+        {/* ======================================================== */}
+        {activePageIndex < currentDayLesson.sections.length && (() => {
+          const currentSection = currentDayLesson.sections[activePageIndex];
+          if (!currentSection) return null;
+
+          return (
+            <div className="space-y-8 animate-fadeIn">
               
-              {/* Learning Objective pill */}
-              <div className="mt-4 inline-flex items-start sm:items-center gap-2 bg-brand-sage-950/60 border border-brand-sage-700/60 rounded-xl px-3.5 py-2 text-xs text-brand-gold-200">
-                <Target className="w-4 h-4 text-brand-gold-400 flex-shrink-0 mt-0.5 sm:mt-0" />
-                <span><strong>Objetivo del Día:</strong> {currentDayLesson.objective}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Section Step Navigator (Like Aprendes Slides) */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="text-sm font-bold text-stone-700 flex items-center gap-2">
-                <Layers className="w-4 h-4 text-brand-sage-600" />
-                <span>Contenido de la Clase (Sección {activeSectionIndex + 1} de {currentDayLesson.sections.length})</span>
-              </h4>
-              <div className="flex items-center gap-1">
-                {currentDayLesson.sections.map((_, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setActiveSectionIndex(idx)}
-                    className={`w-7 h-2 rounded-full transition-all ${
-                      activeSectionIndex === idx ? 'bg-brand-sage-600 w-9' : 'bg-stone-200 hover:bg-stone-300'
-                    }`}
-                    title={`Ir a sección ${idx + 1}`}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Active Section Card */}
-            {currentDayLesson.sections[activeSectionIndex] && (
-              <div className="bg-white rounded-2xl p-6 sm:p-8 border border-stone-200 shadow-sm space-y-5 animate-fadeIn">
-                <div className="border-b border-stone-100 pb-3">
-                  <span className="text-xs font-semibold text-brand-sage-600 uppercase tracking-wider">
-                    Paso {activeSectionIndex + 1}
+              {/* Day & Step Header Banner */}
+              <div className="border-b border-stone-200 pb-6">
+                <div className="flex items-center gap-2 mb-2.5 flex-wrap">
+                  <span className="text-xs font-bold uppercase tracking-wider text-brand-sage-700 bg-brand-sage-100/80 px-3 py-1 rounded-full border border-brand-sage-300">
+                    Día {currentDayLesson.dayNumber} • {currentDayLesson.title.replace(`Día ${currentDayLesson.dayNumber}: `, '')}
                   </span>
-                  <h4 className="text-lg sm:text-xl font-bold text-stone-900 mt-1">
-                    {currentDayLesson.sections[activeSectionIndex].title}
-                  </h4>
-                  {currentDayLesson.sections[activeSectionIndex].subtitle && (
-                    <p className="text-sm font-medium text-stone-500">
-                      {currentDayLesson.sections[activeSectionIndex].subtitle}
-                    </p>
-                  )}
+                  <span className="text-xs text-stone-400 flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5" />
+                    {currentDayLesson.readTime}
+                  </span>
+                  <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
+                    Paso {activePageIndex + 1} de {currentDayLesson.sections.length}
+                  </span>
                 </div>
 
-                <p className="text-base text-stone-700 leading-relaxed">
-                  {currentDayLesson.sections[activeSectionIndex].content}
+                {/* Section Main Title (Big, Visually Bold Typography) */}
+                <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-stone-900 leading-tight">
+                  {currentSection.title}
+                </h2>
+                {currentSection.subtitle && (
+                  <p className="text-base sm:text-lg font-medium text-brand-sage-700 mt-2">
+                    {currentSection.subtitle}
+                  </p>
+                )}
+              </div>
+
+              {/* Day Objective Card (Shown on Step 1) */}
+              {activePageIndex === 0 && currentDayLesson.objective && (
+                <div className="bg-gradient-to-r from-brand-sage-50 to-brand-sand-100 p-5 sm:p-6 rounded-3xl border border-brand-sage-200 shadow-xs flex items-start gap-3.5">
+                  <div className="w-10 h-10 rounded-2xl bg-brand-sage-600 text-white flex items-center justify-center shrink-0 shadow-xs mt-0.5">
+                    <Target className="w-5 h-5 text-brand-gold-300" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold uppercase tracking-wider text-brand-sage-900 block mb-1">
+                      🎯 Objetivo de este Día:
+                    </span>
+                    <p className="text-sm sm:text-base text-stone-800 leading-relaxed font-medium">
+                      {currentDayLesson.objective}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Main Explanatory Content (Large, High-Contrast Typography) */}
+              <div className="bg-white rounded-3xl p-6 sm:p-10 border border-stone-200 shadow-xs space-y-6">
+                <p className="text-base sm:text-lg lg:text-xl text-stone-800 leading-relaxed font-normal">
+                  {currentSection.content}
                 </p>
 
-                {/* Bullet points if available */}
-                {currentDayLesson.sections[activeSectionIndex].bulletPoints && (
-                  <div className="bg-brand-sand-50/70 rounded-xl p-4 border border-brand-sand-200 space-y-2">
-                    {currentDayLesson.sections[activeSectionIndex].bulletPoints?.map((bp, bidx) => (
-                      <div key={bidx} className="flex items-start gap-2.5 text-sm text-stone-800">
-                        <CheckCircle2 className="w-4 h-4 text-brand-sage-600 flex-shrink-0 mt-0.5" />
-                        <span>{bp}</span>
-                      </div>
-                    ))}
+                {/* Key Bullet Points Box */}
+                {currentSection.bulletPoints && currentSection.bulletPoints.length > 0 && (
+                  <div className="bg-[#fbf9f5] rounded-2xl p-6 border border-brand-sand-300 space-y-3.5">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-brand-sage-900 flex items-center gap-1.5">
+                      <Sparkles className="w-4 h-4 text-brand-gold-500" />
+                      <span>Puntos Clave a Recordar:</span>
+                    </h4>
+                    <div className="space-y-3">
+                      {currentSection.bulletPoints.map((bp, bidx) => (
+                        <div key={bidx} className="flex items-start gap-3 text-sm sm:text-base text-stone-800">
+                          <CheckCircle2 className="w-5 h-5 text-brand-sage-600 shrink-0 mt-0.5" />
+                          <span className="leading-relaxed">{bp}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
 
-                {/* Practical Exercise Box if available */}
-                {currentDayLesson.sections[activeSectionIndex].exercise && (
-                  <div className="bg-gradient-to-br from-brand-sage-50 to-emerald-50 rounded-2xl p-5 border border-brand-sage-200 space-y-3">
-                    <div className="flex items-center gap-2 text-brand-sage-900 font-bold text-sm">
-                      <Sparkles className="w-4 h-4 text-brand-gold-500" />
-                      <span>{currentDayLesson.sections[activeSectionIndex].exercise?.title}</span>
+                {/* Practical Exercise Box */}
+                {currentSection.exercise && (
+                  <div className="bg-gradient-to-br from-brand-sage-50/90 to-emerald-50/70 rounded-2xl p-6 sm:p-8 border border-brand-sage-300 shadow-xs space-y-4">
+                    <div className="flex items-center gap-2 text-brand-sage-950 font-bold text-base sm:text-lg">
+                      <Sparkles className="w-5 h-5 text-brand-gold-600" />
+                      <span>{currentSection.exercise.title}</span>
                     </div>
-                    <ol className="list-decimal list-inside space-y-2 text-sm text-stone-800">
-                      {currentDayLesson.sections[activeSectionIndex].exercise?.steps.map((st, sidx) => (
-                        <li key={sidx} className="leading-relaxed pl-1">{st}</li>
+                    <ol className="space-y-3 text-sm sm:text-base text-stone-800">
+                      {currentSection.exercise.steps.map((st, sidx) => (
+                        <li key={sidx} className="flex items-start gap-3">
+                          <span className="w-6 h-6 rounded-full bg-brand-sage-600 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+                            {sidx + 1}
+                          </span>
+                          <span className="leading-relaxed font-medium">{st}</span>
+                        </li>
                       ))}
                     </ol>
                   </div>
                 )}
 
-                {/* Tip box if available */}
-                {currentDayLesson.sections[activeSectionIndex].tip && (
-                  <div className="bg-amber-50/80 rounded-xl p-4 border border-amber-200 text-sm text-amber-900 flex items-start gap-2.5">
-                    <Sparkles className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                    <span><strong>Tip clave:</strong> {currentDayLesson.sections[activeSectionIndex].tip}</span>
+                {/* Key Tip */}
+                {currentSection.tip && (
+                  <div className="bg-amber-50/90 rounded-2xl p-5 sm:p-6 border border-amber-200/90 text-sm sm:text-base text-amber-950 flex items-start gap-3.5 shadow-2xs">
+                    <Sparkles className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="block text-xs font-bold uppercase tracking-wider text-amber-900 mb-1">
+                        Consejo de Aplicación:
+                      </strong>
+                      <p className="leading-relaxed">{currentSection.tip}</p>
+                    </div>
                   </div>
                 )}
-
-                {/* Next / Previous Section Buttons */}
-                <div className="flex items-center justify-between pt-4 border-t border-stone-100">
-                  <button
-                    onClick={() => setActiveSectionIndex(prev => Math.max(0, prev - 1))}
-                    disabled={activeSectionIndex === 0}
-                    className="px-4 py-2 rounded-xl text-xs font-semibold text-stone-600 hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1"
-                  >
-                    <ChevronLeft className="w-4 h-4" /> Anterior
-                  </button>
-
-                  <button
-                    onClick={() => setActiveSectionIndex(prev => Math.min(currentDayLesson.sections.length - 1, prev + 1))}
-                    disabled={activeSectionIndex === currentDayLesson.sections.length - 1}
-                    className="px-5 py-2.5 rounded-xl text-xs font-bold bg-brand-sage-700 text-white hover:bg-brand-sage-800 disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1.5 shadow-sm"
-                  >
-                    Siguiente Sección <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
               </div>
-            )}
-          </div>
 
-          {/* ======================================================== */}
-          {/* 3 PREGUNTAS DE COMPROBACIÓN (QUIZ DE APRENDIZAJE)        */}
-          {/* ======================================================== */}
-          <div className="bg-white rounded-2xl p-6 sm:p-8 border border-stone-200 shadow-sm space-y-6">
-            <div className="border-b border-stone-100 pb-3 flex items-center justify-between">
-              <div>
-                <span className="text-xs font-bold uppercase tracking-wider text-brand-gold-600 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full">
-                  Evaluación Rápida
+            </div>
+          );
+        })()}
+
+        {/* ======================================================== */}
+        {/* CASE B: QUIZ / CHECKING PAGE (3 Validation Questions)    */}
+        {/* ======================================================== */}
+        {activePageIndex === QUIZ_PAGE_INDEX && (
+          <div className="space-y-8 animate-fadeIn">
+            
+            {/* Header Banner */}
+            <div className="border-b border-stone-200 pb-6">
+              <div className="flex items-center gap-2 mb-2.5">
+                <span className="text-xs font-bold uppercase tracking-wider text-amber-800 bg-amber-100 px-3 py-1 rounded-full border border-amber-300">
+                  Comprobación Interactiva
                 </span>
-                <h4 className="text-lg font-bold text-stone-900 mt-1">
-                  Comprobemos lo aprendido en el Día {currentDayLesson.dayNumber}
-                </h4>
-                <p className="text-xs text-stone-500">
-                  Responde estas 3 sencillas preguntas para validar tu comprensión y desbloquear tus misiones.
-                </p>
+                <span className="text-xs text-stone-400 font-medium">
+                  Día {currentDayLesson.dayNumber}
+                </span>
               </div>
-              <Award className="w-7 h-7 text-brand-gold-500" />
+              <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-stone-900 leading-tight">
+                Comprobemos lo aprendido en el Día {currentDayLesson.dayNumber}
+              </h2>
+              <p className="text-base sm:text-lg text-stone-600 mt-2">
+                Responde estas 3 sencillas preguntas para validar tu comprensión y consolidar tu avance.
+              </p>
             </div>
 
+            {/* Questions list */}
             <div className="space-y-6">
               {currentDayLesson.quiz.map((q, qIndex) => {
                 const selectedOpt = quizAnswers[q.id];
@@ -499,27 +589,27 @@ INSTRUCCIONES:
                 const isCorrect = isAnswered && selectedOpt === q.correctAnswerIndex;
 
                 return (
-                  <div key={q.id} className="bg-brand-sand-50/60 rounded-2xl p-5 border border-brand-sand-200 space-y-3">
-                    <p className="text-sm font-bold text-stone-900">
+                  <div key={q.id} className="bg-white rounded-3xl p-6 sm:p-8 border border-stone-200 shadow-xs space-y-4">
+                    <p className="text-base sm:text-lg font-bold text-stone-900">
                       {qIndex + 1}. {q.question}
                     </p>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {q.options.map((opt, optIdx) => {
                         const isThisSelected = selectedOpt === optIdx;
                         const isThisCorrect = q.correctAnswerIndex === optIdx;
 
-                        let btnStyle = 'bg-white border-stone-200 text-stone-700 hover:bg-stone-50';
+                        let btnStyle = 'bg-stone-50 border-stone-200 text-stone-800 hover:bg-stone-100';
                         if (quizSubmitted) {
                           if (isThisCorrect) {
-                            btnStyle = 'bg-emerald-100 border-emerald-400 text-emerald-900 font-bold';
+                            btnStyle = 'bg-emerald-100 border-emerald-400 text-emerald-950 font-bold';
                           } else if (isThisSelected && !isThisCorrect) {
-                            btnStyle = 'bg-rose-100 border-rose-400 text-rose-900';
+                            btnStyle = 'bg-rose-100 border-rose-400 text-rose-950';
                           } else {
                             btnStyle = 'bg-stone-50 border-stone-200 text-stone-400 opacity-60';
                           }
                         } else if (isThisSelected) {
-                          btnStyle = 'bg-brand-sage-700 text-white border-brand-sage-800 font-semibold';
+                          btnStyle = 'bg-brand-sage-700 text-white border-brand-sage-800 font-semibold shadow-xs';
                         }
 
                         return (
@@ -527,12 +617,12 @@ INSTRUCCIONES:
                             key={optIdx}
                             onClick={() => handleSelectQuizOption(q.id, optIdx)}
                             disabled={quizSubmitted}
-                            className={`p-3.5 rounded-xl text-xs text-left border transition-all flex items-start gap-2.5 ${btnStyle}`}
+                            className={`p-4 rounded-2xl text-sm text-left border transition-all flex items-start gap-3 cursor-pointer ${btnStyle}`}
                           >
-                            <span className="w-5 h-5 rounded-full bg-black/10 flex items-center justify-center font-bold text-[10px] flex-shrink-0 mt-0.5">
+                            <span className="w-6 h-6 rounded-full bg-black/10 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
                               {String.fromCharCode(65 + optIdx)}
                             </span>
-                            <span className="leading-snug">{opt}</span>
+                            <span className="leading-relaxed">{opt}</span>
                           </button>
                         );
                       })}
@@ -540,19 +630,19 @@ INSTRUCCIONES:
 
                     {/* Feedback explanation if submitted */}
                     {quizSubmitted && (
-                      <div className={`p-3 rounded-xl text-xs flex items-start gap-2 border ${
+                      <div className={`p-4 rounded-2xl text-sm flex items-start gap-3 border ${
                         isCorrect 
-                          ? 'bg-emerald-50 text-emerald-900 border-emerald-200' 
-                          : 'bg-rose-50 text-rose-900 border-rose-200'
+                          ? 'bg-emerald-50 text-emerald-950 border-emerald-200' 
+                          : 'bg-rose-50 text-rose-950 border-rose-200'
                       }`}>
                         {isCorrect ? (
-                          <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                          <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
                         ) : (
-                          <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0 mt-0.5" />
+                          <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
                         )}
                         <div>
-                          <p className="font-bold">{isCorrect ? '¡Correcto!' : 'Respuesta a repasar:'}</p>
-                          <p className="mt-0.5">{q.explanation}</p>
+                          <p className="font-bold">{isCorrect ? '¡Correcto!' : 'Explicación recomendada:'}</p>
+                          <p className="mt-1 text-xs sm:text-sm leading-relaxed">{q.explanation}</p>
                         </div>
                       </div>
                     )}
@@ -561,218 +651,273 @@ INSTRUCCIONES:
               })}
             </div>
 
+            {/* Quiz Submit CTA */}
             {!quizSubmitted ? (
-              <div className="flex justify-end">
+              <div className="flex justify-end pt-4">
                 <Button
                   onClick={handleSubmitQuiz}
                   variant="primary"
-                  className="px-6 py-3 text-sm font-bold shadow-md"
+                  className="px-8 py-3.5 text-base font-bold shadow-md"
                 >
-                  Comprobar Mis Respuestas <Check className="w-4 h-4 ml-1.5" />
+                  Comprobar Mis Respuestas <Check className="w-5 h-5 ml-2" />
                 </Button>
               </div>
             ) : (
-              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold">
+              <div className="bg-emerald-50 border border-emerald-200 rounded-3xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-bold text-lg shadow-xs">
                     {quizScore}/3
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-emerald-900">¡Lección del Día {currentDayLesson.dayNumber} Validada!</p>
-                    <p className="text-xs text-emerald-700">Tus misiones prácticas se encuentran listas más abajo.</p>
+                    <p className="text-base font-bold text-emerald-950">¡Día {currentDayLesson.dayNumber} Validado con Éxito!</p>
+                    <p className="text-xs sm:text-sm text-emerald-800">Avanza a la siguiente página para activar tus misiones prácticas del día.</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setQuizSubmitted(false)}
-                  className="text-xs font-semibold text-emerald-800 hover:underline flex items-center gap-1"
+                  className="text-xs sm:text-sm font-bold text-emerald-800 hover:underline flex items-center gap-1.5 cursor-pointer"
                 >
-                  <RotateCcw className="w-3.5 h-3.5" /> Reintentar quiz
+                  <RotateCcw className="w-4 h-4" /> Reintentar comprobación
                 </button>
               </div>
             )}
-          </div>
 
-          {/* ======================================================== */}
-          {/* MISIONES PRÁCTICAS DEL DÍA DESBLOQUEADAS                  */}
-          {/* ======================================================== */}
-          <div className="bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent rounded-2xl p-6 sm:p-8 border border-amber-200/80 shadow-sm space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-xs font-bold uppercase tracking-wider text-amber-800 bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-300">
-                  Misiones Prácticas del Día
+          </div>
+        )}
+
+        {/* ======================================================== */}
+        {/* CASE C: MISSIONS PAGE (Daily Practical Habits)          */}
+        {/* ======================================================== */}
+        {activePageIndex === MISSIONS_PAGE_INDEX && (
+          <div className="space-y-8 animate-fadeIn">
+            
+            {/* Header Banner */}
+            <div className="border-b border-stone-200 pb-6">
+              <div className="flex items-center gap-2 mb-2.5">
+                <span className="text-xs font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full border border-emerald-300">
+                  Hábitos y Misiones Prácticas
                 </span>
-                <h4 className="text-lg font-bold text-stone-900 mt-1">
-                  Pon en acción lo aprendido hoy
-                </h4>
+                <span className="text-xs text-stone-400 font-medium">
+                  Día {currentDayLesson.dayNumber}
+                </span>
               </div>
-              <Target className="w-6 h-6 text-amber-600" />
+              <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-stone-900 leading-tight">
+                Pon en acción lo aprendido hoy
+              </h2>
+              <p className="text-base sm:text-lg text-stone-600 mt-2">
+                Activa estas misiones para registrarlas en tu rutina diaria y ganar experiencia (+XP).
+              </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Missions Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {currentDayLesson.missions.map((m) => (
-                <div key={m.id} className="bg-white rounded-xl p-5 border border-stone-200 shadow-sm flex flex-col justify-between space-y-3 hover:border-amber-400 transition-all">
+                <div key={m.id} className="bg-white rounded-3xl p-6 sm:p-8 border border-stone-200 shadow-xs flex flex-col justify-between space-y-5 hover:border-amber-400 transition-all">
                   <div>
-                    <div className="flex items-center justify-between text-xs mb-1">
-                      <span className="font-semibold text-amber-700 flex items-center gap-1">
-                        <Clock className="w-3 h-3" /> {m.timeEstimate}
+                    <div className="flex items-center justify-between text-xs mb-3">
+                      <span className="font-bold text-amber-800 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200 flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5" /> {m.timeEstimate}
                       </span>
-                      <span className="font-bold text-brand-gold-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                      <span className="font-bold text-brand-gold-700 bg-amber-100 px-2.5 py-1 rounded-lg border border-amber-300">
                         +{m.xp} XP
                       </span>
                     </div>
-                    <h5 className="font-bold text-stone-900 text-sm mb-1">{m.title}</h5>
-                    <p className="text-xs text-stone-600 leading-relaxed">{m.description}</p>
+                    <h3 className="font-bold text-stone-900 text-lg mb-2">{m.title}</h3>
+                    <p className="text-sm sm:text-base text-stone-600 leading-relaxed">{m.description}</p>
                   </div>
 
                   <Button
                     onClick={() => handleActivateMission(m)}
                     variant="outline"
-                    className="w-full text-xs font-bold text-brand-sage-800 border-brand-sage-300 hover:bg-brand-sage-50"
+                    className="w-full py-3 text-sm font-bold text-brand-sage-800 border-brand-sage-300 hover:bg-brand-sage-50"
                   >
-                    Activar en Mis Misiones <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                    Activar en Mis Misiones <ArrowRight className="w-4 h-4 ml-1.5" />
                   </Button>
                 </div>
               ))}
             </div>
-          </div>
 
-          {/* ======================================================== */}
-          {/* FLUX AI TUTOR: RESUELVE DUDAS EXCLUSIVAS DEL TEXTO       */}
-          {/* ======================================================== */}
-          <div className="bg-white rounded-2xl p-6 sm:p-8 border border-brand-sage-200 shadow-sm space-y-5">
-            <div className="flex items-center justify-between border-b border-brand-sand-200 pb-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-brand-sage-700 text-brand-gold-300 flex items-center justify-center font-bold shadow-sm">
-                  <Bot className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="text-base font-bold text-stone-900 flex items-center gap-2">
-                    <span>Dudas con Flux AI</span>
-                    <span className="text-[10px] font-bold uppercase bg-brand-sage-100 text-brand-sage-800 px-2 py-0.5 rounded-full border border-brand-sage-300">
-                      Contexto de la Guía
-                    </span>
-                  </h4>
-                  <p className="text-xs text-stone-500">
-                    Pregúntame cualquier duda sobre el texto de hoy. Responderé únicamente con lo expuesto en esta clase.
-                  </p>
-                </div>
+            {/* Tip on habits */}
+            <div className="bg-[#fbf9f5] rounded-2xl p-5 border border-brand-sand-300 text-xs sm:text-sm text-stone-700 flex items-center gap-3">
+              <Sparkles className="w-5 h-5 text-brand-sage-600 shrink-0" />
+              <span>Estas misiones aparecerán en tu módulo de <strong>Metas y Misiones</strong> para que puedas marcar su cumplimiento diario.</span>
+            </div>
+
+          </div>
+        )}
+
+        {/* ======================================================== */}
+        {/* CASE D: FLUX AI TUTOR PAGE (Day Context Q&A)             */}
+        {/* ======================================================== */}
+        {activePageIndex === AI_TUTOR_PAGE_INDEX && (
+          <div className="space-y-8 animate-fadeIn">
+            
+            {/* Header Banner */}
+            <div className="border-b border-stone-200 pb-6">
+              <div className="flex items-center gap-2 mb-2.5">
+                <span className="text-xs font-bold uppercase tracking-wider text-brand-sage-800 bg-brand-sage-100 px-3 py-1 rounded-full border border-brand-sage-300">
+                  Tutor Inteligente
+                </span>
+                <span className="text-xs text-stone-400 font-medium">
+                  Día {currentDayLesson.dayNumber}
+                </span>
               </div>
+              <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-stone-900 leading-tight">
+                Consultas con Flux AI
+              </h2>
+              <p className="text-base sm:text-lg text-stone-600 mt-2">
+                Haz cualquier pregunta sobre el tema de hoy: &ldquo;{currentDayLesson.title}&rdquo;.
+              </p>
             </div>
 
-            {/* Chat Box */}
-            <div 
-              ref={aiChatScrollRef}
-              className="bg-brand-sand-50/80 rounded-2xl p-4 border border-brand-sand-200 max-h-60 overflow-y-auto space-y-3"
-            >
-              {aiChatMessages.map((msg, midx) => (
-                <div 
-                  key={midx}
-                  className={`flex items-start gap-2.5 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  {msg.role === 'model' && (
-                    <div className="w-7 h-7 rounded-xl bg-brand-sage-700 text-brand-gold-300 flex items-center justify-center text-xs flex-shrink-0 mt-0.5">
-                      <Bot className="w-3.5 h-3.5" />
+            {/* AI Chat Box */}
+            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-stone-200 shadow-xs space-y-6">
+              
+              {/* Chat Messages Log */}
+              <div 
+                ref={aiChatScrollRef}
+                className="bg-[#fbf9f5] rounded-2xl p-5 border border-brand-sand-300 min-h-[220px] max-h-[360px] overflow-y-auto space-y-4"
+              >
+                {aiChatMessages.map((msg, midx) => (
+                  <div 
+                    key={midx}
+                    className={`flex items-start gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    {msg.role === 'model' && (
+                      <div className="w-8 h-8 rounded-xl bg-brand-sage-700 text-brand-gold-300 flex items-center justify-center text-xs shrink-0 mt-0.5">
+                        <Bot className="w-4 h-4" />
+                      </div>
+                    )}
+                    <div className={`p-4 rounded-2xl text-sm max-w-[85%] sm:max-w-[75%] leading-relaxed ${
+                      msg.role === 'user'
+                        ? 'bg-brand-sage-800 text-white rounded-tr-none'
+                        : 'bg-white text-stone-800 border border-stone-200 rounded-tl-none shadow-2xs'
+                    }`}>
+                      <p>{msg.text}</p>
+                      <span className="block text-[10px] mt-1.5 opacity-70 text-right">{msg.time}</span>
                     </div>
-                  )}
-                  <div className={`p-3 rounded-2xl text-xs max-w-[85%] sm:max-w-[75%] leading-relaxed ${
-                    msg.role === 'user'
-                      ? 'bg-brand-sage-800 text-white rounded-tr-none'
-                      : 'bg-white text-stone-800 border border-stone-200 rounded-tl-none shadow-xs'
-                  }`}>
-                    <p>{msg.text}</p>
-                    <span className="block text-[10px] mt-1 opacity-70 text-right">{msg.time}</span>
                   </div>
-                </div>
-              ))}
+                ))}
 
-              {isAiLoading && (
-                <div className="flex items-center gap-2 text-xs text-stone-500 animate-pulse">
-                  <Bot className="w-4 h-4 text-brand-sage-600" />
-                  <span>Flux AI está repasando la lección para responderte...</span>
-                </div>
-              )}
-            </div>
+                {isAiLoading && (
+                  <div className="flex items-center gap-2 text-xs sm:text-sm text-stone-500 animate-pulse">
+                    <Bot className="w-4 h-4 text-brand-sage-600" />
+                    <span>Flux AI está repasando los puntos de este día para responderte...</span>
+                  </div>
+                )}
+              </div>
 
-            {/* Suggested Quick Questions */}
-            <div className="flex flex-wrap gap-2 text-xs">
-              <span className="text-[11px] text-stone-400 self-center">Sugerencias:</span>
-              <button
-                onClick={() => handleSendAiQuestion(`¿Puedes resumirme en 2 puntos clave el ejercicio práctico de hoy?`)}
-                className="bg-stone-100 hover:bg-brand-sage-50 text-stone-700 hover:text-brand-sage-800 px-3 py-1.5 rounded-full border border-stone-200 transition-colors"
-              >
-                💡 Resumir ejercicio práctico
-              </button>
-              <button
-                onClick={() => handleSendAiQuestion(`¿Cómo aplico la técnica de hoy si estoy en clase o en el trabajo?`)}
-                className="bg-stone-100 hover:bg-brand-sage-50 text-stone-700 hover:text-brand-sage-800 px-3 py-1.5 rounded-full border border-stone-200 transition-colors"
-              >
-                🏢 ¿Cómo aplicarlo en público?
-              </button>
-            </div>
+              {/* Quick Suggestion Chips */}
+              <div className="flex flex-wrap gap-2 text-xs">
+                <span className="text-xs text-stone-400 self-center">Preguntas rápidas:</span>
+                <button
+                  onClick={() => handleSendAiQuestion(`¿Cómo aplico la técnica de hoy en mi vida cotidiana?`)}
+                  className="bg-stone-100 hover:bg-brand-sage-50 text-stone-700 hover:text-brand-sage-800 px-3.5 py-1.5 rounded-full border border-stone-200 transition-colors cursor-pointer"
+                >
+                  💡 ¿Cómo aplicarlo en el día a día?
+                </button>
+                <button
+                  onClick={() => handleSendAiQuestion(`¿Qué debo hacer si me cuesta concentrarme en los ejercicios de hoy?`)}
+                  className="bg-stone-100 hover:bg-brand-sage-50 text-stone-700 hover:text-brand-sage-800 px-3.5 py-1.5 rounded-full border border-stone-200 transition-colors cursor-pointer"
+                >
+                  🧠 ¿Qué hago si me cuesta concentrarme?
+                </button>
+              </div>
 
-            {/* AI Question Input Form */}
-            <form 
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSendAiQuestion();
-              }}
-              className="flex items-center gap-2"
-            >
-              <input
-                type="text"
-                value={aiInputText}
-                onChange={(e) => setAiInputText(e.target.value)}
-                placeholder={`¿Tienes alguna duda sobre ${currentDayLesson.title}?`}
-                className="flex-1 px-4 py-2.5 rounded-xl text-xs bg-brand-sand-50 border border-stone-300 focus:outline-none focus:ring-2 focus:ring-brand-sage-500"
-              />
-              <Button
-                type="submit"
-                variant="primary"
-                disabled={!aiInputText.trim() || isAiLoading}
-                className="px-4 py-2.5 text-xs font-bold"
-              >
-                <Send className="w-3.5 h-3.5" />
-              </Button>
-            </form>
-          </div>
-
-        </div>
-
-        {/* Bottom Footer with Next Day Navigation */}
-        <div className="bg-white px-5 sm:px-8 py-3.5 border-t border-stone-200 flex items-center justify-between flex-shrink-0">
-          <button
-            onClick={() => setSelectedDayNumber(prev => Math.max(1, prev - 1))}
-            disabled={selectedDayNumber === 1}
-            className="px-4 py-2 rounded-xl text-xs font-semibold text-stone-600 hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1"
-          >
-            <ChevronLeft className="w-4 h-4" /> Día Anterior
-          </button>
-
-          <div className="flex items-center gap-2">
-            {selectedDayNumber < course.totalDays ? (
-              <Button
-                onClick={() => {
-                  const nextDay = selectedDayNumber + 1;
-                  setSelectedDayNumber(nextDay);
+              {/* Chat Input Form */}
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSendAiQuestion();
                 }}
-                variant="primary"
-                className="px-5 py-2.5 text-xs font-bold shadow-sm"
+                className="flex items-center gap-2"
               >
-                Avanzar al Día {selectedDayNumber + 1} <ChevronRight className="w-4 h-4 ml-1" />
-              </Button>
-            ) : (
-              <Button
-                onClick={onClose}
-                variant="primary"
-                className="px-5 py-2.5 text-xs font-bold bg-emerald-700 hover:bg-emerald-800"
-              >
-                ¡Completaste los 7 Días! <Award className="w-4 h-4 ml-1" />
-              </Button>
-            )}
+                <input
+                  type="text"
+                  value={aiInputText}
+                  onChange={(e) => setAiInputText(e.target.value)}
+                  placeholder={`Escribe tu pregunta sobre "${currentDayLesson.title}"...`}
+                  className="flex-1 px-4 py-3 rounded-2xl text-sm bg-brand-sand-50 border border-stone-300 focus:outline-none focus:ring-2 focus:ring-brand-sage-500"
+                />
+                <Button
+                  type="submit"
+                  variant="primary"
+                  disabled={!aiInputText.trim() || isAiLoading}
+                  className="px-6 py-3 text-sm font-bold"
+                >
+                  <Send className="w-4 h-4" />
+                </Button>
+              </form>
+
+            </div>
           </div>
+        )}
+
+      </main>
+
+      {/* 5. BOTTOM NAVIGATION BAR (Clean Paginated Forward / Back Controls) */}
+      <footer className="bg-white px-4 sm:px-8 py-3.5 border-t border-stone-200 flex items-center justify-between shrink-0 shadow-sm">
+        {/* Previous Button */}
+        <button
+          onClick={() => {
+            if (activePageIndex > 0) {
+              setActivePageIndex(prev => prev - 1);
+            } else if (selectedDayNumber > 1) {
+              setSelectedDayNumber(prev => prev - 1);
+            }
+          }}
+          disabled={activePageIndex === 0 && selectedDayNumber === 1}
+          className="px-4 sm:px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-semibold text-stone-700 hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1.5 cursor-pointer"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          <span>{activePageIndex === 0 && selectedDayNumber > 1 ? `Día ${selectedDayNumber - 1}` : 'Página Anterior'}</span>
+        </button>
+
+        {/* Center Progress Indicator */}
+        <div className="text-center">
+          <span className="text-xs sm:text-sm font-bold text-stone-700 block">
+            {getPageTitle(activePageIndex)}
+          </span>
+          <span className="text-[11px] text-stone-400">
+            Página {activePageIndex + 1} de {totalPagesInCurrentDay} • Día {selectedDayNumber} de {course.totalDays}
+          </span>
         </div>
 
-      </div>
+        {/* Next / Advance Button */}
+        <div className="flex items-center gap-2">
+          {activePageIndex < totalPagesInCurrentDay - 1 ? (
+            <Button
+              onClick={() => setActivePageIndex(prev => prev + 1)}
+              variant="primary"
+              className="px-5 sm:px-6 py-2.5 text-xs sm:text-sm font-bold shadow-xs"
+            >
+              <span>Siguiente Página</span>
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          ) : selectedDayNumber < course.totalDays ? (
+            <Button
+              onClick={() => {
+                const nextDay = selectedDayNumber + 1;
+                setSelectedDayNumber(nextDay);
+              }}
+              variant="primary"
+              className="px-5 sm:px-6 py-2.5 text-xs sm:text-sm font-bold bg-emerald-700 hover:bg-emerald-800 shadow-xs"
+            >
+              <span>Avanzar al Día {selectedDayNumber + 1}</span>
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          ) : (
+            <Button
+              onClick={onClose}
+              variant="primary"
+              className="px-6 py-2.5 text-xs sm:text-sm font-bold bg-emerald-700 hover:bg-emerald-800"
+            >
+              <span>¡Guía de 1 Semana Completada! 🎉</span>
+            </Button>
+          )}
+        </div>
+      </footer>
+
     </div>
   );
 };

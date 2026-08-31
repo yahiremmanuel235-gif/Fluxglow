@@ -900,22 +900,22 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
           </div>
         )}
 
-        {/* SECTION 0: Guías Completas (Programas Estructurados de 7 Días) */}
+        {/* SECTION 0: Guías Completas de 1 Semana */}
         <div className="mb-12">
           <div className="flex items-center justify-between mb-5">
             <div>
               <div className="flex items-center gap-2">
                 <span className="bg-gradient-to-r from-brand-sage-600 to-emerald-700 text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full shadow-2xs">
-                  🎓 Nuevo: Aprendizaje Interactivo
+                  📅 Guías Completas de 1 Semana
                 </span>
                 <span className="text-xs font-semibold text-[#548c71] bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                  Estilo Aprendes El Salvador
+                  Paso a paso diario
                 </span>
               </div>
               <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight mt-1 flex items-center gap-2">
-                <span>Guías Completas (Cursos de 7 Días)</span>
+                <span>Guías Completas de 1 Semana</span>
                 <span className="text-xs font-medium text-stone-400 bg-stone-100 px-2.5 py-0.5 rounded-full">
-                  {COMPLETE_COURSES_CATALOG.length} programas
+                  {COMPLETE_COURSES_CATALOG.length} guías
                 </span>
               </h2>
             </div>
@@ -983,15 +983,15 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                     <div className="grid grid-cols-2 gap-2 mb-4 text-[11px] text-stone-700 bg-brand-sand-50/80 p-3 rounded-2xl border border-brand-sand-200">
                       <div className="flex items-center gap-1.5">
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                        <span>Secciones guiadas</span>
+                        <span>Paso a paso en pantalla completa</span>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                        <span>3 preguntas diarias</span>
+                        <span>3 preguntas de comprobación</span>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                        <span>Misión práctica diaria</span>
+                        <span>Misión práctica del día</span>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <Sparkles className="w-3.5 h-3.5 text-brand-sage-600 shrink-0" />
@@ -1015,7 +1015,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                     </div>
 
                     <button className="bg-brand-sage-600 group-hover:bg-brand-sage-700 text-white px-4 py-2 rounded-full text-xs font-bold shadow-2xs flex items-center gap-1.5 transition-all">
-                      <span>{completedDaysCount > 0 ? 'Continuar Clase' : 'Iniciar Clase'}</span>
+                      <span>{completedDaysCount > 0 ? `Continuar Día ${currentUnlockedDay}` : 'Iniciar Día 1'}</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
