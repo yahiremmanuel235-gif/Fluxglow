@@ -53,6 +53,8 @@ import {
   AI_DEMO_NOTICE_TEXT 
 } from '../../data/guidesData';
 import { INSTANT_PRACTICES_CATALOG } from '../../data/instantPracticesData';
+import { COMPLETE_COURSES_CATALOG } from '../../data/completeGuidesData';
+import { CompleteCoursePlayerModal } from './CompleteCoursePlayerModal';
 import { InstantPracticeModal } from './InstantPracticeModal';
 import { 
   activateMissionFromGuide,
@@ -67,7 +69,8 @@ import {
   UserDailyMissionRecord, 
   ViewMode, 
   InstantPracticeItem,
-  JournalEntry 
+  JournalEntry,
+  CompleteCourse 
 } from '../../types';
 
 const CATEGORY_CHIPS = [
@@ -121,6 +124,9 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
 
   // Instant Practice modal
   const [activePractice, setActivePractice] = useState<InstantPracticeItem | null>(null);
+
+  // Complete 7-Day Courses modal
+  const [activeCourseModal, setActiveCourseModal] = useState<CompleteCourse | null>(null);
 
   // Stored missions state for real-time mission status
   const [missionsList, setMissionsList] = useState<UserDailyMissionRecord[]>(() => getStoredMissions());
@@ -894,12 +900,137 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
           </div>
         )}
 
-        {/* SECTION 1: Guías recomendadas (AI Demo Guides) */}
+        {/* SECTION 0: Guías Completas (Programas Estructurados de 7 Días) */}
+        <div className="mb-12">
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="bg-gradient-to-r from-brand-sage-600 to-emerald-700 text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full shadow-2xs">
+                  🎓 Nuevo: Aprendizaje Interactivo
+                </span>
+                <span className="text-xs font-semibold text-[#548c71] bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                  Estilo Aprendes El Salvador
+                </span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight mt-1 flex items-center gap-2">
+                <span>Guías Completas (Cursos de 7 Días)</span>
+                <span className="text-xs font-medium text-stone-400 bg-stone-100 px-2.5 py-0.5 rounded-full">
+                  {COMPLETE_COURSES_CATALOG.length} programas
+                </span>
+              </h2>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {COMPLETE_COURSES_CATALOG.map((course) => {
+              // Calculate user's saved course progress
+              let completedDaysCount = 0;
+              let currentUnlockedDay = 1;
+              try {
+                const saved = localStorage.getItem(`fluxglow_course_progress_${course.id}`);
+                if (saved) {
+                  const parsed = JSON.parse(saved);
+                  completedDaysCount = parsed.completedDays?.length || 0;
+                  currentUnlockedDay = parsed.currentUnlockedDay || 1;
+                }
+              } catch (e) {}
+
+              const progressPct = Math.round((completedDaysCount / course.days.length) * 100);
+
+              return (
+                <div
+                  key={course.id}
+                  onClick={() => setActiveCourseModal(course)}
+                  className="group cursor-pointer bg-white rounded-3xl p-5 border-2 border-brand-sage-300/80 hover:border-brand-sage-500 shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
+                >
+                  <div>
+                    {/* Top Cover Banner */}
+                    <div className="relative w-full aspect-[21/9] sm:aspect-[2.5/1] rounded-2xl overflow-hidden bg-stone-900 mb-4">
+                      <img
+                        src={course.image || course.coverImage}
+                        alt={course.title}
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-900/40 to-transparent" />
+                      
+                      <div className="absolute top-3 left-3 flex items-center gap-2">
+                        <span className="bg-white/95 backdrop-blur-xs text-stone-900 text-[11px] font-bold px-3 py-1 rounded-full shadow-xs">
+                          {course.category}
+                        </span>
+                        <span className="bg-amber-400 text-amber-950 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs flex items-center gap-1">
+                          <Flame className="w-3 h-3 fill-amber-500" />
+                          <span>{course.totalDays} Días</span>
+                        </span>
+                      </div>
+
+                      <div className="absolute bottom-3 left-3 right-3 text-white">
+                        <span className="text-[11px] text-brand-gold-300 font-medium">
+                          {course.author}
+                        </span>
+                        <h3 className="text-base sm:text-lg font-bold leading-tight line-clamp-1">
+                          {course.title}
+                        </h3>
+                      </div>
+                    </div>
+
+                    {/* Description */}
+                    <p className="text-xs sm:text-sm text-stone-600 leading-relaxed mb-4">
+                      {course.description}
+                    </p>
+
+                    {/* Features list */}
+                    <div className="grid grid-cols-2 gap-2 mb-4 text-[11px] text-stone-700 bg-brand-sand-50/80 p-3 rounded-2xl border border-brand-sand-200">
+                      <div className="flex items-center gap-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <span>Secciones guiadas</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <span>3 preguntas diarias</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <span>Misión práctica diaria</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-brand-sage-600 shrink-0" />
+                        <span>Tutor IA Contextual</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Bottom Progress and CTA */}
+                  <div className="pt-3 border-t border-stone-100 flex items-center justify-between">
+                    <div>
+                      <span className="text-[11px] font-bold text-stone-500 block">
+                        Progreso: Día {currentUnlockedDay} de {course.totalDays} ({progressPct}%)
+                      </span>
+                      <div className="w-32 bg-stone-100 rounded-full h-2 mt-1 overflow-hidden border border-stone-200">
+                        <div
+                          className="bg-emerald-600 h-full rounded-full transition-all"
+                          style={{ width: `${Math.max(progressPct, 10)}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    <button className="bg-brand-sage-600 group-hover:bg-brand-sage-700 text-white px-4 py-2 rounded-full text-xs font-bold shadow-2xs flex items-center gap-1.5 transition-all">
+                      <span>{completedDaysCount > 0 ? 'Continuar Clase' : 'Iniciar Clase'}</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* SECTION 1: Guías Rápidas Recomendadas (Lecturas de 5 min) */}
         {filteredRecommended.length > 0 && (
           <div className="mb-12">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight flex items-center gap-2">
-                <span>Guías recomendadas con IA:</span>
+                <span>Guías Rápidas Recomendadas (Lecturas de 5 min):</span>
                 <span className="text-xs font-medium text-stone-400 bg-stone-100 px-2.5 py-0.5 rounded-full">
                   {filteredRecommended.length}
                 </span>
@@ -1013,12 +1144,12 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
           </div>
         )}
 
-        {/* SECTION 2: Guías populares */}
+        {/* SECTION 2: Guías Rápidas Populares */}
         {filteredPopular.length > 0 && (
           <div className="mb-12">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight flex items-center gap-2">
-                <span>Guías populares:</span>
+                <span>Guías Rápidas Populares:</span>
                 <span className="text-xs font-medium text-stone-400 bg-stone-100 px-2.5 py-0.5 rounded-full">
                   {filteredPopular.length}
                 </span>
@@ -2125,6 +2256,13 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
         onClose={() => setActiveMedia(null)}
         onSelectMedia={(item) => setActiveMedia(item)}
         allMedia={VERIFIED_MEDIA_CATALOG}
+      />
+
+      {/* Complete 7-Day Course Player Modal (Aprendes El Salvador style) */}
+      <CompleteCoursePlayerModal
+        course={activeCourseModal}
+        isOpen={!!activeCourseModal}
+        onClose={() => setActiveCourseModal(null)}
       />
 
       {/* Guide Tutorial Modal */}

@@ -269,6 +269,70 @@ export interface EmergencyContact {
   notifyOnAlert: boolean;
 }
 
+export interface CommunityGroup {
+  id: string;
+  name: string;
+  icon: string;
+  coverImage: string;
+  category: string;
+  membersCount: number;
+  description: string;
+  purpose: string;
+  rules: string[];
+  tags: string[];
+}
+
+export interface CourseSection {
+  id: string;
+  title: string;
+  subtitle?: string;
+  content: string;
+  bulletPoints?: string[];
+  tip?: string;
+  exercise?: {
+    title: string;
+    steps: string[];
+  };
+}
+
+export interface LessonQuizQuestion {
+  id: number;
+  question: string;
+  options: string[];
+  correctAnswerIndex: number;
+  explanation: string;
+}
+
+export interface DayLesson {
+  dayNumber: number;
+  title: string;
+  subtitle: string;
+  readTime: string;
+  summary: string;
+  objective: string;
+  sections: CourseSection[];
+  quiz: LessonQuizQuestion[];
+  missions: GuideDailyMission[];
+  fullContextForAI: string;
+}
+
+export interface CompleteCourse {
+  id: string;
+  badge: string;
+  title: string;
+  subtitle: string;
+  image: string;
+  coverImage?: string;
+  category: string;
+  author: string;
+  totalDays: number;
+  difficulty: string;
+  description: string;
+  targetAudience: string;
+  learningOutcomes: string[];
+  days: DayLesson[];
+}
+
 export interface TeamMember {
   id: string;
   name: string;
@@ -279,3 +343,4 @@ export interface TeamMember {
   functions: string[];
   accentColor: string;
 }
+

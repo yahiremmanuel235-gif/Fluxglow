@@ -139,9 +139,9 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
           return parsed.map(sanitizeJournalEntry);
         }
       }
-      return (MOCK_JOURNAL_ENTRIES as any[]).map(sanitizeJournalEntry);
+      return [];
     } catch {
-      return (MOCK_JOURNAL_ENTRIES as any[]).map(sanitizeJournalEntry);
+      return [];
     }
   });
 

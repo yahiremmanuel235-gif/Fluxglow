@@ -105,7 +105,7 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
     } catch {
       // ignore
     }
-    return (MOCK_JOURNAL_ENTRIES as any[]).map(sanitize);
+    return [];
   });
 
   const [selectedMood, setSelectedMood] = useState<MoodType>('feliz');
@@ -562,53 +562,65 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {entries.map((entry) => (
-                <div 
-                  key={entry.id}
-                  className="bg-white rounded-3xl p-5 border border-stone-200 shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between"
-                >
-                  <div>
-                    <div className="flex items-center justify-between pb-2 border-b border-stone-100 mb-2.5">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xl">
-                          {entry.mood === 'feliz' ? '😄' : entry.mood === 'tranquilo' ? '🙂' : entry.mood === 'ansioso' ? '😐' : entry.mood === 'triste' ? '🙁' : '😡'}
-                        </span>
-                        <span className="text-xs font-bold text-stone-800 capitalize">
-                          {entry.mood}
-                        </span>
-                        <span className="text-[10px] bg-stone-100 px-2 py-0.5 rounded-full text-stone-600 font-bold">
-                          {entry.intensity}/10
-                        </span>
+            {entries.length === 0 ? (
+              <div className="bg-white rounded-3xl p-8 border border-stone-200 text-center space-y-2">
+                <div className="w-12 h-12 rounded-2xl bg-brand-sand-100 text-stone-400 mx-auto flex items-center justify-center">
+                  <BookOpen className="w-6 h-6" />
+                </div>
+                <h3 className="text-sm font-bold text-stone-800">Aún no tienes reflexiones guardadas</h3>
+                <p className="text-xs text-stone-500 max-w-sm mx-auto">
+                  Utiliza el formulario de arriba para registrar tu primera emoción o reflexión del día.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {entries.map((entry) => (
+                  <div 
+                    key={entry.id}
+                    className="bg-white rounded-3xl p-5 border border-stone-200 shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between pb-2 border-b border-stone-100 mb-2.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl">
+                            {entry.mood === 'feliz' ? '😄' : entry.mood === 'tranquilo' ? '🙂' : entry.mood === 'ansioso' ? '😐' : entry.mood === 'triste' ? '🙁' : '😡'}
+                          </span>
+                          <span className="text-xs font-bold text-stone-800 capitalize">
+                            {entry.mood}
+                          </span>
+                          <span className="text-[10px] bg-stone-100 px-2 py-0.5 rounded-full text-stone-600 font-bold">
+                            {entry.intensity}/10
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2 text-xs text-stone-400">
+                          <span>{entry.date}</span>
+                          <button 
+                            onClick={() => handleDeleteEntry(entry.id)}
+                            className="text-stone-300 hover:text-red-500 transition-colors cursor-pointer p-1"
+                            title="Eliminar registro"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
 
-                      <div className="flex items-center gap-2 text-xs text-stone-400">
-                        <span>{entry.date}</span>
-                        <button 
-                          onClick={() => handleDeleteEntry(entry.id)}
-                          className="text-stone-300 hover:text-red-500 transition-colors cursor-pointer p-1"
-                          title="Eliminar registro"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
+                      <p className="text-xs sm:text-sm text-stone-700 leading-relaxed line-clamp-3 mb-3">
+                        "{entry.notes}"
+                      </p>
                     </div>
 
-                    <p className="text-xs sm:text-sm text-stone-700 leading-relaxed line-clamp-3 mb-3">
-                      "{entry.notes}"
-                    </p>
+                    <div className="flex flex-wrap gap-1 pt-2 border-t border-stone-100">
+                      {entry.triggers.map((t, idx) => (
+                        <span key={idx} className="text-[10px] bg-[#e8f1ec] text-[#2d5a3f] px-2 py-0.5 rounded-md font-medium">
+                          #{t}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-
-                  <div className="flex flex-wrap gap-1 pt-2 border-t border-stone-100">
-                    {entry.triggers.map((t, idx) => (
-                      <span key={idx} className="text-[10px] bg-[#e8f1ec] text-[#2d5a3f] px-2 py-0.5 rounded-md font-medium">
-                        #{t}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

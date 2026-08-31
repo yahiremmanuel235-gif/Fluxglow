@@ -91,16 +91,16 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>(() => {
     try {
       const saved = localStorage.getItem('fluxglow_journal_entries');
-      return saved ? JSON.parse(saved) : MOCK_JOURNAL_ENTRIES;
+      return saved ? JSON.parse(saved) : [];
     } catch {
-      return MOCK_JOURNAL_ENTRIES;
+      return [];
     }
   });
 
   // Dynamic Gamification data
   const [storedMissions, setStoredMissions] = useState(() => getStoredMissions());
-  const activeStreak = calculateMissionStreak(storedMissions) || 1;
-  const totalXP = getTotalMissionsXP() || 120;
+  const activeStreak = calculateMissionStreak(storedMissions);
+  const totalXP = getTotalMissionsXP();
   const currentLevel = Math.floor(totalXP / 100) + 1;
   const completedMissionsCount = storedMissions.filter(m => m.status === 'completed').length;
 
