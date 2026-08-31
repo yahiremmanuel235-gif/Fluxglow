@@ -33,6 +33,7 @@ import { soundEngine } from '../../utils/audioSynth';
 import { useToast } from '../common/Toast';
 import { INSTANT_PRACTICES_CATALOG } from '../../data/instantPracticesData';
 import { InstantPracticeModal } from './InstantPracticeModal';
+import { sendChatMessageToGemini } from '../../services/gemini';
 
 interface FluxAiModuleProps {
   userProfile?: UserProfileData;
@@ -195,44 +196,34 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
     const enrichedContext = `Modo: ${modeObj?.label || 'Acompañamiento'}. Estado reportado: ${selectedMoodContext || 'No especificado'}. Usuario: ${userProfile?.name || 'Amigo de FluxGlow'}.`;
 
     try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: text,
-          userMood: selectedMoodContext,
-          context: enrichedContext,
-          userContext: userProfile ? { name: userProfile.name, ageGroup: userProfile.ageGroup } : undefined,
-          history: messages.slice(-8).map(m => ({
-            role: m.sender === 'user' ? 'user' : 'model',
-            content: m.text,
-            text: m.text,
-            parts: [{ text: m.text }]
-          }))
-        })
+      const replyText = await sendChatMessageToGemini({
+        message: text,
+        history: messages.slice(-8).map(m => ({
+          role: m.sender === 'user' ? 'user' : 'model',
+          text: m.text
+        })),
+        mode: selectedMode,
+        userMood: selectedMoodContext,
+        userContext: userProfile ? {
+          name: userProfile.name,
+          ageGroup: userProfile.ageGroup
+        } : undefined
       });
-
-      let replyText = '';
-      if (response.ok) {
-        const data = await response.json();
-        replyText = data.response || data.reply || getFallbackResponse(text, selectedMode);
-      } else {
-        replyText = getFallbackResponse(text, selectedMode);
-      }
 
       const botMessage: ChatMessage = {
         id: 'bot-' + Date.now(),
         sender: 'bot',
-        text: replyText,
+        text: replyText || getFallbackResponse(text, selectedMode),
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
 
       setMessages(prev => [...prev, botMessage]);
 
       if (isVoiceActive) {
-        soundEngine.speak(replyText.slice(0, 200));
+        soundEngine.speak((replyText || getFallbackResponse(text, selectedMode)).slice(0, 200));
       }
     } catch (err) {
+      console.warn('Error al obtener respuesta de Flux AI:', err);
       const botMessage: ChatMessage = {
         id: 'bot-' + Date.now(),
         sender: 'bot',

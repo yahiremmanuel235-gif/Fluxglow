@@ -104,16 +104,33 @@ Directrices de excelencia para tus respuestas:
         parts: [{ text: message.trim() }]
       });
 
-      const response = await client.models.generateContent({
-        model: "gemini-3.7-flash",
-        contents: formattedContents,
-        config: {
-          systemInstruction: systemInstruction,
-          temperature: 0.7,
-        }
-      });
+      // Multi-model resilient generation (handles 503 high demand / 429 quota seamlessly)
+      let replyText = "";
+      const modelsToAttempt = ["gemini-3.7-flash", "gemini-3.1-flash-lite"];
 
-      const replyText = response.text?.trim() || generateFallbackAssistantResponse(message, userMood, context);
+      for (const modelName of modelsToAttempt) {
+        try {
+          const response = await client.models.generateContent({
+            model: modelName,
+            contents: formattedContents,
+            config: {
+              systemInstruction: systemInstruction,
+              temperature: 0.7,
+            }
+          });
+
+          if (response && response.text) {
+            replyText = response.text.trim();
+            break;
+          }
+        } catch (modelErr: any) {
+          console.warn(`Gemini generation failed on model ${modelName}:`, modelErr?.status || modelErr?.message || modelErr);
+        }
+      }
+
+      if (!replyText) {
+        replyText = generateFallbackAssistantResponse(message, userMood, context);
+      }
 
       return res.json({
         response: replyText,
@@ -159,17 +176,33 @@ Genera un breve análisis psicológico positivo y constructivo con formato JSON:
   "suggestedAction": "una acción práctica recomendada inmediata"
 }`;
 
-      const response = await client.models.generateContent({
-        model: "gemini-3.7-flash",
-        contents: prompt,
-        config: {
-          responseMimeType: "application/json",
-          temperature: 0.5,
-        }
-      });
+      let responseText = "";
+      const modelsToAttempt = ["gemini-3.7-flash", "gemini-3.1-flash-lite"];
 
-      const parsed = JSON.parse(response.text || "{}");
-      return res.json({ analysis: parsed });
+      for (const modelName of modelsToAttempt) {
+        try {
+          const response = await client.models.generateContent({
+            model: modelName,
+            contents: prompt,
+            config: {
+              responseMimeType: "application/json",
+              temperature: 0.5,
+            }
+          });
+          if (response && response.text) {
+            responseText = response.text;
+            break;
+          }
+        } catch (modelErr: any) {
+          console.warn(`Analyze attempt with model ${modelName} failed:`, modelErr?.status || modelErr?.message || modelErr);
+        }
+      }
+
+      const parsed = JSON.parse(responseText || "{}");
+      if (parsed && (parsed.dominantEmotion || parsed.aiInsight)) {
+        return res.json({ analysis: parsed });
+      }
+      throw new Error("No valid JSON analysis generated");
     } catch (err) {
       return res.json({
         analysis: {
