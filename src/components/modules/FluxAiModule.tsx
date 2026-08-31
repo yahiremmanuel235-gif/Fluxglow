@@ -75,7 +75,7 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
   const [selectedMode, setSelectedMode] = useState<AiMode>('calm');
   const [selectedMoodContext, setSelectedMoodContext] = useState<string>('');
   const [activePractice, setActivePractice] = useState<InstantPracticeItem | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   const { info, success } = useToast();
 
   const AI_MODES = [
@@ -103,7 +103,12 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
   ];
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTo({
+        top: chatContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
   };
 
   useEffect(() => {
@@ -576,7 +581,7 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
             </div>
 
             {/* Chat Messages List */}
-            <div className="flex-1 overflow-y-auto space-y-4 pr-2 scrollbar-thin">
+            <div ref={chatContainerRef} className="flex-1 overflow-y-auto space-y-4 pr-2 scrollbar-thin">
               {messages.map((msg) => (
                 <div
                   key={msg.id}
@@ -660,7 +665,6 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
                   <span>Flux AI está pensando en una respuesta empática y clara...</span>
                 </div>
               )}
-              <div ref={messagesEndRef} />
             </div>
 
             {/* Chat Input Bar */}
