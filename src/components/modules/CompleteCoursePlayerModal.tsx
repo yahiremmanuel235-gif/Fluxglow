@@ -32,7 +32,7 @@ import { activateMissionFromGuide } from '../../utils/missionsManager';
 import { sendChatMessageToGemini } from '../../services/gemini';
 
 interface CompleteCoursePlayerModalProps {
-  course: CompleteCourse;
+  course: CompleteCourse | null;
   isOpen: boolean;
   onClose: () => void;
   onNavigateToMissions?: () => void;
@@ -44,9 +44,12 @@ interface CourseProgressRecord {
   lastCompletedAt?: string;
 }
 
-export const CompleteCoursePlayerModal: React.FC<CompleteCoursePlayerModalProps> = ({
+const CoursePlayerModalContent: React.FC<{
+  course: CompleteCourse;
+  onClose: () => void;
+  onNavigateToMissions?: () => void;
+}> = ({
   course,
-  isOpen,
   onClose,
   onNavigateToMissions
 }) => {
@@ -246,8 +249,6 @@ INSTRUCCIONES:
       setIsAiLoading(false);
     }
   };
-
-  if (!isOpen) return null;
 
   const totalCompleted = progress.completedDays.length;
   const progressPercent = Math.round((totalCompleted / course.totalDays) * 100);
@@ -773,5 +774,33 @@ INSTRUCCIONES:
 
       </div>
     </div>
+  );
+};
+
+export const CompleteCoursePlayerModal: React.FC<CompleteCoursePlayerModalProps> = ({
+  course,
+  isOpen,
+  onClose,
+  onNavigateToMissions
+}) => {
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
+  if (!isOpen || !course) return null;
+
+  return (
+    <CoursePlayerModalContent
+      course={course}
+      onClose={onClose}
+      onNavigateToMissions={onNavigateToMissions}
+    />
   );
 };

@@ -600,53 +600,63 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
                 Registro Emocional Reciente
               </h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-                
-                {/* Left: Minimalist Table */}
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs sm:text-sm">
-                    <thead>
-                      <tr className="border-b border-brand-sand-300 text-stone-900 font-bold">
-                        <th className="pb-2.5">Fecha</th>
-                        <th className="pb-2.5">Estado</th>
-                        <th className="pb-2.5">Intensidad</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-brand-sand-200">
-                      {recentTableEntries.map((row, idx) => (
-                        <tr key={idx} className="hover:bg-brand-sand-50 transition-colors">
-                          <td className="py-2.5 text-stone-600 font-medium">{row.date}</td>
-                          <td className="py-2.5 text-stone-900 font-semibold">{row.mood}</td>
-                          <td className="py-2.5 text-stone-700 font-bold">{row.intensity}</td>
+              {recentTableEntries.length === 0 ? (
+                <div className="py-8 px-4 text-center bg-brand-sand-50 rounded-2xl border border-brand-sand-200 space-y-1">
+                  <Smile className="w-6 h-6 text-stone-400 mx-auto mb-1" />
+                  <p className="text-xs font-bold text-stone-700">Sin registros emocionales recientes</p>
+                  <p className="text-[11px] text-stone-500 max-w-sm mx-auto">
+                    Guarda tu primera entrada en el Diario Emocional para ver aquí tu histórico y gráfica de intensidad.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                  
+                  {/* Left: Minimalist Table */}
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs sm:text-sm">
+                      <thead>
+                        <tr className="border-b border-brand-sand-300 text-stone-900 font-bold">
+                          <th className="pb-2.5">Fecha</th>
+                          <th className="pb-2.5">Estado</th>
+                          <th className="pb-2.5">Intensidad</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody className="divide-y divide-brand-sand-200">
+                        {recentTableEntries.map((row, idx) => (
+                          <tr key={idx} className="hover:bg-brand-sand-50 transition-colors">
+                            <td className="py-2.5 text-stone-600 font-medium">{row.date}</td>
+                            <td className="py-2.5 text-stone-900 font-semibold">{row.mood}</td>
+                            <td className="py-2.5 text-stone-700 font-bold">{row.intensity}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
 
-                {/* Right: Line Chart */}
-                <div className="h-44 w-full bg-brand-sand-50 rounded-2xl p-3 border border-brand-sand-300">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={chartData}>
-                      <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#78716c' }} />
-                      <YAxis domain={[0, 10]} ticks={[0, 2, 4, 6, 8, 10]} tick={{ fontSize: 10, fill: '#78716c' }} />
-                      <Tooltip 
-                        formatter={(val: any) => [`${val}/10`, 'Intensidad']}
-                        contentStyle={{ borderRadius: 12, fontSize: 11, border: '1px solid #e7e5e4' }}
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="intensidad" 
-                        stroke="#548c71" 
-                        strokeWidth={3} 
-                        dot={{ r: 4, fill: '#548c71' }} 
-                        activeDot={{ r: 6 }} 
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
+                  {/* Right: Line Chart */}
+                  <div className="h-44 w-full bg-brand-sand-50 rounded-2xl p-3 border border-brand-sand-300">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={chartData}>
+                        <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#78716c' }} />
+                        <YAxis domain={[0, 10]} ticks={[0, 2, 4, 6, 8, 10]} tick={{ fontSize: 10, fill: '#78716c' }} />
+                        <Tooltip 
+                          formatter={(val: any) => [`${val}/10`, 'Intensidad']}
+                          contentStyle={{ borderRadius: 12, fontSize: 11, border: '1px solid #e7e5e4' }}
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="intensidad" 
+                          stroke="#548c71" 
+                          strokeWidth={3} 
+                          dot={{ r: 4, fill: '#548c71' }} 
+                          activeDot={{ r: 6 }} 
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
 
-              </div>
+                </div>
+              )}
             </div>
 
             {/* CARD 4: Unified Activity Timeline */}

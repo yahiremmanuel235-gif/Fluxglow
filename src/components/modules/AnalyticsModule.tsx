@@ -212,26 +212,22 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
   });
 
   // 1. Monthly Learning Growth Data
-  const learningMonthlyData = [
-    { month: 'Ene', guias: 6 },
-    { month: 'Feb', guias: 11 },
-    { month: 'Mar', guias: 14 },
-    { month: 'Abr', guias: 19 },
-    { month: 'May', guias: 24 },
-    { month: 'Jun', guias: 28 + completedMissionsCount },
-  ];
+  const learningMonthlyData = useMemo(() => {
+    return [
+      { month: 'Ene', guias: 0 },
+      { month: 'Feb', guias: 0 },
+      { month: 'Mar', guias: 0 },
+      { month: 'Abr', guias: 0 },
+      { month: 'May', guias: 0 },
+      { month: 'Jun', guias: completedMissionsCount },
+    ];
+  }, [completedMissionsCount]);
 
   // 2. Correlation between Triggers/Tags and Moods
   const triggerCorrelations = useMemo(() => {
-    const triggerMap: Record<string, { count: number; totalIntensity: number; moods: Record<string, number> }> = {
-      'sueño': { count: 3, totalIntensity: 24, moods: { 'tranquilo': 2, 'feliz': 1 } },
-      'ejercicio': { count: 4, totalIntensity: 35, moods: { 'feliz': 3, 'tranquilo': 1 } },
-      'trabajo': { count: 5, totalIntensity: 28, moods: { 'ansioso': 3, 'enojado': 1, 'tranquilo': 1 } },
-      'familia': { count: 3, totalIntensity: 25, moods: { 'feliz': 2, 'tranquilo': 1 } },
-      'estudio': { count: 2, totalIntensity: 13, moods: { 'ansioso': 1, 'tranquilo': 1 } },
-    };
+    const triggerMap: Record<string, { count: number; totalIntensity: number; moods: Record<string, number> }> = {};
 
-    if (Array.isArray(journalEntries)) {
+    if (Array.isArray(journalEntries) && journalEntries.length > 0) {
       journalEntries.forEach(entry => {
         if (!entry) return;
         const triggers = Array.isArray(entry.triggers) ? entry.triggers : [];
@@ -262,7 +258,7 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
       let impactType: 'positive' | 'neutral' | 'stressor' = 'neutral';
       if (['feliz', 'motivado', 'tranquilo'].includes(topMood) && Number(avgIntensity) >= 7) {
         impactType = 'positive';
-      } else if (['ansioso', 'estresado', 'abrumado', 'enojado'].includes(topMood)) {
+      } else if (['ansioso', 'estresado', 'abrumado', 'enojado', 'triste'].includes(topMood)) {
         impactType = 'stressor';
       }
 
@@ -284,15 +280,9 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
 
   // 3. Dynamic Topics of Interest (Donut Pie Chart derived from triggers in Journal)
   const topicsData = useMemo(() => {
-    const counts: Record<string, number> = {
-      'Resiliencia': 5,
-      'Inteligencia Emocional': 4,
-      'Productividad': 3,
-      'Relaciones': 2,
-      'Mindfulness': 3,
-    };
+    const counts: Record<string, number> = {};
 
-    if (Array.isArray(journalEntries)) {
+    if (Array.isArray(journalEntries) && journalEntries.length > 0) {
       journalEntries.forEach(entry => {
         if (!entry) return;
         const allTriggers = [
@@ -303,17 +293,20 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
           if (t && typeof t === 'string') {
             const clean = t.replace('#', '').trim();
             if (clean) {
-              counts[clean] = (counts[clean] || 0) + 2;
+              counts[clean] = (counts[clean] || 0) + 1;
             }
           }
         });
       });
     }
 
-    const total = Object.values(counts).reduce((acc, c) => acc + c, 0) || 1;
+    const entriesList = Object.entries(counts);
+    if (entriesList.length === 0) return [];
+
+    const total = entriesList.reduce((acc, [, val]) => acc + val, 0) || 1;
     const colors = ['#548c71', '#3d6753', '#de6943', '#d97706', '#0284c7', '#84cc16'];
 
-    return Object.entries(counts)
+    return entriesList
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5)
       .map(([name, val], idx) => ({
@@ -323,78 +316,88 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
       }));
   }, [journalEntries]);
 
-  // 4. Dynamic 30-Day Emotional Path
+  // 4. Dynamic 30-Day Emotional Path (derived strictly from real journal entries)
   const monthlyMoodPath = useMemo(() => {
-    const baseDays = [
-      { day: 1, val: 5, mood: 'Felicidad', date: '01 Jun', note: 'Buen inicio de mes' },
-      { day: 2, val: 4, mood: 'Tranquilidad', date: '02 Jun', note: 'Paseo al aire libre' },
-      { day: 3, val: 4, mood: 'Tranquilidad', date: '03 Jun', note: 'Lectura guiada' },
-      { day: 4, val: 3, mood: 'Inquietud', date: '04 Jun', note: 'Pendientes acumulados' },
-      { day: 5, val: 3, mood: 'Inquietud', date: '05 Jun', note: 'Reunión de trabajo' },
-      { day: 6, val: 2, mood: 'Tristeza', date: '06 Jun', note: 'Cansancio acumulado' },
-      { day: 7, val: 3, mood: 'Inquietud', date: '07 Jun', note: 'Descanso activo' },
-      { day: 8, val: 4, mood: 'Tranquilidad', date: '08 Jun', note: 'Meditación matutina' },
-      { day: 9, val: 5, mood: 'Felicidad', date: '09 Jun', note: 'Completé proyecto' },
-      { day: 10, val: 5, mood: 'Felicidad', date: '10 Jun', note: 'Salida con amigos' },
-      { day: 11, val: 4, mood: 'Tranquilidad', date: '11 Jun', note: 'Día sereno' },
-      { day: 12, val: 3, mood: 'Inquietud', date: '12 Jun', note: 'Examen académico' },
-      { day: 13, val: 2, mood: 'Tristeza', date: '13 Jun', note: 'Insomnio leve' },
-      { day: 14, val: 1, mood: 'Tensión', date: '14 Jun', note: 'Discusión externa' },
-      { day: 15, val: 3, mood: 'Inquietud', date: '15 Jun', note: 'Respiración diafragmática' },
-      { day: 16, val: 4, mood: 'Tranquilidad', date: '16 Jun', note: 'Retorno a la calma' },
-      { day: 17, val: 5, mood: 'Felicidad', date: '17 Jun', note: 'Excelente sesión terapéutica' },
-      { day: 18, val: 4, mood: 'Tranquilidad', date: '18 Jun', note: 'Hábitos consistentes' },
-      { day: 19, val: 4, mood: 'Tranquilidad', date: '19 Jun', note: 'Buen descanso' },
-      { day: 20, val: 5, mood: 'Felicidad', date: '20 Jun', note: 'Logro de meta mensual' },
-      { day: 21, val: 5, mood: 'Felicidad', date: '21 Jun', note: 'Día familiar cálido' },
-      { day: 22, val: 4, mood: 'Tranquilidad', date: '22 Jun', note: 'Planificación semanal' },
-      { day: 23, val: 3, mood: 'Inquietud', date: '23 Jun', note: 'Cierre de entregables' },
-      { day: 24, val: 4, mood: 'Tranquilidad', date: '24 Jun', note: 'Caminata en parque' },
-      { day: 25, val: 5, mood: 'Felicidad', date: '25 Jun', note: 'Buen balance vida-trabajo' },
-      { day: 26, val: 4, mood: 'Tranquilidad', date: '26 Jun', note: 'Lectura nocturna' },
-      { day: 27, val: 4, mood: 'Tranquilidad', date: '27 Jun', note: 'Descanso reparador' },
-      { day: 28, val: 5, mood: 'Felicidad', date: '28 Jun', note: 'Compartir en comunidad' },
-      { day: 29, val: 4, mood: 'Tranquilidad', date: '29 Jun', note: 'Plan de hábitos' },
-      { day: 30, val: 5, mood: 'Felicidad', date: '30 Jun', note: 'Reflexión y cierre positivo' }
-    ];
+    if (!Array.isArray(journalEntries) || journalEntries.length === 0) {
+      return [];
+    }
 
-    if (Array.isArray(journalEntries) && journalEntries.length > 0) {
-      journalEntries.forEach((entry) => {
-        if (!entry) return;
-        const dateStr = typeof entry.date === 'string' ? entry.date : '';
-        const parts = dateStr.split('-');
-        const rawDay = parts.length > 2 ? parseInt(parts[2], 10) : NaN;
-        const targetDay = isNaN(rawDay) ? 30 : Math.min(30, Math.max(1, rawDay));
+    const points = journalEntries
+      .filter(e => e && e.date)
+      .map((entry, idx) => {
+        const d = new Date(entry.date);
+        const dayNum = isNaN(d.getDate()) ? (idx + 1) : d.getDate();
+        const dateFormatted = !isNaN(d.getDate()) 
+          ? `${dayNum < 10 ? '0' + dayNum : dayNum} Jun`
+          : entry.date;
         const moodKey = entry.mood || 'tranquilo';
         const entryVal = MOOD_TO_VAL[moodKey] || 4;
         const entryMood = MOOD_TO_LABEL[moodKey] || 'Tranquilidad';
         const entryNote = entry.notes ? entry.notes.slice(0, 35) + '...' : 'Registro en diario';
 
-        const index = baseDays.findIndex(d => d.day === targetDay);
-        if (index !== -1) {
-          baseDays[index] = {
-            day: targetDay,
-            val: entryVal,
-            mood: entryMood,
-            date: `${targetDay < 10 ? '0' + targetDay : targetDay} Jun`,
-            note: entryNote
-          };
-        }
-      });
-    }
+        return {
+          day: dayNum,
+          val: entryVal,
+          mood: entryMood,
+          date: dateFormatted,
+          note: entryNote
+        };
+      })
+      .sort((a, b) => a.day - b.day);
 
-    return baseDays;
+    return points;
+  }, [journalEntries]);
+
+  // Emotional summary indicator
+  const emotionalTendency = useMemo(() => {
+    if (!Array.isArray(journalEntries) || journalEntries.length === 0) {
+      return { label: 'Sin datos suficientes', percent: 0, daysCount: 0 };
+    }
+    const moodCounts: Record<string, number> = {};
+    journalEntries.forEach(e => {
+      const key = e.mood || 'tranquilo';
+      moodCounts[key] = (moodCounts[key] || 0) + 1;
+    });
+    const sorted = Object.entries(moodCounts).sort((a, b) => b[1] - a[1]);
+    const topMoodKey = sorted[0]?.[0] || 'tranquilo';
+    const topMoodLabel = MOOD_TO_LABEL[topMoodKey] || 'Equilibrio';
+    const topCount = sorted[0]?.[1] || 0;
+    const percent = Math.round((topCount / journalEntries.length) * 100);
+    return {
+      label: `${topMoodLabel} (${percent}%)`,
+      percent,
+      daysCount: journalEntries.length
+    };
   }, [journalEntries]);
 
   // 5. Predictive Forecast
   const forecastData = useMemo(() => {
+    const hasData = journalEntries.length > 0 || completedMissionsCount > 0;
+
+    if (!hasData) {
+      return {
+        title: forecastPeriod === '7d' ? 'Horizonte Inmediato (Próximos 7 Días)' : forecastPeriod === '14d' ? 'Proyección Quincenal (14 Días)' : 'Tendencia Mensual Global (30 Días)',
+        riskLevel: 'Sin Datos',
+        riskPercent: 0,
+        riskDescription: 'Registra tus primeros días en el diario para que el modelo predictivo calibre tu nivel de riesgo.',
+        riskBarColor: 'bg-stone-300',
+        batteryPercent: 0,
+        batteryState: '0% Inicial',
+        batteryDescription: 'Completa misiones y registra tu estado de ánimo para medir tus reservas de energía mental.',
+        batteryBarColor: 'bg-stone-300',
+        actionTitle: 'Registrar primera emoción',
+        actionDesc: 'Dedica 2 minutos a guardar tu primera entrada en el Diario Emocional para activar tus métricas predictivas.',
+        actionType: 'Acción recomendada de inicio'
+      };
+    }
+
     const recentScores = monthlyMoodPath.map(d => d.val);
-    const avgScore = recentScores.reduce((a, b) => a + b, 0) / (recentScores.length || 1);
+    const avgScore = recentScores.length > 0 ? (recentScores.reduce((a, b) => a + b, 0) / recentScores.length) : 4;
     const isHighWellbeing = avgScore >= 3.8;
 
     if (forecastPeriod === '7d') {
       const riskPercent = isHighWellbeing ? 8 : 16;
-      const batteryPercent = Math.min(95, 80 + streakDays * 2);
+      const batteryPercent = Math.min(95, 60 + streakDays * 5 + completedMissionsCount * 4);
       return {
         title: 'Horizonte Inmediato (Próximos 7 Días)',
         riskLevel: riskPercent <= 10 ? 'Riesgo Muy Bajo' : 'Riesgo Bajo',
@@ -411,7 +414,7 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
       };
     } else if (forecastPeriod === '14d') {
       const riskPercent = isHighWellbeing ? 14 : 22;
-      const batteryPercent = Math.min(90, 75 + streakDays);
+      const batteryPercent = Math.min(90, 55 + streakDays * 4 + completedMissionsCount * 3);
       return {
         title: 'Proyección Quincenal (14 Días)',
         riskLevel: 'Riesgo Estable',
@@ -428,7 +431,7 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
       };
     } else {
       const riskPercent = isHighWellbeing ? 12 : 25;
-      const batteryPercent = Math.min(88, 70 + streakDays * 2);
+      const batteryPercent = Math.min(88, 50 + streakDays * 5 + completedMissionsCount * 3);
       return {
         title: 'Tendencia Mensual Global (30 Días)',
         riskLevel: 'Riesgo Controlado',
@@ -444,7 +447,35 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
         actionType: 'Estrategia de consolidación a 30 días'
       };
     }
-  }, [forecastPeriod, monthlyMoodPath, streakDays]);
+  }, [forecastPeriod, monthlyMoodPath, streakDays, journalEntries.length, completedMissionsCount]);
+
+  // Subjective Wellbeing & Stress Episodes
+  const subjectiveWellbeing = useMemo(() => {
+    if (!Array.isArray(journalEntries) || journalEntries.length === 0) {
+      return { score: '0.0', deltaText: '0% Sin registros aún' };
+    }
+    const total = journalEntries.reduce((acc, e) => acc + (typeof e.intensity === 'number' ? e.intensity : 5), 0);
+    const avg = (total / journalEntries.length).toFixed(1);
+    return {
+      score: `${avg}`,
+      deltaText: `+${Math.min(100, journalEntries.length * 10)}% según tus registros`
+    };
+  }, [journalEntries]);
+
+  const reactiveStressEpisodes = useMemo(() => {
+    if (!Array.isArray(journalEntries) || journalEntries.length === 0) {
+      return { count: 0, text: '0% Sin picos detectados' };
+    }
+    const stressEntries = journalEntries.filter(e => {
+      const mood = (e.mood || '').toLowerCase();
+      const intensity = typeof e.intensity === 'number' ? e.intensity : 5;
+      return ['ansioso', 'estresado', 'enojado', 'abrumado'].includes(mood) && intensity >= 7;
+    });
+    return {
+      count: stressEntries.length,
+      text: stressEntries.length === 0 ? '0% Sin picos detectados' : `${stressEntries.length} registrados este mes`
+    };
+  }, [journalEntries]);
 
   const activeTriggerData = triggerCorrelations.find(t => t.rawTag === selectedTrigger) || triggerCorrelations[0];
 
@@ -511,10 +542,10 @@ Generado con FluxGlow • Cuidado emocional consciente`;
           <div className="bg-white p-4 rounded-2xl border border-brand-sand-300 shadow-2xs flex items-center justify-between">
             <div>
               <p className="text-[11px] font-semibold text-stone-500">Bienestar Subjetivo</p>
-              <h3 className="text-xl font-bold text-stone-900 mt-0.5">8.4 / 10</h3>
+              <h3 className="text-xl font-bold text-stone-900 mt-0.5">{subjectiveWellbeing.score} / 10</h3>
               <p className="text-[11px] text-brand-sage-700 font-bold flex items-center gap-0.5 mt-1">
                 <ArrowUpRight className="w-3.5 h-3.5 text-brand-sage-600" />
-                <span>+14% vs semana previa</span>
+                <span>{subjectiveWellbeing.deltaText}</span>
               </p>
             </div>
             <div className="w-10 h-10 rounded-xl bg-brand-sage-50 border border-brand-sage-200 flex items-center justify-center text-brand-sage-700">
@@ -528,7 +559,7 @@ Generado con FluxGlow • Cuidado emocional consciente`;
               <h3 className="text-xl font-bold text-stone-900 mt-0.5">{streakDays} días activos</h3>
               <p className="text-[11px] text-brand-sage-700 font-bold flex items-center gap-0.5 mt-1">
                 <ArrowUpRight className="w-3.5 h-3.5 text-brand-sage-600" />
-                <span>+22% racha sostenida</span>
+                <span>{streakDays === 0 ? '0% Racha por iniciar' : `+${streakDays * 10}% racha sostenida`}</span>
               </p>
             </div>
             <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600">
@@ -539,10 +570,10 @@ Generado con FluxGlow • Cuidado emocional consciente`;
           <div className="bg-white p-4 rounded-2xl border border-brand-sand-300 shadow-2xs flex items-center justify-between">
             <div>
               <p className="text-[11px] font-semibold text-stone-500">Picos de Estrés Reactivo</p>
-              <h3 className="text-xl font-bold text-stone-900 mt-0.5">2 episodios</h3>
-              <p className="text-[11px] text-brand-sage-700 font-bold flex items-center gap-0.5 mt-1">
-                <ArrowDownRight className="w-3.5 h-3.5 text-brand-sage-600" />
-                <span>-18% reducción de fatiga</span>
+              <h3 className="text-xl font-bold text-stone-900 mt-0.5">{reactiveStressEpisodes.count} episodios</h3>
+              <p className="text-[11px] text-stone-500 font-medium flex items-center gap-0.5 mt-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-brand-sage-600" />
+                <span>{reactiveStressEpisodes.text}</span>
               </p>
             </div>
             <div className="w-10 h-10 rounded-xl bg-brand-terracotta-50 border border-brand-terracotta-200 flex items-center justify-center text-brand-terracotta-600">
@@ -570,68 +601,82 @@ Generado con FluxGlow • Cuidado emocional consciente`;
             </span>
           </div>
 
-          {/* Interactive Tag Chips */}
-          <div className="flex flex-wrap gap-2.5 my-5">
-            {triggerCorrelations.map((item) => {
-              const isSelected = selectedTrigger === item.rawTag;
-              const badgeBg = item.impactType === 'positive' 
-                ? 'border-emerald-300 text-emerald-800 hover:bg-emerald-50' 
-                : item.impactType === 'stressor'
-                ? 'border-amber-300 text-amber-800 hover:bg-amber-50'
-                : 'border-brand-sand-300 text-stone-700 hover:bg-brand-sand-100';
-
-              return (
-                <button
-                  key={item.tag}
-                  onClick={() => setSelectedTrigger(item.rawTag)}
-                  className={`px-3.5 py-2 rounded-2xl text-xs font-bold border transition-all flex items-center gap-2 cursor-pointer ${
-                    isSelected
-                      ? 'bg-brand-sage-700 text-white border-brand-sage-800 shadow-sm ring-2 ring-brand-sage-300'
-                      : `bg-white ${badgeBg}`
-                  }`}
-                >
-                  <span>{item.tag}</span>
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${isSelected ? 'bg-white/20 text-white' : 'bg-brand-sand-100 text-stone-600'}`}>
-                    {item.count} reg.
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Detail card of active selected trigger */}
-          {activeTriggerData && (
-            <div className="p-4 sm:p-5 rounded-2xl bg-brand-sand-50 border border-brand-sand-300 flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="flex-1 space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-base font-bold text-stone-900">{activeTriggerData.tag}</span>
-                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
-                    activeTriggerData.impactType === 'positive' 
-                      ? 'bg-emerald-100 text-emerald-800' 
-                      : activeTriggerData.impactType === 'stressor'
-                      ? 'bg-rose-100 text-rose-800'
-                      : 'bg-stone-200 text-stone-700'
-                  }`}>
-                    {activeTriggerData.dominantMood} ({activeTriggerData.avgIntensity}/10)
-                  </span>
-                </div>
-                <p className="text-xs text-stone-700 leading-relaxed">
-                  {activeTriggerData.recommendation}
-                </p>
+          {/* Interactive Tag Chips or Empty State */}
+          {triggerCorrelations.length === 0 ? (
+            <div className="p-8 text-center bg-brand-sand-50 rounded-2xl border border-brand-sand-300 my-4 space-y-2">
+              <div className="w-10 h-10 rounded-xl bg-brand-sand-100 text-stone-400 mx-auto flex items-center justify-center">
+                <Tag className="w-5 h-5" />
               </div>
-
-              <div className="flex items-center gap-3 bg-white p-3 rounded-xl border border-brand-sand-200 shrink-0">
-                <div className="text-center px-2">
-                  <p className="text-xs text-stone-500 font-medium">Frecuencia</p>
-                  <p className="text-sm font-bold text-stone-900">{activeTriggerData.count} veces</p>
-                </div>
-                <div className="h-7 w-px bg-brand-sand-300"></div>
-                <div className="text-center px-2">
-                  <p className="text-xs text-stone-500 font-medium">Intensidad Media</p>
-                  <p className="text-sm font-bold text-brand-sage-700">{activeTriggerData.avgIntensity} / 10</p>
-                </div>
-              </div>
+              <h3 className="text-sm font-bold text-stone-800">Aún no hay factores o detonantes registrados</h3>
+              <p className="text-xs text-stone-500 max-w-md mx-auto">
+                Añade notas con etiquetas en tu Diario Emocional (por ejemplo #sueño, #ejercicio, #estudio) para correlacionar aquí tus actividades con tu bienestar.
+              </p>
             </div>
+          ) : (
+            <>
+              <div className="flex flex-wrap gap-2.5 my-5">
+                {triggerCorrelations.map((item) => {
+                  const isSelected = selectedTrigger === item.rawTag;
+                  const badgeBg = item.impactType === 'positive' 
+                    ? 'border-emerald-300 text-emerald-800 hover:bg-emerald-50' 
+                    : item.impactType === 'stressor'
+                    ? 'border-amber-300 text-amber-800 hover:bg-amber-50'
+                    : 'border-brand-sand-300 text-stone-700 hover:bg-brand-sand-100';
+
+                  return (
+                    <button
+                      key={item.tag}
+                      onClick={() => setSelectedTrigger(item.rawTag)}
+                      className={`px-3.5 py-2 rounded-2xl text-xs font-bold border transition-all flex items-center gap-2 cursor-pointer ${
+                        isSelected
+                          ? 'bg-brand-sage-700 text-white border-brand-sage-800 shadow-sm ring-2 ring-brand-sage-300'
+                          : `bg-white ${badgeBg}`
+                      }`}
+                    >
+                      <span>{item.tag}</span>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${isSelected ? 'bg-white/20 text-white' : 'bg-brand-sand-100 text-stone-600'}`}>
+                        {item.count} reg.
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Detail card of active selected trigger */}
+              {activeTriggerData && (
+                <div className="p-4 sm:p-5 rounded-2xl bg-brand-sand-50 border border-brand-sand-300 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="flex-1 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base font-bold text-stone-900">{activeTriggerData.tag}</span>
+                      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                        activeTriggerData.impactType === 'positive' 
+                          ? 'bg-emerald-100 text-emerald-800' 
+                          : activeTriggerData.impactType === 'stressor'
+                          ? 'bg-rose-100 text-rose-800'
+                          : 'bg-stone-200 text-stone-700'
+                      }`}>
+                        {activeTriggerData.dominantMood} ({activeTriggerData.avgIntensity}/10)
+                      </span>
+                    </div>
+                    <p className="text-xs text-stone-700 leading-relaxed">
+                      {activeTriggerData.recommendation}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-3 bg-white p-3 rounded-xl border border-brand-sand-200 shrink-0">
+                    <div className="text-center px-2">
+                      <p className="text-xs text-stone-500 font-medium">Frecuencia</p>
+                      <p className="text-sm font-bold text-stone-900">{activeTriggerData.count} veces</p>
+                    </div>
+                    <div className="h-7 w-px bg-brand-sand-300"></div>
+                    <div className="text-center px-2">
+                      <p className="text-xs text-stone-500 font-medium">Intensidad Media</p>
+                      <p className="text-sm font-bold text-brand-sage-700">{activeTriggerData.avgIntensity} / 10</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
 
@@ -648,13 +693,13 @@ Generado con FluxGlow • Cuidado emocional consciente`;
                     Aprendizaje y Conocimiento
                   </h2>
                   <div className="flex items-baseline gap-2 mt-2">
-                    <span className="text-4xl font-extrabold text-stone-900">{28 + completedMissionsCount} ↑</span>
+                    <span className="text-4xl font-extrabold text-stone-900">{completedMissionsCount}</span>
                     <span className="text-xs sm:text-sm font-semibold text-stone-600">
-                      Guías y retos completados este mes
+                      Guías y retos completados
                     </span>
                   </div>
                   <p className="text-xs text-brand-sage-700 font-bold mt-0.5">
-                    +{53 + completedMissionsCount}% Más que el mes anterior
+                    {completedMissionsCount === 0 ? 'Comienza tu primera guía o reto hoy' : `+${completedMissionsCount * 10}% Completado en este periodo`}
                   </p>
                 </div>
 
@@ -685,7 +730,7 @@ Generado con FluxGlow • Cuidado emocional consciente`;
                           </linearGradient>
                         </defs>
                         <XAxis dataKey="month" tick={{ fontSize: 10, fill: '#78716c' }} axisLine={false} tickLine={false} />
-                        <YAxis hide domain={[0, 35]} />
+                        <YAxis hide domain={[0, Math.max(5, completedMissionsCount + 2)]} />
                         <Tooltip 
                           formatter={(val: any) => [`${val} logros`, 'Completados']}
                           contentStyle={{ borderRadius: 12, fontSize: 11, border: '1px solid #e7e5e4' }}
@@ -701,37 +746,46 @@ Generado con FluxGlow • Cuidado emocional consciente`;
                   <span className="text-xs font-bold text-stone-600 uppercase tracking-wider mb-1 block">
                     Temas de Interés (Diario)
                   </span>
-                  <div className="h-32 w-full flex items-center justify-center">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={topicsData}
-                          innerRadius={30}
-                          outerRadius={50}
-                          paddingAngle={3}
-                          dataKey="value"
-                        >
-                          {topicsData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip 
-                          formatter={(val: any) => [`${val}%`, 'Frecuencia']}
-                          contentStyle={{ borderRadius: 12, fontSize: 11 }}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-
-                  {/* Legend */}
-                  <div className="grid grid-cols-2 gap-1.5 text-[10px] mt-2">
-                    {topicsData.map((t, idx) => (
-                      <div key={idx} className="flex items-center gap-1.5">
-                        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: t.color }}></span>
-                        <span className="font-semibold text-stone-700 truncate">{t.value}% {t.name}</span>
+                  {topicsData.length === 0 ? (
+                    <div className="h-36 w-full flex flex-col items-center justify-center text-center p-3 bg-brand-sand-50 rounded-2xl border border-brand-sand-200">
+                      <p className="text-xs font-bold text-stone-700">Sin temas registrados</p>
+                      <p className="text-[10px] text-stone-500 mt-1 max-w-[140px]">Se generarán automáticamente a partir de tus notas en el diario</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="h-32 w-full flex items-center justify-center">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={topicsData}
+                              innerRadius={30}
+                              outerRadius={50}
+                              paddingAngle={3}
+                              dataKey="value"
+                            >
+                              {topicsData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.color} />
+                              ))}
+                            </Pie>
+                            <Tooltip 
+                              formatter={(val: any) => [`${val}%`, 'Frecuencia']}
+                              contentStyle={{ borderRadius: 12, fontSize: 11 }}
+                            />
+                          </PieChart>
+                        </ResponsiveContainer>
                       </div>
-                    ))}
-                  </div>
+
+                      {/* Legend */}
+                      <div className="grid grid-cols-2 gap-1.5 text-[10px] mt-2">
+                        {topicsData.map((t, idx) => (
+                          <div key={idx} className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: t.color }}></span>
+                            <span className="font-semibold text-stone-700 truncate">{t.value}% {t.name}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
                 </div>
 
               </div>
@@ -743,7 +797,9 @@ Generado con FluxGlow • Cuidado emocional consciente`;
                 <Brain className="w-3.5 h-3.5 text-brand-sage-600" />
                 Enfoque cognitivo fortalecido
               </span>
-              <span className="font-bold text-stone-900">Índice: {Math.min(99, 85 + streakDays)}/100</span>
+              <span className="font-bold text-stone-900">
+                Índice: {Math.min(100, completedMissionsCount * 25 + streakDays * 15 + journalEntries.length * 10)}/100
+              </span>
             </div>
           </div>
 
@@ -755,7 +811,7 @@ Generado con FluxGlow • Cuidado emocional consciente`;
                   Evolución Emocional
                 </h2>
                 <span className="text-xs text-stone-600 font-semibold bg-brand-sand-100 px-2.5 py-1 rounded-full border border-brand-sand-300">
-                  1 - 30 Días de Junio
+                  Mes en curso
                 </span>
               </div>
 
@@ -768,66 +824,87 @@ Generado con FluxGlow • Cuidado emocional consciente`;
                 <span className="flex items-center gap-1 text-rose-700">🔥 Tensión</span>
               </div>
 
-              {/* Multi-colored Banded Graph Container */}
-              <div className="relative w-full h-56 rounded-2xl overflow-hidden border border-brand-sand-300 shadow-inner">
-                {/* 5 Background Color Bands */}
-                <div className="absolute inset-0 grid grid-rows-5 pointer-events-none opacity-25">
-                  <div className="bg-amber-200 border-b border-amber-300/50"></div>
-                  <div className="bg-emerald-200 border-b border-emerald-300/50"></div>
-                  <div className="bg-orange-200 border-b border-orange-300/50"></div>
-                  <div className="bg-blue-200 border-b border-blue-300/50"></div>
-                  <div className="bg-rose-200"></div>
-                </div>
+              {/* Multi-colored Banded Graph Container or Clean Zero State */}
+              {monthlyMoodPath.length === 0 ? (
+                <div className="relative w-full h-56 rounded-2xl overflow-hidden border border-brand-sand-300 shadow-inner flex flex-col items-center justify-center text-center p-6 bg-white">
+                  <div className="absolute inset-0 grid grid-rows-5 pointer-events-none opacity-20">
+                    <div className="bg-amber-200 border-b border-amber-300/50"></div>
+                    <div className="bg-emerald-200 border-b border-emerald-300/50"></div>
+                    <div className="bg-orange-200 border-b border-orange-300/50"></div>
+                    <div className="bg-blue-200 border-b border-blue-300/50"></div>
+                    <div className="bg-rose-200"></div>
+                  </div>
 
-                {/* Plotted Line Chart Overlay */}
-                <div className="relative z-10 w-full h-full p-2">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={monthlyMoodPath}>
-                      <XAxis 
-                        dataKey="day" 
-                        tick={{ fontSize: 9, fill: '#44403c' }} 
-                        axisLine={false} 
-                        tickLine={false} 
-                        interval={3} 
-                      />
-                      <YAxis hide domain={[0.8, 5.2]} />
-                      <Tooltip 
-                        content={({ active, payload }) => {
-                          if (active && payload && payload.length) {
-                            const data = payload[0].payload;
-                            return (
-                              <div className="bg-stone-900 text-white p-2.5 rounded-xl shadow-lg text-xs space-y-1">
-                                <p className="font-bold text-amber-400">Día {data.day} ({data.date})</p>
-                                <p className="text-white">Estado: <strong>{data.mood}</strong></p>
-                                <p className="text-stone-300 text-[11px]">"{data.note}"</p>
-                              </div>
-                            );
-                          }
-                          return null;
-                        }}
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="val" 
-                        stroke="#292524" 
-                        strokeWidth={2.5} 
-                        dot={{ r: 3, fill: '#292524' }} 
-                        activeDot={{ r: 6, fill: '#de6943', stroke: '#fff', strokeWidth: 2 }} 
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
+                  <div className="relative z-10 space-y-2 max-w-xs">
+                    <div className="w-9 h-9 rounded-xl bg-brand-sand-100 text-stone-500 mx-auto flex items-center justify-center">
+                      <Activity className="w-5 h-5 text-brand-sage-600" />
+                    </div>
+                    <h4 className="text-sm font-bold text-stone-800">Sin registros este mes</h4>
+                    <p className="text-xs text-stone-500 leading-relaxed">
+                      Guarda cómo te sientes en el Diario Emocional para ver tu curva trazada día a día.
+                    </p>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="relative w-full h-56 rounded-2xl overflow-hidden border border-brand-sand-300 shadow-inner">
+                  {/* 5 Background Color Bands */}
+                  <div className="absolute inset-0 grid grid-rows-5 pointer-events-none opacity-25">
+                    <div className="bg-amber-200 border-b border-amber-300/50"></div>
+                    <div className="bg-emerald-200 border-b border-emerald-300/50"></div>
+                    <div className="bg-orange-200 border-b border-orange-300/50"></div>
+                    <div className="bg-blue-200 border-b border-blue-300/50"></div>
+                    <div className="bg-rose-200"></div>
+                  </div>
+
+                  {/* Plotted Line Chart Overlay */}
+                  <div className="relative z-10 w-full h-full p-2">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={monthlyMoodPath}>
+                        <XAxis 
+                          dataKey="day" 
+                          tick={{ fontSize: 9, fill: '#44403c' }} 
+                          axisLine={false} 
+                          tickLine={false} 
+                        />
+                        <YAxis hide domain={[0.8, 5.2]} />
+                        <Tooltip 
+                          content={({ active, payload }) => {
+                            if (active && payload && payload.length) {
+                              const data = payload[0].payload;
+                              return (
+                                <div className="bg-stone-900 text-white p-2.5 rounded-xl shadow-lg text-xs space-y-1">
+                                  <p className="font-bold text-amber-400">Día {data.day} ({data.date})</p>
+                                  <p className="text-white">Estado: <strong>{data.mood}</strong></p>
+                                  <p className="text-stone-300 text-[11px]">"{data.note}"</p>
+                                </div>
+                              );
+                            }
+                            return null;
+                          }}
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="val" 
+                          stroke="#292524" 
+                          strokeWidth={2.5} 
+                          dot={{ r: 3, fill: '#292524' }} 
+                          activeDot={{ r: 6, fill: '#de6943', stroke: '#fff', strokeWidth: 2 }} 
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Bottom Status / Pattern Alert */}
             <div className="mt-4 pt-3 border-t border-brand-sand-200 flex items-center justify-between text-xs">
               <span className="text-stone-700 flex items-center gap-1.5">
                 <Activity className="w-3.5 h-3.5 text-brand-terracotta-600" />
-                Tendencia Predominante: <strong className="text-brand-sage-700">Felicidad & Calma (78%)</strong>
+                Tendencia Predominante: <strong className="text-brand-sage-700">{emotionalTendency.label}</strong>
               </span>
               <span className="text-stone-500 text-[11px]">
-                30 días analizados
+                {emotionalTendency.daysCount} días analizados
               </span>
             </div>
 

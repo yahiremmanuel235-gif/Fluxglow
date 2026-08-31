@@ -183,6 +183,5 @@ export function calculateMissionStreak(missions: UserDailyMissionRecord[]): numb
     }
   }
 
-  // Cap with base mock streak for engaging demonstration (minimum 3 days if active)
-  return Math.max(streak, completedMissions.length > 0 ? 3 : 0);
+  return streak;
 }
