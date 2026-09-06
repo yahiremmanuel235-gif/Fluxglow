@@ -27,6 +27,11 @@ import { FluxGlowLogo } from '../common/FluxGlowLogo';
 import { MoodType, JournalEntry, ViewMode } from '../../types';
 import { MOCK_JOURNAL_ENTRIES } from '../../data/mockData';
 import { useToast } from '../common/Toast';
+import { 
+  fetchSupabaseJournalEntries, 
+  insertSupabaseJournalEntry, 
+  deleteSupabaseJournalEntry 
+} from '../../services/supabaseService';
 
 interface JournalModuleProps {
   onEntryCreated?: (entry: JournalEntry) => void;
@@ -136,6 +141,33 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
     'Salud', 'Sueño', 'Dinero', 'Clima', 'Productividad', 'Descanso', 'Mindfulness'
   ];
 
+  // Consulta (select) inicial a la tabla journal_entries en Supabase
+  useEffect(() => {
+    let isMounted = true;
+    fetchSupabaseJournalEntries()
+      .then((dbEntries) => {
+        if (!isMounted) return;
+        if (dbEntries && dbEntries.length > 0) {
+          setEntries((prev) => {
+            const dbIds = new Set(dbEntries.map((e) => e.id));
+            const nonDuplicates = prev.filter((e) => !dbIds.has(e.id));
+            const merged = [...dbEntries, ...nonDuplicates];
+            try {
+              localStorage.setItem('fluxglow_journal_entries', JSON.stringify(merged));
+            } catch (e) {}
+            return merged;
+          });
+        }
+      })
+      .catch((err) => {
+        console.warn('Error cargando journal_entries de Supabase:', err);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   // Voice recording simulation
   useEffect(() => {
     let interval: any;
@@ -169,7 +201,7 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
     }
   };
 
-  const handleSubmit = (e?: React.FormEvent) => {
+  const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!noteText.trim()) {
       warning('Escribe unas palabras', 'Por favor redacta cómo te sientes antes de guardar tu registro.');
@@ -179,8 +211,24 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
     setIsSubmitting(true);
 
     const now = new Date();
+    let entryId = 'entry-' + Date.now();
+
+    try {
+      // Guarda directamente en la tabla journal_entries de Supabase
+      const savedInDb = await insertSupabaseJournalEntry({
+        mood: selectedMood,
+        note: noteText.trim()
+      });
+
+      if (savedInDb) {
+        entryId = savedInDb.id;
+      }
+    } catch (err) {
+      console.error('Error insertando journal entry en Supabase:', err);
+    }
+
     const newEntry: JournalEntry = {
-      id: 'entry-' + Date.now(),
+      id: entryId,
       date: now.toISOString().split('T')[0],
       time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       mood: selectedMood,
@@ -191,9 +239,11 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
       aiFeedback: INSPIRATIONAL_QUOTES[selectedMood]?.reflection || 'Has identificado tus emociones con claridad.'
     };
 
-    const updated = [newEntry, ...entries];
+    const updated = [newEntry, ...entries.filter(e => e.id !== newEntry.id)];
     setEntries(updated);
-    localStorage.setItem('fluxglow_journal_entries', JSON.stringify(updated));
+    try {
+      localStorage.setItem('fluxglow_journal_entries', JSON.stringify(updated));
+    } catch (e) {}
     window.dispatchEvent(new CustomEvent('fluxglow_journal_updated', { detail: updated }));
 
     if (onEntryCreated) {
@@ -211,7 +261,7 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
       setSubmittedEntry(newEntry);
       setIsSubmitted(true);
       setNoteText('');
-      success('¡Registro guardado en tu Diario!', 'Tu estado emocional ha quedado asentado.');
+      success('¡Registro guardado en Supabase!', 'Tu estado emocional ha sido registrado en la base de datos.');
     }, 350);
   };
 
@@ -222,11 +272,20 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
   };
 
   const handleDeleteEntry = (id: string) => {
+    // Si fue generado en Supabase (UUID), eliminar de Supabase
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+      deleteSupabaseJournalEntry(id).catch((err) =>
+        console.warn('Error eliminando de Supabase:', err)
+      );
+    }
+
     const updated = entries.filter(e => e.id !== id);
     setEntries(updated);
-    localStorage.setItem('fluxglow_journal_entries', JSON.stringify(updated));
+    try {
+      localStorage.setItem('fluxglow_journal_entries', JSON.stringify(updated));
+    } catch (e) {}
     window.dispatchEvent(new CustomEvent('fluxglow_journal_updated', { detail: updated }));
-    success('Registro eliminado', 'La entrada ha sido retirada de tu historial.');
+    success('Registro eliminado', 'La entrada ha sido retirada de tu historial y de la base de datos.');
   };
 
   // Recent 7 days streak preview calculation
@@ -263,6 +322,11 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
           </div>
 
           <div className="flex items-center gap-2">
+            <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>Supabase Conectado</span>
+            </div>
+
             {onNavigate && (
               <button
                 onClick={() => onNavigate('missions')}

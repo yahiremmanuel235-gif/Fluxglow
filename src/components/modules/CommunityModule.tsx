@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Users, 
   Send, 
@@ -23,16 +23,29 @@ import {
   AlertCircle,
   HelpCircle,
   Clock,
-  Filter
+  Filter,
+  RefreshCw,
+  Database
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { FluxGlowLogo } from '../common/FluxGlowLogo';
-import { CommunityGroup, CommunityPost } from '../../types';
+import { CommunityGroup, CommunityPost, UserProfileData } from '../../types';
 import { COMMUNITY_GROUPS, INITIAL_FACEBOOK_STYLE_POSTS } from '../../data/communityData';
 import { useToast } from '../common/Toast';
 import { Button } from '../common/Button';
+import {
+  fetchSupabaseCommunityPosts,
+  insertSupabaseCommunityPost,
+  updateSupabasePostLikes,
+  subscribeToCommunityPostsRealtime,
+  mapSupabasePostToCommunityPost
+} from '../../services/supabaseService';
 
-export const CommunityModule: React.FC = () => {
+interface CommunityModuleProps {
+  userProfile?: UserProfileData;
+}
+
+export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile }) => {
   const { success, warning, info } = useToast();
 
   // Stored posts with fallback to clean Facebook-style initial posts
@@ -45,6 +58,10 @@ export const CommunityModule: React.FC = () => {
     }
     return INITIAL_FACEBOOK_STYLE_POSTS;
   });
+
+  const [isLoadingPosts, setIsLoadingPosts] = useState<boolean>(true);
+  const [isPublishing, setIsPublishing] = useState<boolean>(false);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 
   // User's joined groups (starts empty or with 1 sample group, editable)
   const [joinedGroupIds, setJoinedGroupIds] = useState<string[]>(() => {
@@ -83,6 +100,84 @@ export const CommunityModule: React.FC = () => {
     '💪 Motivación recargada'
   ];
 
+  // Consulta (select) a la tabla community_posts y suscripción en tiempo real
+  useEffect(() => {
+    let isMounted = true;
+    setIsLoadingPosts(true);
+
+    // Consulta inicial (select) a la tabla community_posts
+    fetchSupabaseCommunityPosts()
+      .then((dbPosts) => {
+        if (!isMounted) return;
+        if (dbPosts && dbPosts.length > 0) {
+          setPosts(dbPosts);
+          try {
+            localStorage.setItem('fluxglow_community_posts', JSON.stringify(dbPosts));
+          } catch (e) {}
+        }
+        setIsLoadingPosts(false);
+      })
+      .catch((err) => {
+        console.warn('Error al cargar posts de Supabase:', err);
+        if (isMounted) setIsLoadingPosts(false);
+      });
+
+    // Suscripción en tiempo real (Supabase Realtime)
+    const unsubscribe = subscribeToCommunityPostsRealtime((payload) => {
+      if (!isMounted) return;
+      if (payload.eventType === 'INSERT' && payload.new) {
+        const newPost = mapSupabasePostToCommunityPost(payload.new);
+        setPosts((prev) => {
+          if (prev.some((p) => p.id === newPost.id)) return prev;
+          const updated = [newPost, ...prev];
+          try {
+            localStorage.setItem('fluxglow_community_posts', JSON.stringify(updated));
+          } catch (e) {}
+          return updated;
+        });
+      } else if (payload.eventType === 'UPDATE' && payload.new) {
+        setPosts((prev) =>
+          prev.map((p) =>
+            p.id === String(payload.new.id)
+              ? {
+                  ...p,
+                  likes: payload.new.likes ?? p.likes,
+                  content: payload.new.content ?? p.content
+                }
+              : p
+          )
+        );
+      } else if (payload.eventType === 'DELETE' && payload.old) {
+        setPosts((prev) => prev.filter((p) => p.id !== String(payload.old.id)));
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, []);
+
+  const handleRefreshFeed = async () => {
+    setIsRefreshing(true);
+    try {
+      const dbPosts = await fetchSupabaseCommunityPosts();
+      if (dbPosts && dbPosts.length > 0) {
+        setPosts(dbPosts);
+        try {
+          localStorage.setItem('fluxglow_community_posts', JSON.stringify(dbPosts));
+        } catch (e) {}
+        success('Feed actualizado', 'Mostrando las publicaciones más recientes de Supabase.');
+      } else {
+        info('Feed al día', 'No hay nuevas publicaciones en la base de datos.');
+      }
+    } catch (err) {
+      console.warn('Error al refrescar:', err);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   // Save joined groups to localStorage
   const handleToggleJoinGroup = (groupId: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
@@ -111,49 +206,96 @@ export const CommunityModule: React.FC = () => {
     }
   };
 
-  const handlePublishPost = (e?: React.FormEvent) => {
+  const handlePublishPost = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!postContent.trim()) {
       warning('Escribe un mensaje', 'Por favor redacta lo que deseas compartir en la comunidad.');
       return;
     }
 
-    const newPost: CommunityPost = {
-      id: `post-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-      author: 'Tú (Usuario FluxGlow)',
-      authorRole: 'Miembro de la Comunidad',
-      authorAvatar: '/user.png',
-      avatarColor: '#548c71',
-      timeAgo: 'Hace un momento',
-      content: postContent.trim(),
-      category: selectedPostGroup,
-      tags: [selectedFeeling.split(' ')[1] || 'Bienestar', 'Comunidad'],
-      likes: 1,
-      hugs: 1,
-      commentsCount: 0,
-      comments: []
-    };
+    setIsPublishing(true);
+    const authorDisplayName = userProfile?.name || 'Tú (Usuario FluxGlow)';
 
-    const updated = [newPost, ...posts];
-    setPosts(updated);
     try {
-      localStorage.setItem('fluxglow_community_posts', JSON.stringify(updated));
-    } catch (err) {
-      console.error(err);
-    }
+      // Guarda directamente en la tabla community_posts de Supabase
+      const savedPost = await insertSupabaseCommunityPost({
+        authorName: authorDisplayName,
+        groupCategory: selectedPostGroup,
+        mood: selectedFeeling,
+        content: postContent.trim(),
+        likes: 0
+      });
 
-    setPostContent('');
-    setIsCreatingPostExpanded(false);
-    confetti({ particleCount: 35, spread: 60 });
-    success('¡Publicado con éxito!', 'Tu mensaje ha sido compartido en la comunidad de manera segura.');
+      const newPost: CommunityPost = savedPost || {
+        id: `post-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        author: authorDisplayName,
+        authorRole: 'Miembro de la Comunidad',
+        authorAvatar: userProfile?.avatarUrl || '/user.png',
+        avatarColor: '#548c71',
+        timeAgo: 'Hace un momento',
+        content: postContent.trim(),
+        category: selectedPostGroup,
+        tags: [selectedFeeling.split(' ')[1] || 'Bienestar', 'Comunidad'],
+        likes: 0,
+        hugs: 0,
+        commentsCount: 0,
+        comments: []
+      };
+
+      setPosts((prev) => {
+        if (prev.some((p) => p.id === newPost.id)) return prev;
+        const updated = [newPost, ...prev];
+        try {
+          localStorage.setItem('fluxglow_community_posts', JSON.stringify(updated));
+        } catch (err) {
+          console.error(err);
+        }
+        return updated;
+      });
+
+      setPostContent('');
+      setIsCreatingPostExpanded(false);
+      confetti({ particleCount: 35, spread: 60 });
+      success('¡Publicado con éxito!', 'Tu publicación ha sido guardada en la tabla community_posts de Supabase.');
+    } catch (err) {
+      console.error('Error insertando en Supabase:', err);
+      warning('Guardado local', 'Se guardó en tu dispositivo, revisa la conexión con Supabase.');
+
+      const fallbackPost: CommunityPost = {
+        id: `post-${Date.now()}`,
+        author: authorDisplayName,
+        authorRole: 'Miembro de la Comunidad',
+        authorAvatar: userProfile?.avatarUrl || '/user.png',
+        avatarColor: '#548c71',
+        timeAgo: 'Hace un momento',
+        content: postContent.trim(),
+        category: selectedPostGroup,
+        tags: [selectedFeeling.split(' ')[1] || 'Bienestar', 'Comunidad'],
+        likes: 0,
+        hugs: 0,
+        commentsCount: 0,
+        comments: []
+      };
+      setPosts((prev) => [fallbackPost, ...prev]);
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   const handleLike = (postId: string) => {
-    const updated = posts.map(p => p.id === postId ? { ...p, likes: p.likes + 1 } : p);
+    const targetPost = posts.find((p) => p.id === postId);
+    const newLikes = (targetPost?.likes || 0) + 1;
+
+    const updated = posts.map(p => p.id === postId ? { ...p, likes: newLikes } : p);
     setPosts(updated);
     try {
       localStorage.setItem('fluxglow_community_posts', JSON.stringify(updated));
     } catch (err) {}
+
+    // Sincroniza el like en Supabase
+    updateSupabasePostLikes(postId, newLikes).catch(err => {
+      console.warn('Error al actualizar like en Supabase:', err);
+    });
   };
 
   const handleHug = (postId: string) => {
@@ -240,6 +382,19 @@ export const CommunityModule: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              onClick={handleRefreshFeed}
+              disabled={isRefreshing}
+              title="Recargar publicaciones de Supabase"
+              className="text-xs font-semibold text-stone-600 hover:text-brand-sage-700 bg-white border border-brand-sand-300 px-3 py-1.5 rounded-full flex items-center gap-1.5 hover:bg-brand-sand-100 transition-colors cursor-pointer disabled:opacity-60"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 text-brand-sage-600 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">Actualizar</span>
+            </button>
+            <div className="flex items-center gap-1.5 text-[11px] font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span className="hidden md:inline">Supabase</span> En vivo
+            </div>
             <button
               onClick={() => {
                 setActiveGroupModal(COMMUNITY_GROUPS[0]);
@@ -469,7 +624,8 @@ export const CommunityModule: React.FC = () => {
                 <Button
                   onClick={handlePublishPost}
                   variant="primary"
-                  disabled={!postContent.trim()}
+                  disabled={!postContent.trim() || isPublishing}
+                  isLoading={isPublishing}
                   className="px-5 py-2 text-xs font-bold shadow-xs shrink-0 self-end sm:self-center"
                 >
                   <Send className="w-3.5 h-3.5 mr-1.5" /> Publicar

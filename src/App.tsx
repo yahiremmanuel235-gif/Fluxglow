@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ViewMode, UserProfileData } from './types';
+import { fetchSupabaseCommunityPosts } from './services/supabaseService';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 import { LandingPage } from './components/landing/LandingPage';
@@ -55,6 +56,21 @@ export default function App() {
       window.removeEventListener('fluxglow_open_update_notes', handleOpenUpdateNotes);
       window.removeEventListener('fluxglow_open_tutorial', handleOpenTutorial);
     };
+  }, []);
+
+  // Al cargar la app, consulta (select) a la tabla community_posts en Supabase
+  useEffect(() => {
+    fetchSupabaseCommunityPosts().then(dbPosts => {
+      if (dbPosts && dbPosts.length > 0) {
+        try {
+          localStorage.setItem('fluxglow_community_posts', JSON.stringify(dbPosts));
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }).catch(err => {
+      console.warn('Consulta inicial a community_posts en Supabase:', err);
+    });
   }, []);
 
   // Persistent user profile state connected across register, login & profile personalization
@@ -230,7 +246,7 @@ export default function App() {
 
             {currentView === 'community' && (
               <ErrorBoundary fallbackTitle="Inconveniente en la Comunidad">
-                <CommunityModule />
+                <CommunityModule userProfile={userProfile} />
               </ErrorBoundary>
             )}
           </motion.div>
