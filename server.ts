@@ -43,12 +43,10 @@ async function startServer() {
 
       const client = getGeminiClient();
 
-      const isStream = req.body.stream || req.headers.accept?.includes('text/event-stream');
-
-      if (!client && !isStream) {
+      if (!client) {
         // Fallback intelligent emotional counselor response engine
         const fallbackResponses = generateFallbackAssistantResponse(message, userMood, context);
-        return res.json({ response: fallbackResponses, isFallback: true });
+        return res.json({ response: fallbackResponses, reply: fallbackResponses, isFallback: true });
       }
 
       const systemInstruction = `Eres Flux AI, el acompañante conversacional experto en bienestar emocional y psicología práctica de FluxGlow (diseñado para jóvenes y adultos de 15 a 35 años).
@@ -72,19 +70,31 @@ Directrices de excelencia para tus respuestas:
 
 3. **Estructura y Formato Visual**:
    - Organiza la respuesta con títulos con iconos discretos, párrafos cortos y listas con viñetas cuando propongas pasos.
-   - Destaca conceptos clave en **negrita** para facilitar la lectura.
-   - Cierra con una pregunta abierta, cálida o una propuesta reflexiva de 1 línea para continuar el diálogo al ritmo del usuario.
+    - Destaca conceptos clave en **negrita** para facilitar la lectura.
+    - Cierra con una pregunta abierta, cálida o una propuesta reflexiva de 1 línea para continuar el diálogo al ritmo del usuario.
+    - **Agilidad y Concreción**: Responde de forma concisa, cálida y directa en 2 o 3 párrafos breves (100 a 160 palabras en total) para no saturar al usuario y ofrecer alivio o claridad inmediata.
 
 4. **Límites éticos y de seguridad**:
-   - Eres un apoyo psicoeducativo y emocional, no un sustituto de diagnóstico médico o psiquiátrico.
-   - Ante ideación suicida, autolesión o emergencia grave, responde con máxima calidez, contención inmediata y recuerda con delicadeza la línea de ayuda (+503 7801-4680) o los servicios de emergencia de su localidad.
+    - Eres un apoyo psicoeducativo y emocional, no un sustituto de diagnóstico médico o psiquiátrico.
+    - Ante ideación suicida, autolesión o emergencia grave, responde con máxima calidez, contención inmediata y recuerda con delicadeza la línea de ayuda (+503 7801-4680) o los servicios de emergencia de su localidad.
 5. **Idioma y Tono**: Responde siempre en español natural, cercano, respetuoso y profundamente humano.`;
 
-      // Sanitize and normalize conversation history
+      // Si no hay cliente Gemini configurado, responder inmediatamente con el fallback enriquecido en <10ms
+      if (!client) {
+        const fallback = generateFallbackAssistantResponse(message, userMood, context);
+        return res.json({
+          response: fallback,
+          reply: fallback,
+          isFallback: true
+        });
+      }
+
+      // Sanitize and normalize conversation history (últimos 4 mensajes para máxima velocidad de inferencia)
       const formattedContents: { role: 'user' | 'model'; parts: { text: string }[] }[] = [];
 
       if (Array.isArray(history)) {
-        for (const h of history) {
+        const recentHistory = history.slice(-4);
+        for (const h of recentHistory) {
           const rawText = 
             typeof h === 'string' ? h :
             (h.content || h.text || (Array.isArray(h.parts) && h.parts[0]?.text) || '');
@@ -106,90 +116,33 @@ Directrices de excelencia para tus respuestas:
         parts: [{ text: message.trim() }]
       });
 
-      const modelsToAttempt = ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.1-flash-lite"];
-
-      // Manejo de streaming SSE si fue solicitado
-      if (isStream) {
-        res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
-        res.setHeader('Cache-Control', 'no-cache, no-transform');
-        res.setHeader('Connection', 'keep-alive');
-        res.setHeader('X-Accel-Buffering', 'no');
-
-        if (!client) {
-          const fallback = generateFallbackAssistantResponse(message, userMood, context);
-          const words = fallback.split(' ');
-          for (let i = 0; i < words.length; i += 2) {
-            const piece = words.slice(i, i + 2).join(' ') + (i + 2 < words.length ? ' ' : '');
-            res.write(`data: ${JSON.stringify({ text: piece, isFallback: true })}\n\n`);
-          }
-          res.write(`data: [DONE]\n\n`);
-          res.end();
-          return;
-        }
-
-        let streamedSuccessfully = false;
-        for (const modelName of modelsToAttempt) {
-          try {
-            const responseStream: any = await client.models.generateContentStream({
-              model: modelName,
-              contents: formattedContents,
-              config: {
-                systemInstruction: systemInstruction,
-                temperature: 0.7,
-              }
-            });
-
-            if (!responseStream.stream) {
-              responseStream.stream = responseStream;
-            }
-
-            for await (const chunk of responseStream.stream) {
-              const text = chunk.text || '';
-              if (text) {
-                res.write(`data: ${JSON.stringify({ text })}\n\n`);
-              }
-            }
-            res.write(`data: [DONE]\n\n`);
-            res.end();
-            streamedSuccessfully = true;
-            break;
-          } catch (modelErr: any) {
-            console.warn(`Gemini streaming failed on model ${modelName}:`, modelErr?.status || modelErr?.message || modelErr);
-          }
-        }
-
-        if (!streamedSuccessfully) {
-          const fallback = generateFallbackAssistantResponse(message, userMood, context);
-          const words = fallback.split(' ');
-          for (let i = 0; i < words.length; i += 2) {
-            const piece = words.slice(i, i + 2).join(' ') + (i + 2 < words.length ? ' ' : '');
-            res.write(`data: ${JSON.stringify({ text: piece, isFallback: true })}\n\n`);
-          }
-          res.write(`data: [DONE]\n\n`);
-          res.end();
-        }
-        return;
-      }
-
-      // Respuesta estándar no-streaming
+      const modelsToAttempt = ["gemini-3.8-flash", "gemini-3.7-flash"];
       let replyText = "";
+
       for (const modelName of modelsToAttempt) {
         try {
-          const response = await client.models.generateContent({
+          const timeoutPromise = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('Timeout de velocidad excedido')), 3800)
+          );
+
+          const generatePromise = client.models.generateContent({
             model: modelName,
             contents: formattedContents,
             config: {
               systemInstruction: systemInstruction,
-              temperature: 0.7,
+              temperature: 0.6,
+              maxOutputTokens: 300,
             }
           });
+
+          const response = await Promise.race([generatePromise, timeoutPromise]);
 
           if (response && response.text) {
             replyText = response.text.trim();
             break;
           }
         } catch (modelErr: any) {
-          console.warn(`Gemini generation failed on model ${modelName}:`, modelErr?.status || modelErr?.message || modelErr);
+          console.warn(`Gemini rápido falló en modelo ${modelName}:`, modelErr?.status || modelErr?.message || modelErr);
         }
       }
 
@@ -199,13 +152,14 @@ Directrices de excelencia para tus respuestas:
 
       return res.json({
         response: replyText,
+        reply: replyText,
         isFallback: false,
       });
 
     } catch (error: any) {
       console.error("Error in /api/chat Gemini call:", error?.message || error);
-      const fallback = generateFallbackAssistantResponse(req.body.message, req.body.userMood, req.body.context);
-      return res.json({ response: fallback, isFallback: true });
+      const fallback = generateFallbackAssistantResponse(req.body?.message || '', req.body?.userMood, req.body?.context);
+      return res.json({ response: fallback, reply: fallback, isFallback: true });
     }
   });
 

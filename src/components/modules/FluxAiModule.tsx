@@ -75,7 +75,6 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
   const [selectedMode, setSelectedMode] = useState<AiMode>('calm');
   const [selectedMoodContext, setSelectedMoodContext] = useState<string>('');
   const [activePractice, setActivePractice] = useState<InstantPracticeItem | null>(null);
-  const [streamingMsgId, setStreamingMsgId] = useState<string | null>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const { info, success } = useToast();
 
@@ -103,27 +102,23 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
     'Ayúdame a organizar mis pendientes de hoy para no estresarme.'
   ];
 
-  const scrollToBottom = (instant = false) => {
+  const scrollToBottom = () => {
     if (chatContainerRef.current) {
-      if (instant || streamingMsgId) {
-        chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-      } else {
-        chatContainerRef.current.scrollTo({
-          top: chatContainerRef.current.scrollHeight,
-          behavior: 'smooth'
-        });
-      }
+      chatContainerRef.current.scrollTo({
+        top: chatContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
     }
   };
 
   useEffect(() => {
-    scrollToBottom(!!streamingMsgId);
+    scrollToBottom();
     try {
       localStorage.setItem('fluxglow_chat_messages', JSON.stringify(messages));
     } catch (e) {
       console.error('Error saving chat messages:', e);
     }
-  }, [messages, isLoading, streamingMsgId]);
+  }, [messages, isLoading]);
 
   const handleStartNewConversation = () => {
     // 1. If current session has messages, archive it safely
@@ -198,26 +193,14 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
-    const botMessageId = 'bot-' + (Date.now() + 1);
-    const initialBotMessage: ChatMessage = {
-      id: botMessageId,
-      sender: 'bot',
-      text: '', // Empieza vacío para streaming progresivo palabra por palabra
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-
-    setMessages(prev => [...prev, userMessage, initialBotMessage]);
+    setMessages(prev => [...prev, userMessage]);
     setInputText('');
     setIsLoading(true);
-    setStreamingMsgId(botMessageId);
-
-    const modeObj = AI_MODES.find(m => m.id === selectedMode);
-    const enrichedContext = `Modo: ${modeObj?.label || 'Acompañamiento'}. Estado reportado: ${selectedMoodContext || 'No especificado'}. Usuario: ${userProfile?.name || 'Amigo de FluxGlow'}.`;
 
     try {
       const replyText = await sendChatMessageToGemini({
         message: text,
-        history: messages.slice(-8).map(m => ({
+        history: messages.slice(-4).map(m => ({
           role: m.sender === 'user' ? 'user' : 'model',
           text: m.text
         })),
@@ -226,23 +209,19 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
         userContext: userProfile ? {
           name: userProfile.name,
           ageGroup: userProfile.ageGroup
-        } : undefined,
-        onChunk: (_chunkText, accumulatedText) => {
-          setMessages(prev =>
-            prev.map(msg =>
-              msg.id === botMessageId ? { ...msg, text: accumulatedText } : msg
-            )
-          );
-        }
+        } : undefined
       });
 
       const finalReply = replyText || getFallbackResponse(text, selectedMode);
 
-      setMessages(prev =>
-        prev.map(msg =>
-          msg.id === botMessageId ? { ...msg, text: finalReply } : msg
-        )
-      );
+      const botMessage: ChatMessage = {
+        id: 'bot-' + Date.now(),
+        sender: 'bot',
+        text: finalReply,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+
+      setMessages(prev => [...prev, botMessage]);
 
       if (isVoiceActive) {
         soundEngine.speak(finalReply.slice(0, 200));
@@ -250,14 +229,15 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
     } catch (err) {
       console.warn('Error al obtener respuesta de Flux AI:', err);
       const fallbackReply = getFallbackResponse(text, selectedMode);
-      setMessages(prev =>
-        prev.map(msg =>
-          msg.id === botMessageId ? { ...msg, text: fallbackReply } : msg
-        )
-      );
+      const botMessage: ChatMessage = {
+        id: 'bot-' + Date.now(),
+        sender: 'bot',
+        text: fallbackReply,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      setMessages(prev => [...prev, botMessage]);
     } finally {
       setIsLoading(false);
-      setStreamingMsgId(null);
     }
   };
 
@@ -620,26 +600,10 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
                         : 'bg-[#f8f5f0] text-stone-900 border border-stone-200 rounded-bl-none'
                     }`}
                   >
-                    <p className="whitespace-pre-line text-xs sm:text-sm font-normal">
-                      {msg.text ? (
-                        <>
-                          {msg.text}
-                          {streamingMsgId === msg.id && (
-                            <span className="inline-block w-1.5 h-3.5 ml-1 bg-[#5a8c72] animate-pulse align-middle" />
-                          )}
-                        </>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 text-stone-500 italic py-0.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#5a8c72] animate-bounce"></span>
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#5a8c72] animate-bounce [animation-delay:0.2s]"></span>
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#5a8c72] animate-bounce [animation-delay:0.4s]"></span>
-                          <span className="ml-1 text-xs">Flux AI está conectando con tu mensaje...</span>
-                        </span>
-                      )}
-                    </p>
+                    <p className="whitespace-pre-line text-xs sm:text-sm font-normal">{msg.text}</p>
                     
                     {/* Bot Message Quick Followup Actions */}
-                    {msg.sender === 'bot' && msg.text && streamingMsgId !== msg.id && (
+                    {msg.sender === 'bot' && (
                       <div className="mt-2.5 pt-2 border-t border-stone-200/80 flex items-center justify-between gap-2 flex-wrap">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <button
@@ -695,7 +659,7 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
                 </div>
               ))}
 
-              {isLoading && !streamingMsgId && (
+              {isLoading && (
                 <div className="flex gap-2.5 items-center text-xs text-stone-600 bg-stone-100/90 border border-stone-200 p-3 rounded-2xl max-w-xs shadow-2xs">
                   <Sparkles className="w-4 h-4 text-[#5a8c72] animate-spin" />
                   <span>Flux AI está pensando en una respuesta empática y clara...</span>

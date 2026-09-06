@@ -232,13 +232,6 @@ INSTRUCCIONES:
 2. Mantén un tono cálido, cercano, estructurado y alentador.
 3. Si el usuario pregunta algo complementario de bienestar, respóndele brevemente y anímalo a seguir con los ejercicios del día.`;
 
-      const initialBotMsg = {
-        role: 'model' as const,
-        text: '',
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
-      setAiChatMessages(prev => [...prev, initialBotMsg]);
-
       const responseText = await sendChatMessageToGemini({
         message: question,
         history: aiChatMessages.slice(-4).map(m => ({ role: m.role, text: m.text })),
@@ -247,51 +240,23 @@ INSTRUCCIONES:
         userContext: {
           name: 'Usuario de FluxGlow',
           emotionalState: `Revisando ${currentDayLesson.title}`
-        },
-        onChunk: (_chunkText, accumulatedText) => {
-          setAiChatMessages(prev => {
-            const next = [...prev];
-            const last = next[next.length - 1];
-            if (last && last.role === 'model') {
-              next[next.length - 1] = { ...last, text: accumulatedText };
-            }
-            return next;
-          });
         }
       });
 
-      const finalText = responseText || `En este Día ${selectedDayNumber}, lo esencial es poner en práctica las técnicas explicadas. Recuerda que la constancia y la amabilidad contigo mismo marcan la diferencia.`;
-      setAiChatMessages(prev => {
-        const next = [...prev];
-        const last = next[next.length - 1];
-        if (last && last.role === 'model') {
-          next[next.length - 1] = { ...last, text: finalText };
-        } else {
-          next.push({
-            role: 'model' as const,
-            text: finalText,
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          });
-        }
-        return next;
-      });
+      const botMsg = {
+        role: 'model' as const,
+        text: responseText || `En este Día ${selectedDayNumber}, lo esencial es poner en práctica las técnicas explicadas. Recuerda que la constancia y la amabilidad contigo mismo marcan la diferencia.`,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      setAiChatMessages(prev => [...prev, botMsg]);
     } catch (e) {
       console.warn('Error respondiendo duda en guía:', e);
-      const fallbackMsgText = `Basado en el Día ${selectedDayNumber} ("${currentDayLesson.title}"), recuerda aplicar los ejercicios paso a paso y con calma.`;
-      setAiChatMessages(prev => {
-        const next = [...prev];
-        const last = next[next.length - 1];
-        if (last && last.role === 'model') {
-          next[next.length - 1] = { ...last, text: fallbackMsgText };
-        } else {
-          next.push({
-            role: 'model' as const,
-            text: fallbackMsgText,
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          });
-        }
-        return next;
-      });
+      const fallbackMsg = {
+        role: 'model' as const,
+        text: `Basado en el Día ${selectedDayNumber} ("${currentDayLesson.title}"), recuerda aplicar los ejercicios paso a paso y con calma.`,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      setAiChatMessages(prev => [...prev, fallbackMsg]);
     } finally {
       setIsAiLoading(false);
     }
@@ -832,29 +797,13 @@ INSTRUCCIONES:
                         ? 'bg-brand-sage-800 text-white rounded-tr-none'
                         : 'bg-white text-stone-800 border border-stone-200 rounded-tl-none shadow-2xs'
                     }`}>
-                      <p className="whitespace-pre-line">
-                        {msg.text ? (
-                          <>
-                            {msg.text}
-                            {isAiLoading && midx === aiChatMessages.length - 1 && (
-                              <span className="inline-block w-1.5 h-3.5 ml-1 bg-brand-sage-600 animate-pulse align-middle" />
-                            )}
-                          </>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5 text-stone-400 italic text-xs">
-                            <span className="w-1.5 h-1.5 rounded-full bg-brand-sage-500 animate-bounce"></span>
-                            <span className="w-1.5 h-1.5 rounded-full bg-brand-sage-500 animate-bounce [animation-delay:0.2s]"></span>
-                            <span className="w-1.5 h-1.5 rounded-full bg-brand-sage-500 animate-bounce [animation-delay:0.4s]"></span>
-                            <span className="ml-1">Pensando respuesta...</span>
-                          </span>
-                        )}
-                      </p>
+                      <p className="whitespace-pre-line">{msg.text}</p>
                       <span className="block text-[10px] mt-1.5 opacity-70 text-right">{msg.time}</span>
                     </div>
                   </div>
                 ))}
 
-                {isAiLoading && aiChatMessages.length === 0 && (
+                {isAiLoading && (
                   <div className="flex items-center gap-2 text-xs sm:text-sm text-stone-500 animate-pulse">
                     <Bot className="w-4 h-4 text-brand-sage-600" />
                     <span>Flux AI está repasando los puntos de este día para responderte...</span>

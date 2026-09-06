@@ -54,12 +54,8 @@ function getGeminiClient(): GoogleGenAI | null {
 }
 
 /**
- * Genera la respuesta del asistente empático Flux AI mediante streaming en tiempo real.
- * Utiliza generateContentStream() y 'for await (const chunk of result.stream)' para emitir
- * fragmentos de texto en tiempo real al usuario.
- * 
- * Si la clave no está presente o el modelo experimenta alta demanda, recurre al endpoint
- * del servidor /api/chat con soporte SSE, y en última instancia a un fallback enriquecido.
+ * Genera la respuesta del asistente empático Flux AI de manera ágil y directa.
+ * Prioriza respuestas concisas, cálidas y de baja latencia (<1-2 segundos).
  */
 export async function sendChatMessageToGemini(params: SendChatMessageParams): Promise<string> {
   const { message, history = [], mode = 'calm', userMood = '', userContext, onChunk } = params;
@@ -68,19 +64,19 @@ export async function sendChatMessageToGemini(params: SendChatMessageParams): Pr
   const enrichedSystemInstruction = `${FLUX_AI_SYSTEM_PROMPT}
 
 Contexto actual de la sesión:
-- Modo de interacción seleccionado: ${mode}
+- Modo de interacción: ${mode}
 - Estado de ánimo reportado: ${userMood || 'No especificado'}
 ${userContext?.name ? `- Nombre del usuario: ${userContext.name}` : ''}
 ${userContext?.ageGroup ? `- Grupo de edad: ${userContext.ageGroup}` : ''}
-Adapta tu tono al modo (${mode}) manteniendo siempre la empatía, claridad y calidez.`;
 
-  // Intento 1: Streaming directo con el cliente @google/genai si existe VITE_GEMINI_API_KEY
+DIRECTIVA DE AGILIDAD: Responde en 2 o 3 párrafos breves, estructurados y empáticos (máximo 150 palabras). Da una reflexión cálida y un paso práctico sin rodeos.`;
+
+  // Intento 1: Llamada directa ultra-rápida con cliente @google/genai si existe VITE_GEMINI_API_KEY
   if (client) {
     const formattedContents: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = [];
 
-    // Agregar historial previo
     if (history && history.length > 0) {
-      history.slice(-8).forEach(item => {
+      history.slice(-4).forEach(item => {
         formattedContents.push({
           role: item.role === 'user' ? 'user' : 'model',
           parts: [{ text: item.text }]
@@ -88,132 +84,88 @@ Adapta tu tono al modo (${mode}) manteniendo siempre la empatía, claridad y cal
       });
     }
 
-    // Agregar el mensaje actual del usuario
     formattedContents.push({
       role: 'user',
       parts: [{ text: message.trim() }]
     });
 
-    const modelsToTry = ['gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-3.1-flash-lite'];
+    const modelsToTry = ['gemini-3.8-flash', 'gemini-3.7-flash'];
 
     for (const model of modelsToTry) {
       try {
-        const result: any = await client.models.generateContentStream({
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Timeout directo')), 3500)
+        );
+
+        const callPromise = client.models.generateContent({
           model,
           contents: formattedContents,
           config: {
             systemInstruction: enrichedSystemInstruction,
-            temperature: 0.7,
+            temperature: 0.6,
+            maxOutputTokens: 280
           }
         });
 
-        // Asegurar que result.stream exista como iterable conforme al patrón solicitado
-        if (!result.stream) {
-          result.stream = result;
-        }
-
-        let accumulatedText = '';
-        for await (const chunk of result.stream) {
-          const chunkText = chunk.text || '';
-          if (chunkText) {
-            accumulatedText += chunkText;
-            if (onChunk) {
-              onChunk(chunkText, accumulatedText);
-            }
-          }
-        }
-
-        if (accumulatedText && accumulatedText.trim().length > 0) {
-          return accumulatedText.trim();
+        const result = await Promise.race([callPromise, timeoutPromise]);
+        if (result && result.text && result.text.trim().length > 0) {
+          const text = result.text.trim();
+          if (onChunk) onChunk(text, text);
+          return text;
         }
       } catch (err: any) {
-        console.warn(`Intento de streaming directo con ${model} falló:`, err?.status || err?.message || err);
+        console.warn(`Intento directo con ${model} falló o tardó demasiado:`, err?.message || err);
       }
     }
   }
 
-  // Intento 2: Proxy a /api/chat del servidor con soporte SSE streaming
+  // Intento 2: Llamada veloz al servidor /api/chat con timeout estricto de 3.8s
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3800);
+
     const serverRes = await fetch('/api/chat', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Accept': onChunk ? 'text/event-stream' : 'application/json'
+        'Accept': 'application/json'
       },
+      signal: controller.signal,
       body: JSON.stringify({
         message,
         userMood,
         context: `Modo: ${mode}. Estado: ${userMood}. Usuario: ${userContext?.name || 'Amigo de FluxGlow'}.`,
         userContext,
-        stream: !!onChunk,
-        history: history.map(h => ({
+        history: history.slice(-4).map(h => ({
           role: h.role,
           parts: [{ text: h.text }]
         }))
       })
     });
 
-    if (serverRes.ok && serverRes.body && onChunk) {
-      const reader = serverRes.body.getReader();
-      const decoder = new TextDecoder();
-      let accumulatedText = '';
-      let buffer = '';
+    clearTimeout(timeoutId);
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
-
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (!trimmed.startsWith('data:')) continue;
-          const dataStr = trimmed.replace(/^data:\s*/, '').trim();
-          if (dataStr === '[DONE]') break;
-          try {
-            const parsed = JSON.parse(dataStr);
-            if (parsed.text) {
-              accumulatedText += parsed.text;
-              onChunk(parsed.text, accumulatedText);
-            }
-          } catch {
-            // Fragmento intermedio parcial
-          }
-        }
-      }
-
-      if (accumulatedText.trim().length > 0) {
-        return accumulatedText.trim();
-      }
-    } else if (serverRes.ok) {
+    if (serverRes.ok) {
       const data = await serverRes.json();
-      if (data.response && data.response.trim().length > 0) {
-        const full = data.response.trim();
-        if (onChunk) onChunk(full, full);
-        return full;
+      const reply = data.response || data.reply;
+      if (reply && reply.trim().length > 0) {
+        const cleanReply = reply.trim();
+        if (onChunk) onChunk(cleanReply, cleanReply);
+        return cleanReply;
       }
     }
   } catch (proxyErr) {
-    console.warn('Fallo en la comunicación con /api/chat:', proxyErr);
+    console.warn('Fallo o timeout en /api/chat, recurriendo a respuesta empática inmediata:', proxyErr);
   }
 
-  // Intento 3: Fallback local contextual de alta calidad
+  // Intento 3: Fallback local contextual instantáneo (<1ms)
   const fallback = generateClientLocalFallback(message, mode, userMood);
-  if (onChunk) {
-    const words = fallback.split(' ');
-    let current = '';
-    for (let i = 0; i < words.length; i++) {
-      const word = words[i] + (i < words.length - 1 ? ' ' : '');
-      current += word;
-      onChunk(word, current);
-    }
-  }
+  if (onChunk) onChunk(fallback, fallback);
   return fallback;
 }
 
 /**
- * Función auxiliar para llamadas que requieran streaming explícito
+ * Función auxiliar compatible
  */
 export async function streamChatMessageFromGemini(
   params: SendChatMessageParams,
