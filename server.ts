@@ -70,31 +70,19 @@ Directrices de excelencia para tus respuestas:
 
 3. **Estructura y Formato Visual**:
    - Organiza la respuesta con títulos con iconos discretos, párrafos cortos y listas con viñetas cuando propongas pasos.
-    - Destaca conceptos clave en **negrita** para facilitar la lectura.
-    - Cierra con una pregunta abierta, cálida o una propuesta reflexiva de 1 línea para continuar el diálogo al ritmo del usuario.
-    - **Agilidad y Concreción**: Responde de forma concisa, cálida y directa en 2 o 3 párrafos breves (100 a 160 palabras en total) para no saturar al usuario y ofrecer alivio o claridad inmediata.
+   - Destaca conceptos clave en **negrita** para facilitar la lectura.
+   - Cierra con una pregunta abierta, cálida o una propuesta reflexiva de 1 línea para continuar el diálogo al ritmo del usuario.
 
 4. **Límites éticos y de seguridad**:
-    - Eres un apoyo psicoeducativo y emocional, no un sustituto de diagnóstico médico o psiquiátrico.
-    - Ante ideación suicida, autolesión o emergencia grave, responde con máxima calidez, contención inmediata y recuerda con delicadeza la línea de ayuda (+503 7801-4680) o los servicios de emergencia de su localidad.
+   - Eres un apoyo psicoeducativo y emocional, no un sustituto de diagnóstico médico o psiquiátrico.
+   - Ante ideación suicida, autolesión o emergencia grave, responde con máxima calidez, contención inmediata y recuerda con delicadeza la línea de ayuda (+503 7801-4680) o los servicios de emergencia de su localidad.
 5. **Idioma y Tono**: Responde siempre en español natural, cercano, respetuoso y profundamente humano.`;
 
-      // Si no hay cliente Gemini configurado, responder inmediatamente con el fallback enriquecido en <10ms
-      if (!client) {
-        const fallback = generateFallbackAssistantResponse(message, userMood, context);
-        return res.json({
-          response: fallback,
-          reply: fallback,
-          isFallback: true
-        });
-      }
-
-      // Sanitize and normalize conversation history (últimos 4 mensajes para máxima velocidad de inferencia)
+      // Sanitize and normalize conversation history
       const formattedContents: { role: 'user' | 'model'; parts: { text: string }[] }[] = [];
 
       if (Array.isArray(history)) {
-        const recentHistory = history.slice(-4);
-        for (const h of recentHistory) {
+        for (const h of history) {
           const rawText = 
             typeof h === 'string' ? h :
             (h.content || h.text || (Array.isArray(h.parts) && h.parts[0]?.text) || '');
@@ -116,33 +104,26 @@ Directrices de excelencia para tus respuestas:
         parts: [{ text: message.trim() }]
       });
 
-      const modelsToAttempt = ["gemini-3.8-flash", "gemini-3.7-flash"];
+      const modelsToAttempt = ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.1-flash-lite"];
       let replyText = "";
 
       for (const modelName of modelsToAttempt) {
         try {
-          const timeoutPromise = new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error('Timeout de velocidad excedido')), 3800)
-          );
-
-          const generatePromise = client.models.generateContent({
+          const response = await client.models.generateContent({
             model: modelName,
             contents: formattedContents,
             config: {
               systemInstruction: systemInstruction,
-              temperature: 0.6,
-              maxOutputTokens: 300,
+              temperature: 0.7,
             }
           });
-
-          const response = await Promise.race([generatePromise, timeoutPromise]);
 
           if (response && response.text) {
             replyText = response.text.trim();
             break;
           }
         } catch (modelErr: any) {
-          console.warn(`Gemini rápido falló en modelo ${modelName}:`, modelErr?.status || modelErr?.message || modelErr);
+          console.warn(`Gemini generation failed on model ${modelName}:`, modelErr?.status || modelErr?.message || modelErr);
         }
       }
 
@@ -152,14 +133,13 @@ Directrices de excelencia para tus respuestas:
 
       return res.json({
         response: replyText,
-        reply: replyText,
         isFallback: false,
       });
 
     } catch (error: any) {
       console.error("Error in /api/chat Gemini call:", error?.message || error);
-      const fallback = generateFallbackAssistantResponse(req.body?.message || '', req.body?.userMood, req.body?.context);
-      return res.json({ response: fallback, reply: fallback, isFallback: true });
+      const fallback = generateFallbackAssistantResponse(req.body.message, req.body.userMood, req.body.context);
+      return res.json({ response: fallback, isFallback: true });
     }
   });
 

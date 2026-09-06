@@ -200,7 +200,7 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
     try {
       const replyText = await sendChatMessageToGemini({
         message: text,
-        history: messages.slice(-4).map(m => ({
+        history: messages.slice(-8).map(m => ({
           role: m.sender === 'user' ? 'user' : 'model',
           text: m.text
         })),

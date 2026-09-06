@@ -34,7 +34,6 @@ export interface SendChatMessageParams {
     ageGroup?: string;
     emotionalState?: string;
   };
-  onChunk?: (chunkText: string, accumulatedText: string) => void;
 }
 
 /**
@@ -54,29 +53,30 @@ function getGeminiClient(): GoogleGenAI | null {
 }
 
 /**
- * Genera la respuesta del asistente empático Flux AI de manera ágil y directa.
- * Prioriza respuestas concisas, cálidas y de baja latencia (<1-2 segundos).
+ * Genera la respuesta del asistente empático Flux AI utilizando el modelo Gemini.
+ * Intenta primero el cliente @google/genai directo, luego el proxy del servidor /api/chat,
+ * y en última instancia un fallback contextual altamente empático.
  */
 export async function sendChatMessageToGemini(params: SendChatMessageParams): Promise<string> {
-  const { message, history = [], mode = 'calm', userMood = '', userContext, onChunk } = params;
+  const { message, history = [], mode = 'calm', userMood = '', userContext } = params;
   const client = getGeminiClient();
 
   const enrichedSystemInstruction = `${FLUX_AI_SYSTEM_PROMPT}
 
 Contexto actual de la sesión:
-- Modo de interacción: ${mode}
+- Modo de interacción seleccionado: ${mode}
 - Estado de ánimo reportado: ${userMood || 'No especificado'}
 ${userContext?.name ? `- Nombre del usuario: ${userContext.name}` : ''}
 ${userContext?.ageGroup ? `- Grupo de edad: ${userContext.ageGroup}` : ''}
+Adapta tu tono al modo (${mode}) manteniendo siempre la empatía, claridad y calidez.`;
 
-DIRECTIVA DE AGILIDAD: Responde en 2 o 3 párrafos breves, estructurados y empáticos (máximo 150 palabras). Da una reflexión cálida y un paso práctico sin rodeos.`;
-
-  // Intento 1: Llamada directa ultra-rápida con cliente @google/genai si existe VITE_GEMINI_API_KEY
+  // Intento 1: Llamada directa con cliente @google/genai si existe VITE_GEMINI_API_KEY
   if (client) {
     const formattedContents: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = [];
 
+    // Agregar historial previo
     if (history && history.length > 0) {
-      history.slice(-4).forEach(item => {
+      history.slice(-8).forEach(item => {
         formattedContents.push({
           role: item.role === 'user' ? 'user' : 'model',
           parts: [{ text: item.text }]
@@ -84,94 +84,65 @@ DIRECTIVA DE AGILIDAD: Responde en 2 o 3 párrafos breves, estructurados y empá
       });
     }
 
+    // Agregar el mensaje actual del usuario
     formattedContents.push({
       role: 'user',
       parts: [{ text: message.trim() }]
     });
 
-    const modelsToTry = ['gemini-3.8-flash', 'gemini-3.7-flash'];
+    const modelsToTry = ['gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-3.1-flash-lite'];
 
     for (const model of modelsToTry) {
       try {
-        const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('Timeout directo')), 3500)
-        );
-
-        const callPromise = client.models.generateContent({
+        const response = await client.models.generateContent({
           model,
           contents: formattedContents,
           config: {
             systemInstruction: enrichedSystemInstruction,
-            temperature: 0.6,
-            maxOutputTokens: 280
+            temperature: 0.7,
           }
         });
 
-        const result = await Promise.race([callPromise, timeoutPromise]);
-        if (result && result.text && result.text.trim().length > 0) {
-          const text = result.text.trim();
-          if (onChunk) onChunk(text, text);
-          return text;
+        if (response && response.text) {
+          return response.text.trim();
         }
       } catch (err: any) {
-        console.warn(`Intento directo con ${model} falló o tardó demasiado:`, err?.message || err);
+        console.warn(`Intento directo con ${model} falló:`, err?.status || err?.message || err);
       }
     }
   }
 
-  // Intento 2: Llamada veloz al servidor /api/chat con timeout estricto de 3.8s
+  // Intento 2: Proxy a /api/chat del servidor (utiliza GEMINI_API_KEY de entorno)
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3800);
-
     const serverRes = await fetch('/api/chat', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json'
       },
-      signal: controller.signal,
       body: JSON.stringify({
         message,
         userMood,
         context: `Modo: ${mode}. Estado: ${userMood}. Usuario: ${userContext?.name || 'Amigo de FluxGlow'}.`,
         userContext,
-        history: history.slice(-4).map(h => ({
+        history: history.slice(-8).map(h => ({
           role: h.role,
           parts: [{ text: h.text }]
         }))
       })
     });
 
-    clearTimeout(timeoutId);
-
     if (serverRes.ok) {
       const data = await serverRes.json();
-      const reply = data.response || data.reply;
-      if (reply && reply.trim().length > 0) {
-        const cleanReply = reply.trim();
-        if (onChunk) onChunk(cleanReply, cleanReply);
-        return cleanReply;
+      if (data.response && data.response.trim().length > 0) {
+        return data.response.trim();
       }
     }
   } catch (proxyErr) {
-    console.warn('Fallo o timeout en /api/chat, recurriendo a respuesta empática inmediata:', proxyErr);
+    console.warn('Fallo en la comunicación con /api/chat:', proxyErr);
   }
 
-  // Intento 3: Fallback local contextual instantáneo (<1ms)
-  const fallback = generateClientLocalFallback(message, mode, userMood);
-  if (onChunk) onChunk(fallback, fallback);
-  return fallback;
-}
-
-/**
- * Función auxiliar compatible
- */
-export async function streamChatMessageFromGemini(
-  params: SendChatMessageParams,
-  onChunk: (chunkText: string, accumulatedText: string) => void
-): Promise<string> {
-  return sendChatMessageToGemini({ ...params, onChunk });
+  // Intento 3: Fallback local contextual de alta calidad
+  return generateClientLocalFallback(message, mode, userMood);
 }
 
 /**
