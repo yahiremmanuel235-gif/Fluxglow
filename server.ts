@@ -43,7 +43,9 @@ async function startServer() {
 
       const client = getGeminiClient();
 
-      if (!client) {
+      const isStream = req.body.stream || req.headers.accept?.includes('text/event-stream');
+
+      if (!client && !isStream) {
         // Fallback intelligent emotional counselor response engine
         const fallbackResponses = generateFallbackAssistantResponse(message, userMood, context);
         return res.json({ response: fallbackResponses, isFallback: true });
@@ -104,10 +106,73 @@ Directrices de excelencia para tus respuestas:
         parts: [{ text: message.trim() }]
       });
 
-      // Multi-model resilient generation (handles 503 high demand / 429 quota seamlessly)
-      let replyText = "";
-      const modelsToAttempt = ["gemini-3.7-flash", "gemini-3.1-flash-lite"];
+      const modelsToAttempt = ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.1-flash-lite"];
 
+      // Manejo de streaming SSE si fue solicitado
+      if (isStream) {
+        res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+        res.setHeader('Cache-Control', 'no-cache, no-transform');
+        res.setHeader('Connection', 'keep-alive');
+        res.setHeader('X-Accel-Buffering', 'no');
+
+        if (!client) {
+          const fallback = generateFallbackAssistantResponse(message, userMood, context);
+          const words = fallback.split(' ');
+          for (let i = 0; i < words.length; i += 2) {
+            const piece = words.slice(i, i + 2).join(' ') + (i + 2 < words.length ? ' ' : '');
+            res.write(`data: ${JSON.stringify({ text: piece, isFallback: true })}\n\n`);
+          }
+          res.write(`data: [DONE]\n\n`);
+          res.end();
+          return;
+        }
+
+        let streamedSuccessfully = false;
+        for (const modelName of modelsToAttempt) {
+          try {
+            const responseStream: any = await client.models.generateContentStream({
+              model: modelName,
+              contents: formattedContents,
+              config: {
+                systemInstruction: systemInstruction,
+                temperature: 0.7,
+              }
+            });
+
+            if (!responseStream.stream) {
+              responseStream.stream = responseStream;
+            }
+
+            for await (const chunk of responseStream.stream) {
+              const text = chunk.text || '';
+              if (text) {
+                res.write(`data: ${JSON.stringify({ text })}\n\n`);
+              }
+            }
+            res.write(`data: [DONE]\n\n`);
+            res.end();
+            streamedSuccessfully = true;
+            break;
+          } catch (modelErr: any) {
+            console.warn(`Gemini streaming failed on model ${modelName}:`, modelErr?.status || modelErr?.message || modelErr);
+          }
+        }
+
+        if (!streamedSuccessfully) {
+          const fallback = generateFallbackAssistantResponse(message, userMood, context);
+          const words = fallback.split(' ');
+          for (let i = 0; i < words.length; i += 2) {
+            const piece = words.slice(i, i + 2).join(' ') + (i + 2 < words.length ? ' ' : '');
+            res.write(`data: ${JSON.stringify({ text: piece, isFallback: true })}\n\n`);
+          }
+          res.write(`data: [DONE]\n\n`);
+          res.end();
+        }
+        return;
+      }
+
+      // Respuesta estándar no-streaming
+      let replyText = "";
       for (const modelName of modelsToAttempt) {
         try {
           const response = await client.models.generateContent({

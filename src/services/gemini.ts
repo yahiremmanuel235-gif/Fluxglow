@@ -34,6 +34,7 @@ export interface SendChatMessageParams {
     ageGroup?: string;
     emotionalState?: string;
   };
+  onChunk?: (chunkText: string, accumulatedText: string) => void;
 }
 
 /**
@@ -53,12 +54,15 @@ function getGeminiClient(): GoogleGenAI | null {
 }
 
 /**
- * Genera la respuesta del asistente empático Flux AI
- * Primero intenta llamar directamente al SDK de Gemini con VITE_GEMINI_API_KEY.
- * Si la clave no está presente o el modelo experimenta alta demanda, recurre a la API interna del servidor /api/chat.
+ * Genera la respuesta del asistente empático Flux AI mediante streaming en tiempo real.
+ * Utiliza generateContentStream() y 'for await (const chunk of result.stream)' para emitir
+ * fragmentos de texto en tiempo real al usuario.
+ * 
+ * Si la clave no está presente o el modelo experimenta alta demanda, recurre al endpoint
+ * del servidor /api/chat con soporte SSE, y en última instancia a un fallback enriquecido.
  */
 export async function sendChatMessageToGemini(params: SendChatMessageParams): Promise<string> {
-  const { message, history = [], mode = 'calm', userMood = '', userContext } = params;
+  const { message, history = [], mode = 'calm', userMood = '', userContext, onChunk } = params;
   const client = getGeminiClient();
 
   const enrichedSystemInstruction = `${FLUX_AI_SYSTEM_PROMPT}
@@ -70,7 +74,7 @@ ${userContext?.name ? `- Nombre del usuario: ${userContext.name}` : ''}
 ${userContext?.ageGroup ? `- Grupo de edad: ${userContext.ageGroup}` : ''}
 Adapta tu tono al modo (${mode}) manteniendo siempre la empatía, claridad y calidez.`;
 
-  // Intento 1: Llamada directa con el cliente @google/genai si existe VITE_GEMINI_API_KEY
+  // Intento 1: Streaming directo con el cliente @google/genai si existe VITE_GEMINI_API_KEY
   if (client) {
     const formattedContents: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = [];
 
@@ -90,11 +94,11 @@ Adapta tu tono al modo (${mode}) manteniendo siempre la empatía, claridad y cal
       parts: [{ text: message.trim() }]
     });
 
-    const modelsToTry = ['gemini-3.7-flash', 'gemini-3.1-flash-lite'];
+    const modelsToTry = ['gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-3.1-flash-lite'];
 
     for (const model of modelsToTry) {
       try {
-        const response = await client.models.generateContent({
+        const result: any = await client.models.generateContentStream({
           model,
           contents: formattedContents,
           config: {
@@ -103,25 +107,45 @@ Adapta tu tono al modo (${mode}) manteniendo siempre la empatía, claridad y cal
           }
         });
 
-        if (response && response.text && response.text.trim().length > 0) {
-          return response.text.trim();
+        // Asegurar que result.stream exista como iterable conforme al patrón solicitado
+        if (!result.stream) {
+          result.stream = result;
+        }
+
+        let accumulatedText = '';
+        for await (const chunk of result.stream) {
+          const chunkText = chunk.text || '';
+          if (chunkText) {
+            accumulatedText += chunkText;
+            if (onChunk) {
+              onChunk(chunkText, accumulatedText);
+            }
+          }
+        }
+
+        if (accumulatedText && accumulatedText.trim().length > 0) {
+          return accumulatedText.trim();
         }
       } catch (err: any) {
-        console.warn(`Intento directo con ${model} falló:`, err?.status || err?.message || err);
+        console.warn(`Intento de streaming directo con ${model} falló:`, err?.status || err?.message || err);
       }
     }
   }
 
-  // Intento 2: Proxy a /api/chat del servidor (utiliza GEMINI_API_KEY del backend con resiliencia y fallback)
+  // Intento 2: Proxy a /api/chat del servidor con soporte SSE streaming
   try {
     const serverRes = await fetch('/api/chat', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': onChunk ? 'text/event-stream' : 'application/json'
+      },
       body: JSON.stringify({
         message,
         userMood,
         context: `Modo: ${mode}. Estado: ${userMood}. Usuario: ${userContext?.name || 'Amigo de FluxGlow'}.`,
         userContext,
+        stream: !!onChunk,
         history: history.map(h => ({
           role: h.role,
           parts: [{ text: h.text }]
@@ -129,10 +153,45 @@ Adapta tu tono al modo (${mode}) manteniendo siempre la empatía, claridad y cal
       })
     });
 
-    if (serverRes.ok) {
+    if (serverRes.ok && serverRes.body && onChunk) {
+      const reader = serverRes.body.getReader();
+      const decoder = new TextDecoder();
+      let accumulatedText = '';
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed.startsWith('data:')) continue;
+          const dataStr = trimmed.replace(/^data:\s*/, '').trim();
+          if (dataStr === '[DONE]') break;
+          try {
+            const parsed = JSON.parse(dataStr);
+            if (parsed.text) {
+              accumulatedText += parsed.text;
+              onChunk(parsed.text, accumulatedText);
+            }
+          } catch {
+            // Fragmento intermedio parcial
+          }
+        }
+      }
+
+      if (accumulatedText.trim().length > 0) {
+        return accumulatedText.trim();
+      }
+    } else if (serverRes.ok) {
       const data = await serverRes.json();
       if (data.response && data.response.trim().length > 0) {
-        return data.response.trim();
+        const full = data.response.trim();
+        if (onChunk) onChunk(full, full);
+        return full;
       }
     }
   } catch (proxyErr) {
@@ -140,7 +199,27 @@ Adapta tu tono al modo (${mode}) manteniendo siempre la empatía, claridad y cal
   }
 
   // Intento 3: Fallback local contextual de alta calidad
-  return generateClientLocalFallback(message, mode, userMood);
+  const fallback = generateClientLocalFallback(message, mode, userMood);
+  if (onChunk) {
+    const words = fallback.split(' ');
+    let current = '';
+    for (let i = 0; i < words.length; i++) {
+      const word = words[i] + (i < words.length - 1 ? ' ' : '');
+      current += word;
+      onChunk(word, current);
+    }
+  }
+  return fallback;
+}
+
+/**
+ * Función auxiliar para llamadas que requieran streaming explícito
+ */
+export async function streamChatMessageFromGemini(
+  params: SendChatMessageParams,
+  onChunk: (chunkText: string, accumulatedText: string) => void
+): Promise<string> {
+  return sendChatMessageToGemini({ ...params, onChunk });
 }
 
 /**
