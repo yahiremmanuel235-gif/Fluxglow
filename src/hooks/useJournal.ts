@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 import { useAuth } from './useAuth';
 import { JournalEntry, MoodType } from '../types';
 import { mapSupabaseJournalEntry } from '../services/supabaseService';
+import { migrateGuestDataToSupabase } from '../services/migrationService';
 
 export interface CreateJournalEntryParams {
   mood: MoodType;
@@ -44,7 +45,17 @@ export function useJournal() {
     setError(null);
 
     if (user) {
-      // 1. Usuario autenticado: Consultar tabla journal_entries filtrada por user_id y ordenada por created_at desc
+      // 1. Usuario autenticado: Si existen entradas previas de invitado en localStorage, migrarlas a Supabase
+      const pendingGuestEntries = localStorage.getItem('fluxglow_journal_entries');
+      if (pendingGuestEntries) {
+        try {
+          await migrateGuestDataToSupabase(user.id);
+        } catch (mErr) {
+          console.warn('Aviso en migración automática de diario:', mErr);
+        }
+      }
+
+      // Consultar tabla journal_entries filtrada por user_id y ordenada por created_at desc
       try {
         const { data, error: dbError } = await supabase
           .from('journal_entries')
@@ -69,7 +80,6 @@ export function useJournal() {
           setEntries(mapped);
           try {
             localStorage.setItem(`fluxglow_journal_${user.id}`, JSON.stringify(mapped));
-            localStorage.setItem('fluxglow_journal_entries', JSON.stringify(mapped));
           } catch {}
         }
       } catch (err: any) {
@@ -170,7 +180,6 @@ export function useJournal() {
           const updated = [newEntry, ...prev.filter((e) => e.id !== newEntry.id)];
           try {
             localStorage.setItem(`fluxglow_journal_${user.id}`, JSON.stringify(updated));
-            localStorage.setItem('fluxglow_journal_entries', JSON.stringify(updated));
           } catch {}
           return updated;
         });

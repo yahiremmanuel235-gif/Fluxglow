@@ -310,37 +310,27 @@ export function useMissions(userProfile?: UserProfileData, onUpdateProfile?: (up
           console.warn('Aviso guardando en user_missions de Supabase:', e);
         }
 
-        // 2. Sincronizar puntos y nivel del usuario delegando en la función RPC 'add_user_xp' en PostgreSQL
+        // 2. Sincronizar puntos y nivel del usuario delegando EXCLUSIVAMENTE en el procedimiento RPC 'add_user_xp'
         const xpDelta = isCompleting ? missionXP : -missionXP;
-        let syncedPoints = userPoints + xpDelta;
+        let syncedPoints = Math.max(0, userPoints + xpDelta);
         let syncedLevel = Math.max(1, Math.floor(syncedPoints / 100) + 1);
 
         try {
-          // Intento de incremento atómico mediante la función RPC segura en Supabase
+          // Invocación atómica del procedimiento almacenado seguro con SECURITY DEFINER en Postgres
           const { data: rpcResult, error: rpcError } = await supabase.rpc('add_user_xp', {
             xp_delta: xpDelta
           });
 
           if (!rpcError && rpcResult && typeof rpcResult.points === 'number') {
             syncedPoints = rpcResult.points;
-            syncedLevel = typeof rpcResult.level === 'number' ? rpcResult.level : Math.max(1, Math.floor(syncedPoints / 100) + 1);
-          } else {
-            if (rpcError) {
-              console.warn('Nota: RPC add_user_xp no disponible aún, usando actualización directa:', rpcError.message);
-            }
-            // Fallback directo a la tabla profiles si la función RPC aún no ha sido aplicada
-            syncedPoints = Math.max(0, userPoints + xpDelta);
-            syncedLevel = Math.max(1, Math.floor(syncedPoints / 100) + 1);
-            await supabase
-              .from('profiles')
-              .update({
-                points: syncedPoints,
-                level: syncedLevel
-              })
-              .eq('id', user.id);
+            syncedLevel = typeof rpcResult.level === 'number' 
+              ? rpcResult.level 
+              : Math.max(1, Math.floor(syncedPoints / 100) + 1);
+          } else if (rpcError) {
+            console.warn('Aviso en ejecución de RPC add_user_xp:', rpcError.message);
           }
         } catch (e) {
-          console.warn('Aviso sincronizando puntos en profiles:', e);
+          console.warn('Excepción al invocar función RPC add_user_xp:', e);
         }
 
         setUserPoints(syncedPoints);

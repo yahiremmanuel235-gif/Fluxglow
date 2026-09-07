@@ -17,62 +17,7 @@ import { FluxGlowLogo } from './FluxGlowLogo';
 import { ViewMode, UserProfileData } from '../../types';
 import { useToast } from './Toast';
 import { supabase } from '../../lib/supabaseClient';
-
-// Migración silenciosa y transparente de datos locales a la base de datos de Supabase
-async function migrateGuestDataToSupabase(userId: string) {
-  try {
-    // 1. Migrar entradas del Diario creadas en modo invitado
-    const rawJournal = localStorage.getItem('fluxglow_journal_entries');
-    if (rawJournal) {
-      const parsed = JSON.parse(rawJournal);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        const guestEntries = parsed.filter(e => e && e.id && String(e.id).startsWith('guest-'));
-        for (const entry of guestEntries) {
-          await supabase.from('journal_entries').insert({
-            user_id: userId,
-            mood: entry.mood || 'neutral',
-            note: entry.notes || entry.note || ''
-          });
-        }
-        if (guestEntries.length > 0) {
-          window.dispatchEvent(new CustomEvent('fluxglow_journal_updated', { detail: [] }));
-        }
-      }
-    }
-
-    // 2. Migrar misiones completadas en modo invitado
-    const rawMissions = localStorage.getItem('fluxglow_daily_missions');
-    if (rawMissions) {
-      const parsedMissions = JSON.parse(rawMissions);
-      if (Array.isArray(parsedMissions) && parsedMissions.length > 0) {
-        const completedMissions = parsedMissions.filter(m => m && m.status === 'completed');
-        for (const m of completedMissions) {
-          const missionIdentifier = m.missionId || m.id;
-          const { data: existing } = await supabase
-            .from('user_missions')
-            .select('id')
-            .eq('user_id', userId)
-            .eq('mission_id', missionIdentifier)
-            .maybeSingle();
-
-          if (!existing) {
-            await supabase.from('user_missions').insert({
-              user_id: userId,
-              mission_id: missionIdentifier,
-              completed: true,
-              completed_at: m.completedAt || new Date().toISOString()
-            });
-          }
-        }
-        if (completedMissions.length > 0) {
-          window.dispatchEvent(new CustomEvent('fluxglow_missions_updated', { detail: [] }));
-        }
-      }
-    }
-  } catch (err) {
-    console.warn('Nota en migración de datos de invitado a Supabase:', err);
-  }
-}
+import { migrateGuestDataToSupabase } from '../../services/migrationService';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -175,10 +120,17 @@ export const AuthModals: React.FC<AuthModalProps> = ({
 
     try {
       if (mode === 'register') {
-        // 1. Crear el usuario en Supabase Auth
+        // 1. Crear el usuario en Supabase Auth guardando metadata de respaldo
         const { data, error } = await supabase.auth.signUp({
           email: email.trim(),
           password,
+          options: {
+            data: {
+              name: resolvedName,
+              age_group: ageGroup,
+              goals: formattedGoals
+            }
+          }
         });
 
         if (error) {
@@ -188,27 +140,31 @@ export const AuthModals: React.FC<AuthModalProps> = ({
         }
 
         // Si la confirmación de correo está ACTIVADA en Supabase,
-        // aquí no hay sesión todavía (el usuario debe confirmar su correo primero).
+        // no habrá sesión activa de inmediato (el usuario debe verificar su email primero).
+        // En este caso, no intentamos insertar en 'profiles' ya que auth.uid() no está listo,
+        // sino que delegamos la inicialización del perfil al primer inicio de sesión efectivo.
         if (!data.session) {
           setNeedsEmailConfirmation(true);
           setIsSubmitting(false);
           return;
         }
 
-        // 2. Crear su fila en la tabla `profiles`
-        const { error: profileError } = await supabase.from('profiles').insert({
-          id: data.user!.id,
-          name: resolvedName,
-          age_group: ageGroup,
-          goals: formattedGoals,
-        });
+        // 2. Si la sesión se inició de inmediato (sin confirmación o auto-confirmado)
+        if (data.user) {
+          try {
+            await supabase.from('profiles').upsert({
+              id: data.user.id,
+              name: resolvedName,
+              age_group: ageGroup,
+              goals: formattedGoals,
+            }, { onConflict: 'id' });
+          } catch (profileError) {
+            console.warn('Aviso creando perfil inicial (se completará en el primer inicio de sesión):', profileError);
+          }
 
-        if (profileError) {
-          console.error('Error creando perfil:', profileError);
+          // Migrar sin fricción las reflexiones y misiones de Modo Invitado a la cuenta de Supabase
+          await migrateGuestDataToSupabase(data.user.id);
         }
-
-        // Migrar sin fricción las reflexiones y misiones de Modo Invitado a la cuenta de Supabase
-        await migrateGuestDataToSupabase(data.user!.id);
 
         const updatedProfile: Partial<UserProfileData> = {
           name: resolvedName,
@@ -241,26 +197,59 @@ export const AuthModals: React.FC<AuthModalProps> = ({
           return;
         }
 
-        // Traer su perfil guardado en la tabla `profiles`
-        const { data: profileRow } = await supabase
+        // Traer su perfil guardado en la tabla `profiles` usando maybeSingle()
+        const { data: profileRow, error: profileQueryError } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', data.user.id)
           .maybeSingle();
 
+        if (profileQueryError) {
+          console.warn('Aviso consultando perfil de usuario:', profileQueryError.message);
+        }
+
+        let resolvedProfile = profileRow;
+
+        // Si el perfil no existía aún en la tabla (ej. registro con confirmación de correo diferida),
+        // lo creamos de manera resiliente durante este primer inicio de sesión efectivo
+        if (!resolvedProfile && data.user) {
+          try {
+            const userMeta = data.user.user_metadata || {};
+            const initialProfile = {
+              id: data.user.id,
+              name: userMeta.name || resolvedName,
+              age_group: userMeta.age_group || ageGroup,
+              goals: userMeta.goals || formattedGoals,
+              avatar_url: userMeta.avatar_url || '/user.png'
+            };
+
+            const { data: createdProfile } = await supabase
+              .from('profiles')
+              .upsert(initialProfile, { onConflict: 'id' })
+              .select('*')
+              .maybeSingle();
+
+            if (createdProfile) {
+              resolvedProfile = createdProfile;
+            }
+          } catch (createErr) {
+            console.warn('Creación diferida de perfil al iniciar sesión:', createErr);
+          }
+        }
+
         // Migrar cualquier dato local residual a la cuenta autenticada
         await migrateGuestDataToSupabase(data.user.id);
 
         const updatedProfile: Partial<UserProfileData> = {
-          name: profileRow?.name || resolvedName,
+          name: resolvedProfile?.name || data.user.user_metadata?.name || resolvedName,
           email: email.trim(),
-          ageGroup: profileRow?.age_group || currentUser?.ageGroup,
-          memberSince: profileRow?.member_since
-            ? new Date(profileRow.member_since).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
+          ageGroup: resolvedProfile?.age_group || data.user.user_metadata?.age_group || currentUser?.ageGroup,
+          memberSince: resolvedProfile?.member_since
+            ? new Date(resolvedProfile.member_since).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
             : formatTodaySpanish(),
-          goals: profileRow?.goals || currentUser?.goals,
+          goals: resolvedProfile?.goals || data.user.user_metadata?.goals || currentUser?.goals,
           isLoggedIn: true,
-          avatarUrl: profileRow?.avatar_url || '/user.png',
+          avatarUrl: resolvedProfile?.avatar_url || '/user.png',
         };
 
         setSubmitted(true);

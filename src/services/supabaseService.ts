@@ -165,10 +165,35 @@ export async function insertSupabaseCommunityPost(params: InsertCommunityPostPar
 }
 
 /**
+ * Consulta la lista de IDs de publicaciones que el usuario autenticado ha marcado con "Me gusta".
+ */
+export async function fetchUserLikedPostIds(userId?: string): Promise<string[]> {
+  if (!userId) return [];
+  try {
+    const { data, error } = await supabase
+      .from('post_likes')
+      .select('post_id')
+      .eq('user_id', userId);
+
+    if (error) {
+      console.warn('Aviso al consultar post_likes de usuario:', error.message);
+      return [];
+    }
+
+    if (Array.isArray(data)) {
+      return data.map((row: any) => String(row.post_id)).filter(Boolean);
+    }
+  } catch (err) {
+    console.warn('Excepción consultando post_likes:', err);
+  }
+  return [];
+}
+
+/**
  * Incremento atómico de likes en Supabase mediante el procedimiento RPC `increment_post_likes`.
  * Previene condiciones de carrera y la sobreescritura de datos en el cliente.
  */
-export async function toggleSupabasePostLike(postId: string, _userId?: string): Promise<{ success: boolean; newLikes?: number }> {
+export async function toggleSupabasePostLike(postId: string, userId?: string): Promise<{ success: boolean; newLikes?: number }> {
   try {
     // 1. Intentar ejecución de la función RPC atómica en el servidor Postgres
     const { data: rpcLikes, error: rpcError } = await supabase
@@ -182,7 +207,14 @@ export async function toggleSupabasePostLike(postId: string, _userId?: string): 
       console.warn('RPC increment_post_likes no disponible, intentando actualización de fallback:', rpcError.message);
     }
 
-    // 2. Fallback de lectura-actualización si la función RPC aún no está creada en la base de datos
+    // 2. Si hay usuario autenticado, intentar registrar la interacción en post_likes
+    if (userId) {
+      try {
+        await supabase.from('post_likes').insert({ post_id: postId, user_id: userId });
+      } catch {}
+    }
+
+    // 3. Fallback de lectura-actualización si la función RPC aún no está creada en la base de datos
     const { data: currentPost } = await supabase
       .from('community_posts')
       .select('likes')

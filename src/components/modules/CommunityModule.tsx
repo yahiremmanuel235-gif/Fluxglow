@@ -37,6 +37,7 @@ import {
   fetchSupabaseCommunityPosts,
   insertSupabaseCommunityPost,
   toggleSupabasePostLike,
+  fetchUserLikedPostIds,
   subscribeToCommunityPostsRealtime,
   mapSupabasePostToCommunityPost
 } from '../../services/supabaseService';
@@ -65,6 +66,15 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
   const [isPublishing, setIsPublishing] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [isUsingLocalFallback, setIsUsingLocalFallback] = useState<boolean>(false);
+
+  // Registro de publicaciones a las que el usuario actual ya ha dado like
+  const [likedPostIds, setLikedPostIds] = useState<Set<string>>(() => {
+    try {
+      const saved = localStorage.getItem('fluxglow_liked_posts_guest');
+      if (saved) return new Set(JSON.parse(saved));
+    } catch {}
+    return new Set();
+  });
 
   // User's joined groups (starts empty or with 1 sample group, editable)
   const [joinedGroupIds, setJoinedGroupIds] = useState<string[]>(() => {
@@ -165,6 +175,31 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
       unsubscribe();
     };
   }, []);
+
+  // Consulta de los likes que el usuario actual ya ha dado en post_likes
+  useEffect(() => {
+    if (!user) {
+      try {
+        const guestLikes = localStorage.getItem('fluxglow_liked_posts_guest');
+        if (guestLikes) setLikedPostIds(new Set(JSON.parse(guestLikes)));
+      } catch {}
+      return;
+    }
+
+    let isMounted = true;
+    fetchUserLikedPostIds(user.id).then((ids) => {
+      if (isMounted && Array.isArray(ids)) {
+        setLikedPostIds(new Set(ids));
+        try {
+          localStorage.setItem(`fluxglow_liked_posts_${user.id}`, JSON.stringify(ids));
+        } catch {}
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user]);
 
   const handleRefreshFeed = async () => {
     setIsRefreshing(true);
@@ -278,6 +313,23 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
   };
 
   const handleLike = async (postId: string) => {
+    // Prevención de doble clic y solicitudes duplicadas innecesarias al servidor
+    if (likedPostIds.has(postId)) {
+      info('Ya te has identificado', 'Ya has registrado tu apoyo a esta publicación.');
+      return;
+    }
+
+    // Registrar en el estado local de likes de inmediato
+    setLikedPostIds((prev) => {
+      const next = new Set(prev);
+      next.add(postId);
+      try {
+        const storageKey = user ? `fluxglow_liked_posts_${user.id}` : 'fluxglow_liked_posts_guest';
+        localStorage.setItem(storageKey, JSON.stringify(Array.from(next)));
+      } catch {}
+      return next;
+    });
+
     // 1. Actualización optimista inmediata en la interfaz
     setPosts((prev) =>
       prev.map((p) => (p.id === postId ? { ...p, likes: (p.likes || 0) + 1 } : p))
@@ -765,13 +817,24 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
 
                     {/* Action Bar (Like, Hug, Comment, Share) */}
                     <div className="grid grid-cols-3 gap-2 pt-2 border-t border-stone-100 text-xs">
-                      <button
-                        onClick={() => handleLike(post.id)}
-                        className="py-2 px-2 rounded-xl text-stone-600 hover:text-brand-sage-700 hover:bg-stone-50 font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-                      >
-                        <ThumbsUp className="w-4 h-4 text-brand-sage-600" />
-                        <span>Me sirve</span>
-                      </button>
+                      {(() => {
+                        const isLiked = likedPostIds.has(post.id);
+                        return (
+                          <button
+                            onClick={() => handleLike(post.id)}
+                            disabled={isLiked}
+                            className={`py-2 px-2 rounded-xl font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                              isLiked
+                                ? 'text-brand-sage-700 bg-brand-sage-100/80 border border-brand-sage-300/60 cursor-default shadow-2xs'
+                                : 'text-stone-600 hover:text-brand-sage-700 hover:bg-stone-50 cursor-pointer'
+                            }`}
+                            title={isLiked ? 'Ya te identificaste con esta publicación' : 'Me sirve / Me identifico'}
+                          >
+                            <ThumbsUp className={`w-4 h-4 ${isLiked ? 'text-brand-sage-700 fill-brand-sage-600' : 'text-brand-sage-600'}`} />
+                            <span>{isLiked ? 'Identificado' : 'Me sirve'}</span>
+                          </button>
+                        );
+                      })()}
 
                       <button
                         onClick={() => handleHug(post.id)}

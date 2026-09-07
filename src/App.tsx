@@ -4,6 +4,7 @@ import { ViewMode, UserProfileData } from './types';
 import { fetchSupabaseCommunityPosts } from './services/supabaseService';
 import { useAuth } from './hooks/useAuth';
 import { supabase } from './lib/supabaseClient';
+import { migrateGuestDataToSupabase } from './services/migrationService';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 import { LandingPage } from './components/landing/LandingPage';
@@ -54,6 +55,9 @@ export default function App() {
 
     const loadProfile = async () => {
       try {
+        // Migración silenciosa de datos creados en modo invitado a la cuenta del usuario
+        migrateGuestDataToSupabase(user.id).catch(() => {});
+
         const { data, error: profileErr } = await supabase
           .from('profiles')
           .select('*')
@@ -78,8 +82,18 @@ export default function App() {
             isLoggedIn: true,
           }));
         } else {
-          // Si el perfil aún se está procesando o no existe fila, proveer fallback seguro sin romper la app
+          // Si el perfil aún no existe en profiles (ej. confirmación diferida de correo),
+          // intentamos crearlo de manera transparente y proveemos fallback seguro
           const fallbackName = user.user_metadata?.name || user.email?.split('@')[0] || 'Miembro de FluxGlow';
+          try {
+            await supabase.from('profiles').upsert({
+              id: user.id,
+              name: fallbackName,
+              age_group: user.user_metadata?.age_group || '19 - 24 años',
+              goals: user.user_metadata?.goals || 'Gestión del Estrés, Atención Plena'
+            }, { onConflict: 'id' });
+          } catch {}
+
           setUserProfile(prev => ({
             ...prev,
             name: prev.name && prev.name !== 'Invitado' ? prev.name : fallbackName,

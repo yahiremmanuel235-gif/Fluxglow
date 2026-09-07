@@ -5,6 +5,7 @@ import {
   fetchSupabaseCommunityPosts, 
   insertSupabaseCommunityPost, 
   toggleSupabasePostLike,
+  fetchUserLikedPostIds,
   subscribeToCommunityPostsRealtime,
   mapSupabasePostToCommunityPost
 } from '../services/supabaseService';
@@ -22,9 +23,37 @@ export function useCommunity() {
     return INITIAL_FACEBOOK_STYLE_POSTS;
   });
 
+  const [likedPostIds, setLikedPostIds] = useState<Set<string>>(() => {
+    try {
+      const saved = localStorage.getItem('fluxglow_liked_posts_guest');
+      if (saved) return new Set(JSON.parse(saved));
+    } catch {}
+    return new Set();
+  });
+
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [isUsingLocalFallback, setIsUsingLocalFallback] = useState<boolean>(false);
+
+  // Consulta de likes del usuario autenticado
+  const syncUserLikes = useCallback(async (userId?: string) => {
+    if (!userId) {
+      try {
+        const guestLikes = localStorage.getItem('fluxglow_liked_posts_guest');
+        if (guestLikes) setLikedPostIds(new Set(JSON.parse(guestLikes)));
+      } catch {}
+      return;
+    }
+    try {
+      const ids = await fetchUserLikedPostIds(userId);
+      setLikedPostIds(new Set(ids));
+      try {
+        localStorage.setItem(`fluxglow_liked_posts_${userId}`, JSON.stringify(ids));
+      } catch {}
+    } catch (err) {
+      console.warn('Error sincronizando post_likes:', err);
+    }
+  }, []);
 
   // Carga inicial y recarga de posts desde Supabase
   const loadPosts = useCallback(async () => {
@@ -42,6 +71,9 @@ export function useCommunity() {
         // Si no hay posts en la base de datos remota, mantener la cuadrícula con los iniciales
         setIsUsingLocalFallback(false);
       }
+      if (user?.id) {
+        await syncUserLikes(user.id);
+      }
     } catch (err: any) {
       console.warn('Fallo al conectar con community_posts en Supabase:', err?.message || err);
       setError('No se pudo conectar en vivo con la comunidad de Supabase. Mostrando publicaciones almacenadas localmente.');
@@ -50,11 +82,16 @@ export function useCommunity() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user?.id, syncUserLikes]);
 
   useEffect(() => {
     loadPosts();
   }, [loadPosts]);
+
+  // Actualizar likes cuando cambia el usuario autenticado
+  useEffect(() => {
+    syncUserLikes(user?.id);
+  }, [user?.id, syncUserLikes]);
 
   // Suscripción en tiempo real a nuevas publicaciones o likes
   useEffect(() => {
@@ -122,11 +159,27 @@ export function useCommunity() {
     }
   };
 
-  // Manejo atómico de likes
+  // Manejo atómico de likes y prevención de doble clic
   const likePost = async (postId: string) => {
+    // Si ya le dio like, prevenir petición duplicada innecesaria
+    if (likedPostIds.has(postId)) {
+      return;
+    }
+
+    // Registrar en estado local inmediatamente
+    setLikedPostIds((prev) => {
+      const next = new Set(prev);
+      next.add(postId);
+      try {
+        const storageKey = user ? `fluxglow_liked_posts_${user.id}` : 'fluxglow_liked_posts_guest';
+        localStorage.setItem(storageKey, JSON.stringify(Array.from(next)));
+      } catch {}
+      return next;
+    });
+
     // Optimistic update
     setPosts((prev) =>
-      prev.map((p) => (p.id === postId ? { ...p, likes: p.likes + 1 } : p))
+      prev.map((p) => (p.id === postId ? { ...p, likes: (p.likes || 0) + 1 } : p))
     );
 
     const result = await toggleSupabasePostLike(postId, user?.id);
@@ -139,6 +192,8 @@ export function useCommunity() {
 
   return {
     posts,
+    likedPostIds,
+    isPostLiked: (postId: string) => likedPostIds.has(postId),
     loading,
     error,
     isUsingLocalFallback,
