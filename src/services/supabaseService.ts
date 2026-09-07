@@ -2,30 +2,6 @@ import { supabase } from '../lib/supabaseClient';
 import { CommunityPost, JournalEntry, MoodType } from '../types';
 
 /**
- * Retorna o genera un UUID v4 persistente para identificar al usuario en Supabase.
- */
-export function getOrCreateUserId(): string {
-  try {
-    let id = localStorage.getItem('fluxglow_supabase_user_id');
-    if (!id || id.length < 10) {
-      if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-        id = crypto.randomUUID();
-      } else {
-        id = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-          const r = (Math.random() * 16) | 0;
-          const v = c === 'x' ? r : (r & 0x3) | 0x8;
-          return v.toString(16);
-        });
-      }
-      localStorage.setItem('fluxglow_supabase_user_id', id);
-    }
-    return id;
-  } catch {
-    return '11111111-1111-4111-8111-111111111111';
-  }
-}
-
-/**
  * Convierte un timestamp a una representación legible en español ('Hace 5 min', 'Hace 2 h', etc.)
  */
 export function formatTimeAgo(dateStr?: string | null): string {
@@ -48,7 +24,8 @@ export function formatTimeAgo(dateStr?: string | null): string {
 }
 
 /**
- * Mapea una fila de la tabla `community_posts` de Supabase al tipo CommunityPost de la UI.
+ * Mapea una fila de la tabla `community_posts` (con posible JOIN a `profiles`) al tipo CommunityPost de la UI.
+ * Previene la suplantación de identidad resolviendo el autor directamente desde `profiles`.
  */
 export function mapSupabasePostToCommunityPost(row: any): CommunityPost {
   const category = row.group_category || 'Comunidad General';
@@ -56,11 +33,16 @@ export function mapSupabasePostToCommunityPost(row: any): CommunityPost {
     ? [row.mood.replace(/^[^\w\s]+/, '').trim() || 'Bienestar', 'Comunidad']
     : ['Comunidad', 'Bienestar'];
 
+  // Resolver autor desde la relación profiles (JOIN) o datos de fila como fallback
+  const authorProfile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
+  const authorName = authorProfile?.name || row.author_name || 'Miembro de la Comunidad';
+  const authorAvatar = authorProfile?.avatar_url || row.author_avatar || '/user.png';
+
   return {
     id: String(row.id),
-    author: row.author_name || 'Miembro de la Comunidad',
+    author: authorName,
     authorRole: 'Miembro de la Comunidad',
-    authorAvatar: '/user.png',
+    authorAvatar: authorAvatar,
     avatarColor: '#548c71',
     timeAgo: formatTimeAgo(row.created_at),
     content: row.content || '',
@@ -74,54 +56,98 @@ export function mapSupabasePostToCommunityPost(row: any): CommunityPost {
 }
 
 /**
- * Consulta (SELECT) a la tabla `community_posts` en Supabase ordenada por fecha de creación descendente.
+ * Consulta (SELECT) a la tabla `community_posts` en Supabase con JOIN a `profiles` para obtener el autor real.
  */
 export async function fetchSupabaseCommunityPosts(): Promise<CommunityPost[]> {
   try {
+    // Intento 1: Consulta relacional con JOIN a la tabla `profiles`
     const { data, error } = await supabase
       .from('community_posts')
-      .select('*')
+      .select(`
+        id,
+        user_id,
+        group_category,
+        mood,
+        content,
+        likes,
+        created_at,
+        profiles:user_id (
+          name,
+          avatar_url
+        )
+      `)
       .order('created_at', { ascending: false });
 
-    if (error) {
-      console.warn('Error al consultar community_posts en Supabase:', error.message);
-      return [];
-    }
-
-    if (Array.isArray(data)) {
+    if (!error && Array.isArray(data)) {
       return data.map(mapSupabasePostToCommunityPost);
     }
+
+    // Fallback si la relación de clave foránea aún no está creada en Supabase
+    if (error) {
+      console.warn('Consulta con JOIN falló, reintentando consulta básica:', error.message);
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from('community_posts')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (fallbackError) {
+        throw fallbackError;
+      }
+
+      if (Array.isArray(fallbackData)) {
+        return fallbackData.map(mapSupabasePostToCommunityPost);
+      }
+    }
+
     return [];
-  } catch (err) {
-    console.error('Fallo de red o cliente en fetchSupabaseCommunityPosts:', err);
-    return [];
+  } catch (err: any) {
+    console.error('Fallo en fetchSupabaseCommunityPosts:', err?.message || err);
+    throw err;
   }
+}
+
+export interface InsertCommunityPostParams {
+  userId: string;
+  groupCategory: string;
+  mood?: string;
+  content: string;
 }
 
 /**
  * Inserta un nuevo registro en la tabla `community_posts` en Supabase.
+ * Vincula estrictamente `user_id = user.id` para impedir la suplantación del nombre del autor en el cliente.
  */
-export async function insertSupabaseCommunityPost(params: {
-  authorName: string;
-  groupCategory: string;
-  mood?: string;
-  content: string;
-  likes?: number;
-}): Promise<CommunityPost | null> {
-  const { authorName, groupCategory, mood, content, likes = 0 } = params;
+export async function insertSupabaseCommunityPost(params: InsertCommunityPostParams): Promise<CommunityPost | null> {
+  const { userId, groupCategory, mood, content } = params;
+
+  if (!userId) {
+    throw new Error('Se requiere un usuario autenticado para publicar en la comunidad.');
+  }
 
   try {
     const { data, error } = await supabase
       .from('community_posts')
       .insert({
-        author_name: authorName || 'Usuario FluxGlow',
+        user_id: userId,
         group_category: groupCategory || 'Comunidad General',
         mood: mood || '🌿 En calma',
         content: content.trim(),
-        likes: likes
+        likes: 0
       })
-      .select()
-      .single();
+      .select(`
+        id,
+        user_id,
+        group_category,
+        mood,
+        content,
+        likes,
+        created_at,
+        profiles:user_id (
+          name,
+          avatar_url
+        )
+      `)
+      .maybeSingle();
 
     if (error) {
       console.error('Error al insertar community_post en Supabase:', error);
@@ -139,23 +165,44 @@ export async function insertSupabaseCommunityPost(params: {
 }
 
 /**
- * Actualiza el conteo de likes en la tabla `community_posts` de Supabase.
+ * Incremento atómico de likes en Supabase mediante el procedimiento RPC `increment_post_likes`.
+ * Previene condiciones de carrera y la sobreescritura de datos en el cliente.
  */
-export async function updateSupabasePostLikes(postId: string, newLikes: number): Promise<boolean> {
+export async function toggleSupabasePostLike(postId: string, _userId?: string): Promise<{ success: boolean; newLikes?: number }> {
   try {
-    const { error } = await supabase
+    // 1. Intentar ejecución de la función RPC atómica en el servidor Postgres
+    const { data: rpcLikes, error: rpcError } = await supabase
+      .rpc('increment_post_likes', { target_post_id: postId });
+
+    if (!rpcError && typeof rpcLikes === 'number') {
+      return { success: true, newLikes: rpcLikes };
+    }
+
+    if (rpcError) {
+      console.warn('RPC increment_post_likes no disponible, intentando actualización de fallback:', rpcError.message);
+    }
+
+    // 2. Fallback de lectura-actualización si la función RPC aún no está creada en la base de datos
+    const { data: currentPost } = await supabase
       .from('community_posts')
-      .update({ likes: newLikes })
+      .select('likes')
+      .eq('id', postId)
+      .maybeSingle();
+
+    const nextCount = ((currentPost?.likes as number) || 0) + 1;
+    const { error: updateError } = await supabase
+      .from('community_posts')
+      .update({ likes: nextCount })
       .eq('id', postId);
 
-    if (error) {
-      console.warn('Error actualizando likes en Supabase:', error.message);
-      return false;
+    if (updateError) {
+      throw updateError;
     }
-    return true;
-  } catch (err) {
-    console.error('Fallo en updateSupabasePostLikes:', err);
-    return false;
+
+    return { success: true, newLikes: nextCount };
+  } catch (err: any) {
+    console.error('Error al actualizar like en Supabase:', err?.message || err);
+    return { success: false };
   }
 }
 
@@ -202,86 +249,4 @@ export function mapSupabaseJournalEntry(row: any): JournalEntry {
     habits: row.habits || { sleepHours: 8, waterGlasses: 6, exercised: true, energyLevel: typeof row.intensity === 'number' ? row.intensity : 4 },
     aiFeedback: row.ai_feedback || row.aiFeedback || 'Registro guardado y sincronizado con tu base de datos de Supabase.'
   };
-}
-
-/**
- * Consulta (SELECT) las entradas de `journal_entries` en Supabase ordenadas por fecha.
- */
-export async function fetchSupabaseJournalEntries(): Promise<JournalEntry[]> {
-  try {
-    const { data, error } = await supabase
-      .from('journal_entries')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.warn('Error al consultar journal_entries en Supabase:', error.message);
-      return [];
-    }
-
-    if (Array.isArray(data)) {
-      return data.map(mapSupabaseJournalEntry);
-    }
-    return [];
-  } catch (err) {
-    console.error('Fallo en fetchSupabaseJournalEntries:', err);
-    return [];
-  }
-}
-
-/**
- * Inserta un nuevo registro en la tabla `journal_entries` en Supabase.
- */
-export async function insertSupabaseJournalEntry(params: {
-  mood: string;
-  note: string;
-}): Promise<JournalEntry | null> {
-  const { mood, note } = params;
-  const userId = getOrCreateUserId();
-
-  try {
-    const { data, error } = await supabase
-      .from('journal_entries')
-      .insert({
-        user_id: userId,
-        mood: mood,
-        note: note.trim()
-      })
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error al insertar en journal_entries en Supabase:', error);
-      throw error;
-    }
-
-    if (data) {
-      return mapSupabaseJournalEntry(data);
-    }
-    return null;
-  } catch (err) {
-    console.error('Fallo en insertSupabaseJournalEntry:', err);
-    throw err;
-  }
-}
-
-/**
- * Elimina una entrada de la tabla `journal_entries` en Supabase.
- */
-export async function deleteSupabaseJournalEntry(entryId: string): Promise<boolean> {
-  try {
-    const { error } = await supabase
-      .from('journal_entries')
-      .delete()
-      .eq('id', entryId);
-
-    if (error) {
-      console.warn('Error eliminando entrada de Supabase:', error.message);
-      return false;
-    }
-    return true;
-  } catch (err) {
-    console.error('Fallo en deleteSupabaseJournalEntry:', err);
-    return false;
-  }
 }

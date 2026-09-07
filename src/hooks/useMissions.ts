@@ -100,6 +100,7 @@ export function useMissions(userProfile?: UserProfileData, onUpdateProfile?: (up
   const [loading, setLoading] = useState<boolean>(true);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isUsingLocalFallback, setIsUsingLocalFallback] = useState<boolean>(false);
   const [userPoints, setUserPoints] = useState<number>(userProfile?.points || 0);
   const [userLevel, setUserLevel] = useState<number>(userProfile?.level || 1);
 
@@ -212,8 +213,10 @@ export function useMissions(userProfile?: UserProfileData, onUpdateProfile?: (up
 
         setMissions(consolidatedMissions);
         saveStoredMissions(consolidatedMissions);
+        setIsUsingLocalFallback(false);
       } else {
         // 2. MODO INVITADO: Cargar desde localStorage
+        setIsUsingLocalFallback(false);
         const stored = getStoredMissions();
         if (stored.length > 0) {
           setMissions(stored);
@@ -225,6 +228,9 @@ export function useMissions(userProfile?: UserProfileData, onUpdateProfile?: (up
     } catch (err: any) {
       console.error('Error general en fetchMissionsData:', err);
       setError(err?.message || 'Error al sincronizar misiones');
+      if (user) {
+        setIsUsingLocalFallback(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -304,28 +310,43 @@ export function useMissions(userProfile?: UserProfileData, onUpdateProfile?: (up
           console.warn('Aviso guardando en user_missions de Supabase:', e);
         }
 
-        // 2. Sincronizar puntos y nivel del usuario en la tabla 'profiles'
-        const nextPoints = isCompleting 
-          ? userPoints + missionXP 
-          : Math.max(0, userPoints - missionXP);
-        const nextLevel = Math.max(1, Math.floor(nextPoints / 100) + 1);
+        // 2. Sincronizar puntos y nivel del usuario delegando en la función RPC 'add_user_xp' en PostgreSQL
+        const xpDelta = isCompleting ? missionXP : -missionXP;
+        let syncedPoints = userPoints + xpDelta;
+        let syncedLevel = Math.max(1, Math.floor(syncedPoints / 100) + 1);
 
         try {
-          await supabase
-            .from('profiles')
-            .update({
-              points: nextPoints,
-              level: nextLevel
-            })
-            .eq('id', user.id);
+          // Intento de incremento atómico mediante la función RPC segura en Supabase
+          const { data: rpcResult, error: rpcError } = await supabase.rpc('add_user_xp', {
+            xp_delta: xpDelta
+          });
+
+          if (!rpcError && rpcResult && typeof rpcResult.points === 'number') {
+            syncedPoints = rpcResult.points;
+            syncedLevel = typeof rpcResult.level === 'number' ? rpcResult.level : Math.max(1, Math.floor(syncedPoints / 100) + 1);
+          } else {
+            if (rpcError) {
+              console.warn('Nota: RPC add_user_xp no disponible aún, usando actualización directa:', rpcError.message);
+            }
+            // Fallback directo a la tabla profiles si la función RPC aún no ha sido aplicada
+            syncedPoints = Math.max(0, userPoints + xpDelta);
+            syncedLevel = Math.max(1, Math.floor(syncedPoints / 100) + 1);
+            await supabase
+              .from('profiles')
+              .update({
+                points: syncedPoints,
+                level: syncedLevel
+              })
+              .eq('id', user.id);
+          }
         } catch (e) {
-          console.warn('Aviso actualizando puntos en profiles:', e);
+          console.warn('Aviso sincronizando puntos en profiles:', e);
         }
 
-        setUserPoints(nextPoints);
-        setUserLevel(nextLevel);
+        setUserPoints(syncedPoints);
+        setUserLevel(syncedLevel);
         if (onUpdateProfile) {
-          onUpdateProfile({ points: nextPoints, level: nextLevel });
+          onUpdateProfile({ points: syncedPoints, level: syncedLevel });
         }
 
         // 3. Actualizar estado local
@@ -415,6 +436,7 @@ export function useMissions(userProfile?: UserProfileData, onUpdateProfile?: (up
     loading,
     actionLoadingId,
     error,
+    isUsingLocalFallback,
     userPoints,
     userLevel,
     streakDays,

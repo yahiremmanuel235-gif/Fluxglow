@@ -246,7 +246,7 @@ export const AuthModals: React.FC<AuthModalProps> = ({
           .from('profiles')
           .select('*')
           .eq('id', data.user.id)
-          .single();
+          .maybeSingle();
 
         // Migrar cualquier dato local residual a la cuenta autenticada
         await migrateGuestDataToSupabase(data.user.id);

@@ -50,21 +50,52 @@ export default function App() {
   // Sincronizar el perfil del usuario desde Supabase cuando detecta una sesión activa
   useEffect(() => {
     if (!user) return;
-    supabase.from('profiles').select('*').eq('id', user.id).single()
-      .then(({ data }) => {
+    let isCancelled = false;
+
+    const loadProfile = async () => {
+      try {
+        const { data, error: profileErr } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (isCancelled) return;
+
+        if (profileErr) {
+          console.warn('Aviso al consultar perfil del usuario:', profileErr.message);
+        }
+
         if (data) {
           setUserProfile(prev => ({
             ...prev,
-            name: data.name,
-            ageGroup: data.age_group,
-            goals: data.goals,
-            avatarUrl: data.avatar_url || '/user.png',
+            name: data.name || user.user_metadata?.name || user.email?.split('@')[0] || 'Miembro de FluxGlow',
+            ageGroup: data.age_group || prev.ageGroup,
+            goals: data.goals || prev.goals,
+            avatarUrl: data.avatar_url || prev.avatarUrl || '/user.png',
             points: typeof data.points === 'number' ? data.points : (prev.points ?? 120),
             level: typeof data.level === 'number' ? data.level : (prev.level ?? 1),
             isLoggedIn: true,
           }));
+        } else {
+          // Si el perfil aún se está procesando o no existe fila, proveer fallback seguro sin romper la app
+          const fallbackName = user.user_metadata?.name || user.email?.split('@')[0] || 'Miembro de FluxGlow';
+          setUserProfile(prev => ({
+            ...prev,
+            name: prev.name && prev.name !== 'Invitado' ? prev.name : fallbackName,
+            isLoggedIn: true,
+          }));
         }
-      });
+      } catch (err) {
+        console.warn('Error no crítico recuperando perfil:', err);
+      }
+    };
+
+    loadProfile();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [user]);
 
   // Listen for global custom events to open onboarding or update notes

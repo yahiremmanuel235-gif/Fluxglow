@@ -146,7 +146,9 @@ Directrices de excelencia para tus respuestas:
   // Emotional Entry Analysis Endpoint
   app.post("/api/gemini/analyze", async (req, res) => {
     try {
-      const { text, mood, tags } = req.body;
+      const text = (req.body.text || req.body.entryText || "").trim();
+      const mood = req.body.mood;
+      const tags = req.body.tags;
       const client = getGeminiClient();
 
       if (!client || !text) {

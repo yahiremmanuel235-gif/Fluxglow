@@ -36,17 +36,19 @@ import { Button } from '../common/Button';
 import {
   fetchSupabaseCommunityPosts,
   insertSupabaseCommunityPost,
-  updateSupabasePostLikes,
+  toggleSupabasePostLike,
   subscribeToCommunityPostsRealtime,
   mapSupabasePostToCommunityPost
 } from '../../services/supabaseService';
+import { useAuth } from '../../hooks/useAuth';
 
 interface CommunityModuleProps {
   userProfile?: UserProfileData;
 }
 
 export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile }) => {
-  const { success, warning, info } = useToast();
+  const { user } = useAuth();
+  const { success, warning, info, error: showErrorToast } = useToast();
 
   // Stored posts with fallback to clean Facebook-style initial posts
   const [posts, setPosts] = useState<CommunityPost[]>(() => {
@@ -62,6 +64,7 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
   const [isLoadingPosts, setIsLoadingPosts] = useState<boolean>(true);
   const [isPublishing, setIsPublishing] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const [isUsingLocalFallback, setIsUsingLocalFallback] = useState<boolean>(false);
 
   // User's joined groups (starts empty or with 1 sample group, editable)
   const [joinedGroupIds, setJoinedGroupIds] = useState<string[]>(() => {
@@ -109,6 +112,7 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
     fetchSupabaseCommunityPosts()
       .then((dbPosts) => {
         if (!isMounted) return;
+        setIsUsingLocalFallback(false);
         if (dbPosts && dbPosts.length > 0) {
           setPosts(dbPosts);
           try {
@@ -119,7 +123,11 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
       })
       .catch((err) => {
         console.warn('Error al cargar posts de Supabase:', err);
-        if (isMounted) setIsLoadingPosts(false);
+        if (isMounted) {
+          setIsUsingLocalFallback(true);
+          setIsLoadingPosts(false);
+          info('Modo sin conexión', 'Cargando publicaciones guardadas localmente.');
+        }
       });
 
     // Suscripción en tiempo real (Supabase Realtime)
@@ -213,19 +221,23 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
       return;
     }
 
+    if (!user) {
+      warning('Inicia sesión', 'Debes iniciar sesión o registrarte para publicar en la comunidad de FluxGlow.');
+      return;
+    }
+
     setIsPublishing(true);
-    const authorDisplayName = userProfile?.name || 'Tú (Usuario FluxGlow)';
 
     try {
-      // Guarda directamente en la tabla community_posts de Supabase
+      // Guarda directamente en la tabla community_posts vinculada exclusivamente al user.id autenticado
       const savedPost = await insertSupabaseCommunityPost({
-        authorName: authorDisplayName,
+        userId: user.id,
         groupCategory: selectedPostGroup,
         mood: selectedFeeling,
-        content: postContent.trim(),
-        likes: 0
+        content: postContent.trim()
       });
 
+      const authorDisplayName = userProfile?.name || user.user_metadata?.name || 'Tú (Usuario FluxGlow)';
       const newPost: CommunityPost = savedPost || {
         id: `post-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
         author: authorDisplayName,
@@ -256,46 +268,36 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
       setPostContent('');
       setIsCreatingPostExpanded(false);
       confetti({ particleCount: 35, spread: 60 });
-      success('¡Publicado con éxito!', 'Tu publicación ha sido guardada en la tabla community_posts de Supabase.');
-    } catch (err) {
-      console.error('Error insertando en Supabase:', err);
-      warning('Guardado local', 'Se guardó en tu dispositivo, revisa la conexión con Supabase.');
-
-      const fallbackPost: CommunityPost = {
-        id: `post-${Date.now()}`,
-        author: authorDisplayName,
-        authorRole: 'Miembro de la Comunidad',
-        authorAvatar: userProfile?.avatarUrl || '/user.png',
-        avatarColor: '#548c71',
-        timeAgo: 'Hace un momento',
-        content: postContent.trim(),
-        category: selectedPostGroup,
-        tags: [selectedFeeling.split(' ')[1] || 'Bienestar', 'Comunidad'],
-        likes: 0,
-        hugs: 0,
-        commentsCount: 0,
-        comments: []
-      };
-      setPosts((prev) => [fallbackPost, ...prev]);
+      success('¡Publicado con éxito!', 'Tu publicación ha sido compartida en la comunidad de FluxGlow.');
+    } catch (err: any) {
+      console.error('Error insertando post en Supabase:', err);
+      showErrorToast('Error al publicar', err?.message || 'No se pudo guardar la publicación en Supabase.');
     } finally {
       setIsPublishing(false);
     }
   };
 
-  const handleLike = (postId: string) => {
-    const targetPost = posts.find((p) => p.id === postId);
-    const newLikes = (targetPost?.likes || 0) + 1;
+  const handleLike = async (postId: string) => {
+    // 1. Actualización optimista inmediata en la interfaz
+    setPosts((prev) =>
+      prev.map((p) => (p.id === postId ? { ...p, likes: (p.likes || 0) + 1 } : p))
+    );
 
-    const updated = posts.map(p => p.id === postId ? { ...p, likes: newLikes } : p);
-    setPosts(updated);
+    // 2. Incremento atómico en el servidor mediante RPC para prevenir condiciones de carrera
     try {
-      localStorage.setItem('fluxglow_community_posts', JSON.stringify(updated));
-    } catch (err) {}
-
-    // Sincroniza el like en Supabase
-    updateSupabasePostLikes(postId, newLikes).catch(err => {
-      console.warn('Error al actualizar like en Supabase:', err);
-    });
+      const result = await toggleSupabasePostLike(postId, user?.id);
+      if (result.success && typeof result.newLikes === 'number') {
+        setPosts((prev) => {
+          const updated = prev.map((p) => (p.id === postId ? { ...p, likes: result.newLikes! } : p));
+          try {
+            localStorage.setItem('fluxglow_community_posts', JSON.stringify(updated));
+          } catch {}
+          return updated;
+        });
+      }
+    } catch (err) {
+      console.warn('Error sincronizando like atómico en Supabase:', err);
+    }
   };
 
   const handleHug = (postId: string) => {
@@ -650,6 +652,23 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
                 {filteredPosts.length} publicaciones
               </span>
             </div>
+
+            {/* Offline / Local Cache Indicator */}
+            {isUsingLocalFallback && (
+              <div className="bg-amber-50/90 border border-amber-200 text-amber-900 px-4 py-2.5 rounded-2xl text-xs flex items-center justify-between gap-3 shadow-xs">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0" />
+                  <span><strong>Modo local activo:</strong> Mostrando publicaciones guardadas localmente. La conexión en vivo con Supabase se reintentará automáticamente.</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleRefreshFeed}
+                  className="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-800 rounded-lg font-semibold text-[11px] shrink-0 transition-colors cursor-pointer"
+                >
+                  Reintentar
+                </button>
+              </div>
+            )}
 
             {/* 2. Posts Feed */}
             {filteredPosts.length === 0 ? (

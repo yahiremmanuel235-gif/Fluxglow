@@ -74,6 +74,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
     entries, 
     loading: isJournalLoading, 
     error: journalError, 
+    isUsingLocalFallback: isJournalFallback,
     refreshEntries 
   } = useJournal();
 
@@ -82,6 +83,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
     loading: isMissionsLoading,
     actionLoadingId,
     error: missionsError,
+    isUsingLocalFallback: isMissionsFallback,
     userPoints,
     userLevel,
     streakDays,
@@ -243,6 +245,11 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
               <div className="flex items-center gap-1.5 text-[11px] font-medium text-stone-600 bg-stone-100 border border-stone-200 px-2.5 py-1 rounded-full">
                 <Loader2 className="w-3 h-3 animate-spin text-[#548c71]" />
                 <span className="hidden sm:inline">Sincronizando...</span>
+              </div>
+            ) : user && (isJournalFallback || isMissionsFallback) ? (
+              <div className="flex items-center gap-1.5 text-[11px] font-medium text-amber-900 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full shadow-2xs" title="Mostrando copia local por interrupción de conexión">
+                <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
+                <span>Respaldo Local (Offline)</span>
               </div>
             ) : user ? (
               <div className="flex items-center gap-1.5 text-[11px] font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full shadow-2xs">

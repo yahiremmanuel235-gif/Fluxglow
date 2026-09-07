@@ -1,10 +1,8 @@
 /**
  * FluxGlow Gemini AI Service
- * Utiliza @google/genai y VITE_GEMINI_API_KEY para proporcionar
- * asistencia empática de salud mental y bienestar emocional.
+ * Canalización segura a través del servidor backend (/api/chat y /api/gemini/analyze).
+ * No expone API keys ni SDKs propietarios en el bundle cliente del navegador.
  */
-
-import { GoogleGenAI } from '@google/genai';
 
 // System Prompt especializado en acompañamiento empático de salud mental
 export const FLUX_AI_SYSTEM_PROMPT = `Eres Flux AI, un asistente y compañero empático de salud mental, bienestar psicológico y regulación emocional integrado en la plataforma FluxGlow.
@@ -37,82 +35,14 @@ export interface SendChatMessageParams {
 }
 
 /**
- * Obtiene o inicializa el cliente de Gemini utilizando VITE_GEMINI_API_KEY
- */
-function getGeminiClient(): GoogleGenAI | null {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || (typeof process !== 'undefined' ? process.env?.GEMINI_API_KEY : '');
-  if (!apiKey || apiKey === 'MY_GEMINI_API_KEY' || apiKey.trim() === '') {
-    return null;
-  }
-  try {
-    return new GoogleGenAI({ apiKey });
-  } catch (error) {
-    console.warn('Error al inicializar GoogleGenAI con VITE_GEMINI_API_KEY:', error);
-    return null;
-  }
-}
-
-/**
  * Genera la respuesta del asistente empático Flux AI utilizando el modelo Gemini.
- * Intenta primero el cliente @google/genai directo, luego el proxy del servidor /api/chat,
- * y en última instancia un fallback contextual altamente empático.
+ * Canalizada exclusivamente a través del proxy del servidor backend (/api/chat),
+ * garantizando que las credenciales permanezcan privadas en el entorno de ejecución.
  */
 export async function sendChatMessageToGemini(params: SendChatMessageParams): Promise<string> {
   const { message, history = [], mode = 'calm', userMood = '', userContext } = params;
-  const client = getGeminiClient();
 
-  const enrichedSystemInstruction = `${FLUX_AI_SYSTEM_PROMPT}
-
-Contexto actual de la sesión:
-- Modo de interacción seleccionado: ${mode}
-- Estado de ánimo reportado: ${userMood || 'No especificado'}
-${userContext?.name ? `- Nombre del usuario: ${userContext.name}` : ''}
-${userContext?.ageGroup ? `- Grupo de edad: ${userContext.ageGroup}` : ''}
-Adapta tu tono al modo (${mode}) manteniendo siempre la empatía, claridad y calidez.`;
-
-  // Intento 1: Llamada directa con cliente @google/genai si existe VITE_GEMINI_API_KEY
-  if (client) {
-    const formattedContents: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = [];
-
-    // Agregar historial previo
-    if (history && history.length > 0) {
-      history.slice(-8).forEach(item => {
-        formattedContents.push({
-          role: item.role === 'user' ? 'user' : 'model',
-          parts: [{ text: item.text }]
-        });
-      });
-    }
-
-    // Agregar el mensaje actual del usuario
-    formattedContents.push({
-      role: 'user',
-      parts: [{ text: message.trim() }]
-    });
-
-    const modelsToTry = ['gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-3.1-flash-lite'];
-
-    for (const model of modelsToTry) {
-      try {
-        const response = await client.models.generateContent({
-          model,
-          contents: formattedContents,
-          config: {
-            systemInstruction: enrichedSystemInstruction,
-            temperature: 0.7,
-          }
-        });
-
-        if (response && response.text) {
-          return response.text.trim();
-        }
-      } catch (err: any) {
-        console.warn(`Intento directo con ${model} falló:`, err?.status || err?.message || err);
-      }
-    }
-  }
-
-  // Intento 2: Proxy a /api/chat del servidor (utiliza GEMINI_API_KEY de entorno)
+  // Canalización segura a través del endpoint /api/chat del servidor backend
   try {
     const serverRes = await fetch('/api/chat', {
       method: 'POST',
@@ -120,7 +50,7 @@ Adapta tu tono al modo (${mode}) manteniendo siempre la empatía, claridad y cal
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        message,
+        message: message.trim(),
         userMood,
         context: `Modo: ${mode}. Estado: ${userMood}. Usuario: ${userContext?.name || 'Amigo de FluxGlow'}.`,
         userContext,
@@ -133,81 +63,74 @@ Adapta tu tono al modo (${mode}) manteniendo siempre la empatía, claridad y cal
 
     if (serverRes.ok) {
       const data = await serverRes.json();
-      if (data.response && data.response.trim().length > 0) {
+      if (data.response && typeof data.response === 'string' && data.response.trim().length > 0) {
         return data.response.trim();
       }
+    } else {
+      console.warn('El servidor backend respondió con status:', serverRes.status);
     }
   } catch (proxyErr) {
-    console.warn('Fallo en la comunicación con /api/chat:', proxyErr);
+    console.warn('Fallo de red al comunicar con el proxy /api/chat de Flux AI:', proxyErr);
   }
 
-  // Intento 3: Fallback local contextual de alta calidad
+  // Fallback contextual de alta calidad y empatía si el servidor no está disponible
   return generateClientLocalFallback(message, mode, userMood);
 }
 
-/**
- * Analiza una entrada de diario para identificar emociones, distorsiones cognitivas y sugerencias
- */
-export async function analyzeJournalWithGemini(entryText: string): Promise<any> {
-  const client = getGeminiClient();
-
-  const prompt = `Analiza la siguiente entrada de diario emocional y devuelve un JSON estricto con:
-{
-  "dominantEmotion": "emoción principal detectada",
-  "intensityScore": 7,
-  "cognitiveDistortions": ["catastrofismo", "pensamiento todo o nada"],
-  "aiInsight": "una reflexión breve y empática de 2 oraciones",
-  "suggestedAction": "una acción práctica recomendada inmediata"
+export interface JournalAiAnalysis {
+  dominantEmotion: string;
+  sentimentScore: number;
+  keywords: string[];
+  aiInsight: string;
+  suggestedAction: string;
 }
 
-Texto del diario: "${entryText}"`;
-
-  if (client) {
-    try {
-      const response = await client.models.generateContent({
-        model: 'gemini-3.7-flash',
-        contents: prompt,
-        config: {
-          responseMimeType: 'application/json',
-          temperature: 0.4
-        }
-      });
-
-      if (response && response.text) {
-        return JSON.parse(response.text);
-      }
-    } catch (e) {
-      console.warn('Fallo en análisis directo de diario:', e);
-    }
-  }
-
+/**
+ * Analiza una entrada de diario para identificar emociones y sugerencias prácticas.
+ * Canalizada a través del endpoint proxy del servidor (/api/gemini/analyze).
+ */
+export async function analyzeJournalWithGemini(entryText: string, mood?: string, tags?: string[]): Promise<JournalAiAnalysis> {
   try {
     const res = await fetch('/api/gemini/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ entryText })
+      body: JSON.stringify({
+        text: entryText,
+        entryText: entryText,
+        mood: mood || 'En balance',
+        tags: tags || ['Bienestar', 'Consciencia']
+      })
     });
+
     if (res.ok) {
       const data = await res.json();
-      return data.analysis;
+      if (data.analysis) {
+        return {
+          dominantEmotion: data.analysis.dominantEmotion || mood || "Reflexión profunda",
+          sentimentScore: typeof data.analysis.sentimentScore === 'number' ? data.analysis.sentimentScore : 75,
+          keywords: Array.isArray(data.analysis.keywords) ? data.analysis.keywords : ["Consciencia", "Bienestar"],
+          aiInsight: data.analysis.aiInsight || "Has expresado tus vivencias con autenticidad, lo cual es vital para el equilibrio emocional.",
+          suggestedAction: data.analysis.suggestedAction || "Realiza una pausa de 2 minutos para relajar la respiración."
+        };
+      }
     }
-  } catch {
-    // fallback
+  } catch (err) {
+    console.warn('Error en /api/gemini/analyze, aplicando análisis contextual seguro:', err);
   }
 
   return {
-    dominantEmotion: "Reflexión profunda",
-    intensityScore: 6,
-    cognitiveDistortions: [],
-    aiInsight: "Identificamos una oportunidad para pausar y respirar conscientemente.",
-    suggestedAction: "Toma 3 respiraciones profundas y anota 1 cosa positiva del día."
+    dominantEmotion: mood || "Reflexión profunda",
+    sentimentScore: 75,
+    keywords: ["Autoconocimiento", "Paz interior", "Resiliencia"],
+    aiInsight: "Registrar lo que sientes con honestidad es el primer paso para procesar cualquier tensión de forma saludable.",
+    suggestedAction: "Toma 3 respiraciones diafragmáticas conscientes y siente el apoyo de tus pies sobre el suelo."
   };
 }
 
 /**
- * Fallback contextual si la red no está disponible
+ * Fallback contextual si la red no está disponible o el servidor está en arranque
  */
-function generateClientLocalFallback(message: string, mode: string, mood?: string): string {
+function generateClientLocalFallback(message: string, _mode: string, _mood?: string): string {
   const lower = message.toLowerCase();
 
   if (lower.includes('ansiedad') || lower.includes('ansioso') || lower.includes('pánico') || lower.includes('nervios')) {
@@ -230,6 +153,14 @@ Para despejar la carga mental, te sugiero la **Técnica de Fricción Cero**:
 - Recuerda que no necesitas resolver toda la semana hoy, solo el siguiente paso inmediato.
 
 ¿Te gustaría que dividamos lo que tienes pendiente en pasos muy pequeños y manejables?`;
+  }
+
+  if (lower.includes('triste') || lower.includes('desánimo') || lower.includes('llorar') || lower.includes('solo')) {
+    return `Siento mucho que estés atravesando este momento de tristeza o desánimo. Quiero que sepas que tus emociones son completamente válidas y no tienes que fingir que todo está bien.
+
+A veces, permitirnos sentir la tristeza sin juzgarnos es el primer paso para que el cuerpo libere esa carga. 
+
+Si te apetece, cuéntame qué ha pesado más en tu mente hoy, o simplemente tómate este instante para descansar en calma. Estoy aquí contigo.`;
   }
 
   return `Gracias por compartir esto conmigo. En FluxGlow estamos aquí para escucharte y acompañarte con calma y claridad.

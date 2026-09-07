@@ -24,6 +24,7 @@ export function useJournal() {
   const [loading, setLoading] = useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [isUsingLocalFallback, setIsUsingLocalFallback] = useState<boolean>(false);
 
   const sanitizeEntry = (raw: any): JournalEntry => ({
     id: String(raw?.id || `entry-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`),
@@ -53,7 +54,8 @@ export function useJournal() {
 
         if (dbError) {
           console.warn('Aviso al consultar journal_entries en Supabase:', dbError.message);
-          setError(dbError.message);
+          setError(`Conexión con Supabase no disponible (${dbError.message}). Mostrando datos de respaldo.`);
+          setIsUsingLocalFallback(true);
           // Fallback a almacenamiento local de respaldo para este usuario si existiera
           try {
             const cached = localStorage.getItem(`fluxglow_journal_${user.id}`);
@@ -62,6 +64,7 @@ export function useJournal() {
             }
           } catch {}
         } else if (data) {
+          setIsUsingLocalFallback(false);
           const mapped = data.map(mapSupabaseJournalEntry);
           setEntries(mapped);
           try {
@@ -72,11 +75,13 @@ export function useJournal() {
       } catch (err: any) {
         console.error('Fallo de conexión en fetchEntries:', err);
         setError(err?.message || 'Error de conexión con Supabase');
+        setIsUsingLocalFallback(true);
       } finally {
         setLoading(false);
       }
     } else {
       // 2. Modo Invitado / Exploración: Cargar desde localStorage
+      setIsUsingLocalFallback(false);
       try {
         const saved = localStorage.getItem('fluxglow_journal_entries');
         if (saved) {
@@ -212,15 +217,17 @@ export function useJournal() {
     setError(null);
     try {
       if (user) {
-        // Si el usuario está autenticado, eliminar de la tabla journal_entries en Supabase
+        // Defensa en profundidad: eliminar garantizando que pertenezca al usuario autenticado
         const { error: deleteError } = await supabase
           .from('journal_entries')
           .delete()
-          .eq('id', id);
+          .eq('id', id)
+          .eq('user_id', user.id);
 
         if (deleteError) {
-          console.warn('Error al eliminar en Supabase:', deleteError.message);
-          setError(deleteError.message);
+          console.error('Error al eliminar en Supabase:', deleteError.message);
+          setError(`No se pudo eliminar de la base de datos: ${deleteError.message}`);
+          return false;
         }
       }
 
@@ -249,6 +256,7 @@ export function useJournal() {
     loading,
     isSubmitting,
     error,
+    isUsingLocalFallback,
     createEntry,
     deleteEntry,
     refreshEntries: fetchEntries,
