@@ -1,5 +1,6 @@
 export type ViewMode = 
   | 'landing'
+  | 'dashboard'
   | 'learn'
   | 'missions'
   | 'journal'
@@ -249,6 +250,8 @@ export interface UserProfileData {
   avatarUrl?: string;
   goals: { id: string; label: string; checked: boolean }[];
   isLoggedIn?: boolean;
+  points?: number;
+  level?: number;
 }
 
 export interface UserProfile {

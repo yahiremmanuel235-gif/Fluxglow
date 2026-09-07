@@ -187,16 +187,20 @@ export function mapSupabaseJournalEntry(row: any): JournalEntry {
   const dateStr = dateObj.toISOString().split('T')[0];
   const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
+  const rawMood = typeof row.mood === 'string' ? row.mood.toLowerCase() : 'tranquilo';
+
   return {
     id: String(row.id),
     date: dateStr,
     time: timeStr,
-    mood: (row.mood?.toLowerCase() || 'tranquilo') as MoodType,
-    intensity: 7,
-    notes: row.note || '',
-    triggers: ['Productividad', 'Bienestar'],
-    habits: { sleepHours: 8, waterGlasses: 6, exercised: true, energyLevel: 4 },
-    aiFeedback: 'Registro guardado y sincronizado con tu base de datos de Supabase.'
+    mood: rawMood as MoodType,
+    intensity: typeof row.intensity === 'number' ? row.intensity : 7,
+    notes: row.note || row.notes || '',
+    triggers: Array.isArray(row.triggers) && row.triggers.length > 0 
+      ? row.triggers 
+      : ['Productividad', 'Bienestar'],
+    habits: row.habits || { sleepHours: 8, waterGlasses: 6, exercised: true, energyLevel: typeof row.intensity === 'number' ? row.intensity : 4 },
+    aiFeedback: row.ai_feedback || row.aiFeedback || 'Registro guardado y sincronizado con tu base de datos de Supabase.'
   };
 }
 

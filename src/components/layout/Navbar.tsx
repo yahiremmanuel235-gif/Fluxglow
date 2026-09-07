@@ -14,7 +14,9 @@ import {
   Menu,
   X,
   Target,
-  ChevronDown
+  ChevronDown,
+  LogOut,
+  LayoutDashboard
 } from 'lucide-react';
 import { soundEngine } from '../../utils/audioSynth';
 import { FluxGlowLogo } from '../common/FluxGlowLogo';
@@ -26,13 +28,21 @@ interface NavbarProps {
   userMood?: string;
   isAudioPlaying?: boolean;
   onToggleAudio?: () => void;
+  isLoggedIn?: boolean;
+  onSignOut?: () => void;
+  userPoints?: number;
+  userLevel?: number;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ 
   currentView, 
   onNavigate,
   isAudioPlaying = false,
-  onToggleAudio
+  onToggleAudio,
+  isLoggedIn = false,
+  onSignOut,
+  userPoints,
+  userLevel
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [moreDropdownOpen, setMoreDropdownOpen] = useState(false);
@@ -82,6 +92,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   const primaryNavLinks: { id: ViewMode; label: string; icon: React.ReactNode; badge?: string }[] = [
+    { 
+      id: 'dashboard', 
+      label: 'Centro de Control', 
+      icon: <LayoutDashboard className="w-4 h-4 text-brand-sage-600" /> 
+    },
     { 
       id: 'learn', 
       label: 'Explora y Aprende', 
@@ -266,6 +281,22 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Right helper tools: Audio sound + Landing view switcher + Mobile Menu Toggle */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 pl-2">
+            {/* User XP & Level Pill */}
+            {userPoints !== undefined && (
+              <button
+                id="nav-user-points-badge"
+                onClick={() => onNavigate('missions')}
+                title={`Nivel ${userLevel || 1} • ${userPoints} XP. Clic para ver Misiones Diarias.`}
+                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-bold bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200/80 shadow-2xs transition-all cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                <span className="font-mono text-xs">{userPoints} XP</span>
+                <span className="hidden sm:inline text-[10px] text-amber-800 font-semibold bg-amber-200/60 px-1.5 py-0.5 rounded-full">
+                  Nv.{userLevel || 1}
+                </span>
+              </button>
+            )}
+
             <button
               id="ambient-sound-toggle-btn"
               onClick={handleAudioToggle}
@@ -295,6 +326,19 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="hidden md:inline">{currentView === 'landing' ? 'Ver Módulos' : 'Página de Inicio'}</span>
             </button>
 
+            {isLoggedIn && onSignOut && (
+              <button
+                id="nav-signout-btn"
+                onClick={onSignOut}
+                aria-label="Cerrar sesión"
+                title="Cerrar sesión de Supabase"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-stone-600 hover:text-red-700 bg-white border border-stone-300 hover:border-red-200 hover:bg-red-50 transition-colors cursor-pointer"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span className="hidden md:inline">Salir</span>
+              </button>
+            )}
+
             {/* Mobile Menu Hamburger Button */}
             <button
               id="nav-mobile-hamburger-btn"
@@ -312,6 +356,26 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
         <div className="lg:hidden bg-brand-sand-50 border-b border-brand-sand-300 px-4 py-3 shadow-lg animate-fadeIn">
+          {userPoints !== undefined && (
+            <div 
+              onClick={() => {
+                setMobileMenuOpen(false);
+                onNavigate('missions');
+              }}
+              className="mb-2.5 p-2.5 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between cursor-pointer hover:bg-amber-100 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-amber-600" />
+                <span className="text-xs font-bold text-amber-950">Progreso de Hábitos</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-bold text-amber-900 font-mono">{userPoints} XP</span>
+                <span className="text-[10px] bg-amber-200 text-amber-900 font-bold px-1.5 py-0.5 rounded-full">
+                  Nivel {userLevel || 1}
+                </span>
+              </div>
+            </div>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
             {allNavLinks.map((link) => {
               const isActive = currentView === link.id;
@@ -342,6 +406,21 @@ export const Navbar: React.FC<NavbarProps> = ({
               );
             })}
           </div>
+
+          {isLoggedIn && onSignOut && (
+            <div className="pt-2.5 mt-2.5 border-t border-brand-sand-300">
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onSignOut();
+                }}
+                className="w-full py-2.5 px-3 rounded-xl text-xs font-bold text-red-600 hover:bg-red-50 border border-red-200 flex items-center justify-center gap-2 transition-colors cursor-pointer"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Cerrar Sesión</span>
+              </button>
+            </div>
+          )}
         </div>
       )}
     </header>

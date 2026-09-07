@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ViewMode, UserProfileData } from './types';
 import { fetchSupabaseCommunityPosts } from './services/supabaseService';
+import { useAuth } from './hooks/useAuth';
+import { supabase } from './lib/supabaseClient';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 import { LandingPage } from './components/landing/LandingPage';
@@ -13,6 +15,7 @@ import { AlertModule } from './components/modules/AlertModule';
 import { ProfileModule } from './components/modules/ProfileModule';
 import { CommunityModule } from './components/modules/CommunityModule';
 import { MissionsModule } from './components/modules/MissionsModule';
+import { DashboardModule } from './components/modules/DashboardModule';
 import { OnboardingModal } from './components/common/OnboardingModal';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { soundEngine } from './utils/audioSynth';
@@ -30,15 +33,39 @@ const DEFAULT_USER_PROFILE: UserProfileData = {
     { id: 'growth', label: 'Crecimiento Personal', checked: true },
   ],
   isLoggedIn: false,
+  points: 120,
+  level: 1,
 };
 
 export default function App() {
+  const { user, authLoading, signOut } = useAuth();
+
   // Starts on the Home / Landing page as requested
   const [currentView, setCurrentView] = useState<ViewMode>('landing');
   const [isAudioPlaying, setIsAudioPlaying] = useState<boolean>(false);
   const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
   const [onboardingInitialMode, setOnboardingInitialMode] = useState<'ask_first_time' | 'tutorial' | 'update_notes'>('ask_first_time');
   const [activeGuideId, setActiveGuideId] = useState<string | undefined>(undefined);
+
+  // Sincronizar el perfil del usuario desde Supabase cuando detecta una sesión activa
+  useEffect(() => {
+    if (!user) return;
+    supabase.from('profiles').select('*').eq('id', user.id).single()
+      .then(({ data }) => {
+        if (data) {
+          setUserProfile(prev => ({
+            ...prev,
+            name: data.name,
+            ageGroup: data.age_group,
+            goals: data.goals,
+            avatarUrl: data.avatar_url || '/user.png',
+            points: typeof data.points === 'number' ? data.points : (prev.points ?? 120),
+            level: typeof data.level === 'number' ? data.level : (prev.level ?? 1),
+            isLoggedIn: true,
+          }));
+        }
+      });
+  }, [user]);
 
   // Listen for global custom events to open onboarding or update notes
   useEffect(() => {
@@ -131,7 +158,7 @@ export default function App() {
         return next;
       });
     }
-    setCurrentView(targetView || 'learn');
+    setCurrentView(targetView || 'dashboard');
   };
 
   const handleUpdateProfile = (updated: Partial<UserProfileData>) => {
@@ -156,6 +183,24 @@ export default function App() {
     }
   };
 
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (e) {
+      console.error('Error al cerrar sesión:', e);
+    }
+    setUserProfile({
+      ...DEFAULT_USER_PROFILE,
+      isLoggedIn: false,
+    });
+    try {
+      localStorage.removeItem('fluxglow_user_profile');
+    } catch (e) {
+      console.error('Error limpiando sesión en localStorage:', e);
+    }
+    setCurrentView('landing');
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-brand-sand-50 font-sans antialiased text-stone-800 selection:bg-brand-sage-200 selection:text-brand-sage-900">
       
@@ -166,6 +211,10 @@ export default function App() {
           onNavigate={handleNavigate}
           isAudioPlaying={isAudioPlaying}
           onToggleAudio={handleToggleAmbientAudio}
+          isLoggedIn={userProfile.isLoggedIn}
+          onSignOut={handleSignOut}
+          userPoints={userProfile.points}
+          userLevel={userProfile.level}
         />
       )}
 
@@ -186,6 +235,18 @@ export default function App() {
                   onNavigate={handleNavigate} 
                   currentUser={userProfile}
                   onAuthSuccess={handleAuthSuccess}
+                  onSignOut={handleSignOut}
+                />
+              </ErrorBoundary>
+            )}
+
+            {currentView === 'dashboard' && (
+              <ErrorBoundary fallbackTitle="Inconveniente en el Centro de Control">
+                <DashboardModule 
+                  onNavigate={handleNavigate} 
+                  onOpenGuideById={handleOpenGuideById}
+                  userProfile={userProfile}
+                  onUpdateProfile={handleUpdateProfile}
                 />
               </ErrorBoundary>
             )}
@@ -212,6 +273,8 @@ export default function App() {
                 <MissionsModule 
                   onNavigate={handleNavigate} 
                   onOpenGuideById={handleOpenGuideById} 
+                  userProfile={userProfile}
+                  onUpdateProfile={handleUpdateProfile}
                 />
               </ErrorBoundary>
             )}
@@ -240,6 +303,7 @@ export default function App() {
                   userProfile={userProfile} 
                   onUpdateProfile={handleUpdateProfile} 
                   onNavigate={handleNavigate}
+                  onSignOut={handleSignOut}
                 />
               </ErrorBoundary>
             )}

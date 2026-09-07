@@ -20,18 +20,16 @@ import {
   Flame as FireIcon,
   Quote,
   ArrowRight,
-  Heart
+  Heart,
+  Loader2,
+  RefreshCw,
+  Cloud
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { FluxGlowLogo } from '../common/FluxGlowLogo';
 import { MoodType, JournalEntry, ViewMode } from '../../types';
-import { MOCK_JOURNAL_ENTRIES } from '../../data/mockData';
 import { useToast } from '../common/Toast';
-import { 
-  fetchSupabaseJournalEntries, 
-  insertSupabaseJournalEntry, 
-  deleteSupabaseJournalEntry 
-} from '../../services/supabaseService';
+import { useJournal } from '../../hooks/useJournal';
 
 interface JournalModuleProps {
   onEntryCreated?: (entry: JournalEntry) => void;
@@ -86,32 +84,19 @@ const INSPIRATIONAL_QUOTES: Record<string, EmotionQuote> = {
 
 export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, onNavigate }) => {
   const { success, warning } = useToast();
-  const [entries, setEntries] = useState<JournalEntry[]>(() => {
-    const sanitize = (raw: any): JournalEntry => ({
-      id: raw?.id || `entry-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-      date: typeof raw?.date === 'string' ? raw.date : new Date().toISOString().split('T')[0],
-      time: raw?.time || raw?.timestamp || '12:00 PM',
-      mood: (typeof raw?.mood === 'string' ? raw.mood : 'tranquilo') as MoodType,
-      intensity: typeof raw?.intensity === 'number' ? raw.intensity : 5,
-      notes: typeof raw?.notes === 'string' ? raw.notes : '',
-      triggers: Array.isArray(raw?.triggers) ? raw.triggers : Array.isArray(raw?.tags) ? raw.tags : [],
-      habits: raw?.habits || { sleepHours: 7, waterGlasses: 6, exercised: false, energyLevel: 3 },
-      aiFeedback: raw?.aiFeedback || raw?.aiAnalysis?.aiInsight
-    });
-
-    try {
-      const saved = localStorage.getItem('fluxglow_journal_entries');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          return parsed.map(sanitize);
-        }
-      }
-    } catch {
-      // ignore
-    }
-    return [];
-  });
+  
+  // Custom hook conectado a Supabase y con fallback local para modo invitado
+  const {
+    entries,
+    loading: isJournalLoading,
+    isSubmitting,
+    error: journalError,
+    createEntry,
+    deleteEntry,
+    refreshEntries,
+    isGuest,
+    user
+  } = useJournal();
 
   const [selectedMood, setSelectedMood] = useState<MoodType>('feliz');
   const [intensity, setIntensity] = useState<number>(8);
@@ -120,7 +105,6 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
   const [showAllTriggers, setShowAllTriggers] = useState<boolean>(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
 
   // Post-submission state: hides writer/emotion panel and reveals customized inspiring quote
@@ -140,33 +124,6 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
     'Trabajo', 'Estudios', 'Familia', 'Amigos', 'Pareja', 
     'Salud', 'Sueño', 'Dinero', 'Clima', 'Productividad', 'Descanso', 'Mindfulness'
   ];
-
-  // Consulta (select) inicial a la tabla journal_entries en Supabase
-  useEffect(() => {
-    let isMounted = true;
-    fetchSupabaseJournalEntries()
-      .then((dbEntries) => {
-        if (!isMounted) return;
-        if (dbEntries && dbEntries.length > 0) {
-          setEntries((prev) => {
-            const dbIds = new Set(dbEntries.map((e) => e.id));
-            const nonDuplicates = prev.filter((e) => !dbIds.has(e.id));
-            const merged = [...dbEntries, ...nonDuplicates];
-            try {
-              localStorage.setItem('fluxglow_journal_entries', JSON.stringify(merged));
-            } catch (e) {}
-            return merged;
-          });
-        }
-      })
-      .catch((err) => {
-        console.warn('Error cargando journal_entries de Supabase:', err);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   // Voice recording simulation
   useEffect(() => {
@@ -208,61 +165,41 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
       return;
     }
 
-    setIsSubmitting(true);
-
-    const now = new Date();
-    let entryId = 'entry-' + Date.now();
-
     try {
-      // Guarda directamente en la tabla journal_entries de Supabase
-      const savedInDb = await insertSupabaseJournalEntry({
+      const created = await createEntry({
         mood: selectedMood,
-        note: noteText.trim()
+        notes: noteText.trim(),
+        intensity: intensity,
+        triggers: selectedTriggers,
+        habits: { sleepHours: 8, waterGlasses: 6, exercised: true, energyLevel: intensity },
+        aiFeedback: INSPIRATIONAL_QUOTES[selectedMood]?.reflection || 'Has identificado tus emociones con claridad.'
       });
 
-      if (savedInDb) {
-        entryId = savedInDb.id;
+      if (created) {
+        if (onEntryCreated) {
+          onEntryCreated(created);
+        }
+
+        confetti({
+          particleCount: 65,
+          spread: 60,
+          origin: { y: 0.6 }
+        });
+
+        setSubmittedEntry(created);
+        setIsSubmitted(true);
+        setNoteText('');
+
+        if (user) {
+          success('¡Registro sincronizado en Supabase!', 'Tu estado emocional ha sido guardado en tu cuenta privada.');
+        } else {
+          success('¡Registro guardado!', 'Tu estado emocional se guardó en tu navegador (modo exploración).');
+        }
       }
-    } catch (err) {
-      console.error('Error insertando journal entry en Supabase:', err);
+    } catch (err: any) {
+      console.error('Error al guardar registro:', err);
+      warning('Aviso al guardar', err?.message || 'No se pudo guardar la entrada. Intenta nuevamente.');
     }
-
-    const newEntry: JournalEntry = {
-      id: entryId,
-      date: now.toISOString().split('T')[0],
-      time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      mood: selectedMood,
-      intensity: intensity,
-      notes: noteText,
-      triggers: selectedTriggers,
-      habits: { sleepHours: 8, waterGlasses: 6, exercised: true, energyLevel: intensity },
-      aiFeedback: INSPIRATIONAL_QUOTES[selectedMood]?.reflection || 'Has identificado tus emociones con claridad.'
-    };
-
-    const updated = [newEntry, ...entries.filter(e => e.id !== newEntry.id)];
-    setEntries(updated);
-    try {
-      localStorage.setItem('fluxglow_journal_entries', JSON.stringify(updated));
-    } catch (e) {}
-    window.dispatchEvent(new CustomEvent('fluxglow_journal_updated', { detail: updated }));
-
-    if (onEntryCreated) {
-      onEntryCreated(newEntry);
-    }
-
-    confetti({
-      particleCount: 65,
-      spread: 60,
-      origin: { y: 0.6 }
-    });
-
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setSubmittedEntry(newEntry);
-      setIsSubmitted(true);
-      setNoteText('');
-      success('¡Registro guardado en Supabase!', 'Tu estado emocional ha sido registrado en la base de datos.');
-    }, 350);
   };
 
   const handleResetForNewEntry = () => {
@@ -271,21 +208,13 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
     setNoteText('');
   };
 
-  const handleDeleteEntry = (id: string) => {
-    // Si fue generado en Supabase (UUID), eliminar de Supabase
-    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
-      deleteSupabaseJournalEntry(id).catch((err) =>
-        console.warn('Error eliminando de Supabase:', err)
-      );
+  const handleDeleteEntry = async (id: string) => {
+    const ok = await deleteEntry(id);
+    if (ok) {
+      success('Registro eliminado', 'La entrada ha sido retirada de tu historial.');
+    } else {
+      warning('Aviso', 'No se pudo eliminar el registro.');
     }
-
-    const updated = entries.filter(e => e.id !== id);
-    setEntries(updated);
-    try {
-      localStorage.setItem('fluxglow_journal_entries', JSON.stringify(updated));
-    } catch (e) {}
-    window.dispatchEvent(new CustomEvent('fluxglow_journal_updated', { detail: updated }));
-    success('Registro eliminado', 'La entrada ha sido retirada de tu historial y de la base de datos.');
   };
 
   // Recent 7 days streak preview calculation
@@ -322,10 +251,22 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span>Supabase Conectado</span>
-            </div>
+            {isJournalLoading ? (
+              <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-medium text-stone-600 bg-stone-100 border border-stone-200 px-2.5 py-1 rounded-full">
+                <Loader2 className="w-3 h-3 animate-spin text-[#548c71]" />
+                <span>Cargando diario...</span>
+              </div>
+            ) : user ? (
+              <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>Supabase Conectado</span>
+              </div>
+            ) : (
+              <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-medium text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full" title="Tus registros se guardan en este dispositivo. Inicia sesión para guardarlos en tu nube privada de Supabase.">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                <span>Modo Exploración (Local)</span>
+              </div>
+            )}
 
             {onNavigate && (
               <button
@@ -346,6 +287,23 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
             </button>
           </div>
         </div>
+
+        {/* Sync notification if errors occur */}
+        {journalError && (
+          <div className="mb-4 bg-amber-50 border border-amber-200 text-amber-900 px-4 py-2.5 rounded-2xl text-xs flex items-center justify-between gap-2 shadow-2xs">
+            <span className="flex items-center gap-1.5">
+              <Cloud className="w-3.5 h-3.5 text-amber-700" />
+              <span>Aviso de sincronización: {journalError}</span>
+            </span>
+            <button
+              onClick={() => refreshEntries()}
+              className="text-amber-950 font-bold underline flex items-center gap-1 cursor-pointer hover:text-amber-700"
+            >
+              <RefreshCw className="w-3 h-3" />
+              <span>Reintentar</span>
+            </button>
+          </div>
+        )}
 
         {/* Big Display Title: Registro Emocional */}
         <div className="text-center my-6">
@@ -438,10 +396,21 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
                 id="submit-journal-btn"
                 onClick={() => handleSubmit()}
                 disabled={isSubmitting}
-                className="bg-[#de6943] hover:bg-[#cb512e] active:scale-95 text-white px-8 py-2.5 rounded-full text-sm font-bold tracking-wide shadow-xs hover:shadow-md transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer"
+                className={`bg-[#de6943] hover:bg-[#cb512e] active:scale-95 text-white px-8 py-2.5 rounded-full text-sm font-bold tracking-wide shadow-xs hover:shadow-md transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                  isSubmitting ? 'opacity-80 cursor-not-allowed' : ''
+                }`}
               >
-                <Send className="w-4 h-4" />
-                <span>{isSubmitting ? 'Guardando...' : 'Enviar registro'}</span>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Guardando en {user ? 'Supabase' : 'Diario'}...</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    <span>Enviar registro</span>
+                  </>
+                )}
               </button>
             </div>
 
@@ -626,14 +595,22 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
               </button>
             </div>
 
-            {entries.length === 0 ? (
+            {isJournalLoading ? (
+              <div className="bg-white rounded-3xl p-10 border border-stone-200 text-center space-y-3">
+                <Loader2 className="w-8 h-8 text-[#548c71] animate-spin mx-auto" />
+                <h3 className="text-sm font-bold text-stone-800">Sincronizando tus reflexiones con Supabase...</h3>
+                <p className="text-xs text-stone-500">Recuperando tu historial emocional privado y seguro</p>
+              </div>
+            ) : entries.length === 0 ? (
               <div className="bg-white rounded-3xl p-8 border border-stone-200 text-center space-y-2">
                 <div className="w-12 h-12 rounded-2xl bg-brand-sand-100 text-stone-400 mx-auto flex items-center justify-center">
                   <BookOpen className="w-6 h-6" />
                 </div>
                 <h3 className="text-sm font-bold text-stone-800">Aún no tienes reflexiones guardadas</h3>
                 <p className="text-xs text-stone-500 max-w-sm mx-auto">
-                  Utiliza el formulario de arriba para registrar tu primera emoción o reflexión del día.
+                  {user
+                    ? 'No encontramos registros anteriores en tu cuenta de Supabase. ¡Escribe tu primer registro arriba!'
+                    : 'Utiliza el formulario de arriba para registrar tu primera emoción o reflexión del día.'}
                 </p>
               </div>
             ) : (

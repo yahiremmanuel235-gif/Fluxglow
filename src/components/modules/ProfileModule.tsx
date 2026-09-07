@@ -34,7 +34,8 @@ import {
   Smile,
   Activity,
   Heart,
-  Target
+  Target,
+  LogOut
 } from 'lucide-react';
 import { 
   ResponsiveContainer, 
@@ -55,6 +56,7 @@ interface ProfileModuleProps {
   userProfile?: UserProfileData;
   onUpdateProfile?: (updated: Partial<UserProfileData>) => void;
   onNavigate?: (view: ViewMode) => void;
+  onSignOut?: () => void;
 }
 
 const PRESET_AVATARS = [
@@ -69,7 +71,8 @@ const PRESET_AVATARS = [
 export const ProfileModule: React.FC<ProfileModuleProps> = ({ 
   userProfile, 
   onUpdateProfile,
-  onNavigate
+  onNavigate,
+  onSignOut
 }) => {
   const { success, info } = useToast();
   const [userName, setUserName] = useState(userProfile?.name || 'Usuario FluxGlow');
@@ -377,6 +380,19 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
             >
               <span>Configuración</span>
             </Button>
+
+            {onSignOut && (
+              <Button
+                id="profile-signout-btn"
+                onClick={onSignOut}
+                variant="sand"
+                size="sm"
+                leftIcon={<LogOut className="w-3.5 h-3.5 text-stone-500" />}
+                className="hover:text-red-700 hover:border-red-300"
+              >
+                <span>Cerrar Sesión</span>
+              </Button>
+            )}
           </div>
         </div>
 
@@ -917,6 +933,22 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
             >
               Guardar Cambios
             </Button>
+
+            {onSignOut && (
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowSettingsModal(false);
+                    onSignOut();
+                  }}
+                  className="w-full py-2.5 px-4 text-xs font-bold text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl border border-red-200 flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Cerrar Sesión</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

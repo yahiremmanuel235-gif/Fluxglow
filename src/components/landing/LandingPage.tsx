@@ -20,19 +20,22 @@ import {
   User,
   ChevronDown,
   HelpCircle,
-  ChevronUp
+  ChevronUp,
+  LayoutDashboard
 } from 'lucide-react';
 
 interface LandingPageProps {
   onNavigate: (view: ViewMode) => void;
   currentUser?: UserProfileData;
   onAuthSuccess?: (targetView: ViewMode, userProfile?: Partial<UserProfileData>) => void;
+  onSignOut?: () => void;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ 
   onNavigate,
   currentUser,
-  onAuthSuccess
+  onAuthSuccess,
+  onSignOut
 }) => {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('register');
@@ -133,27 +136,62 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <a href="#equipo" className="hover:text-[#4a7c59] transition-colors">Equipo</a>
             </div>
 
-            {/* Right actions matching user request: Only Regístrate and Iniciar sesión */}
+            {/* Right actions matching user request: Only Regístrate and Iniciar sesión (or User badge & Cerrar sesión if logged in) */}
             <div className="flex items-center gap-2.5 sm:gap-4">
-              <button
-                id="top-nav-register-btn"
-                onClick={() => openAuth('register')}
-                className="flex items-center gap-1.5 text-stone-800 hover:text-[#4a7c59] text-sm sm:text-base font-semibold transition-colors py-1 px-2 rounded-lg cursor-pointer"
-              >
-                <div className="w-5 h-5 rounded-full border border-stone-400 flex items-center justify-center text-xs font-serif text-stone-600">
-                  i
-                </div>
-                <span>Regístrate</span>
-              </button>
+              {currentUser?.isLoggedIn ? (
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <button
+                    id="top-nav-dashboard-btn"
+                    onClick={() => onNavigate('dashboard')}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#548c71] hover:bg-[#43705a] text-white text-xs sm:text-sm font-bold shadow-2xs transition-all cursor-pointer"
+                  >
+                    <LayoutDashboard className="w-3.5 h-3.5" />
+                    <span>Centro de Control</span>
+                  </button>
 
-              <button
-                id="top-nav-login-btn"
-                onClick={() => openAuth('login')}
-                className="flex items-center gap-1.5 text-stone-800 hover:text-[#de6943] text-sm sm:text-base font-semibold transition-colors py-1 px-2 rounded-lg cursor-pointer"
-              >
-                <User className="w-4 h-4 sm:w-5 sm:h-5 text-stone-600" />
-                <span>Iniciar sesión</span>
-              </button>
+                  <button
+                    onClick={() => onNavigate('profile')}
+                    className="flex items-center gap-2 text-stone-800 hover:text-[#4a7c59] text-xs sm:text-sm font-semibold transition-colors py-1 px-3 rounded-full bg-stone-100 border border-stone-200 cursor-pointer"
+                  >
+                    <img 
+                      src={currentUser.avatarUrl || '/user.png'} 
+                      alt="avatar" 
+                      className="w-5 h-5 rounded-full object-cover" 
+                    />
+                    <span className="max-w-[120px] truncate">{currentUser.name}</span>
+                  </button>
+                  {onSignOut && (
+                    <button
+                      onClick={onSignOut}
+                      className="text-xs sm:text-sm font-semibold text-stone-600 hover:text-red-600 transition-colors cursor-pointer"
+                    >
+                      Cerrar sesión
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <button
+                    id="top-nav-register-btn"
+                    onClick={() => openAuth('register')}
+                    className="flex items-center gap-1.5 text-stone-800 hover:text-[#4a7c59] text-sm sm:text-base font-semibold transition-colors py-1 px-2 rounded-lg cursor-pointer"
+                  >
+                    <div className="w-5 h-5 rounded-full border border-stone-400 flex items-center justify-center text-xs font-serif text-stone-600">
+                      i
+                    </div>
+                    <span>Regístrate</span>
+                  </button>
+
+                  <button
+                    id="top-nav-login-btn"
+                    onClick={() => openAuth('login')}
+                    className="flex items-center gap-1.5 text-stone-800 hover:text-[#de6943] text-sm sm:text-base font-semibold transition-colors py-1 px-2 rounded-lg cursor-pointer"
+                  >
+                    <User className="w-4 h-4 sm:w-5 sm:h-5 text-stone-600" />
+                    <span>Iniciar sesión</span>
+                  </button>
+                </>
+              )}
             </div>
 
           </div>
@@ -183,37 +221,60 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             Transforma tu salud emocional con una plataforma que te entiende. Centraliza tu aprendizaje, registra tu progreso y recibe apoyo personalizado, todo en un solo lugar.
           </p>
 
-          {/* Two Main Primary Pill Buttons: Regístrate e Iniciar sesión */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 max-w-xl mx-auto">
-            
-            {/* Green / Sage Pill Button: Regístrate */}
-            <button
-              id="hero-pill-register"
-              onClick={() => openAuth('register')}
-              className="w-full sm:w-60 py-3.5 px-8 rounded-full bg-[#548c71] hover:bg-[#42715b] text-white font-extrabold text-base shadow-sm hover:shadow-md transition-all duration-200 text-center transform hover:-translate-y-0.5 cursor-pointer"
-            >
-              Regístrate
-            </button>
+          {/* Main Primary Action Buttons */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 max-w-xl mx-auto">
+            {currentUser?.isLoggedIn ? (
+              <>
+                {/* Logged in: Go to Dashboard */}
+                <button
+                  id="hero-pill-dashboard"
+                  onClick={() => onNavigate('dashboard')}
+                  className="w-full sm:w-64 py-3.5 px-8 rounded-full bg-[#548c71] hover:bg-[#42715b] text-white font-extrabold text-base shadow-sm hover:shadow-md transition-all duration-200 text-center transform hover:-translate-y-0.5 cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <LayoutDashboard className="w-5 h-5" />
+                  <span>Ir al Centro de Control</span>
+                </button>
 
-            {/* Terracotta Orange Pill Button: Iniciar sesión */}
-            <button
-              id="hero-pill-login"
-              onClick={() => openAuth('login')}
-              className="w-full sm:w-60 py-3.5 px-8 rounded-full bg-[#de6943] hover:bg-[#cb512e] text-white font-extrabold text-base shadow-sm hover:shadow-md transition-all duration-200 text-center transform hover:-translate-y-0.5 cursor-pointer"
-            >
-              Iniciar sesión
-            </button>
+                {/* Logged in: Explore Modules */}
+                <button
+                  id="hero-pill-explore"
+                  onClick={() => onNavigate('learn')}
+                  className="w-full sm:w-60 py-3.5 px-8 rounded-full bg-white hover:bg-stone-50 text-stone-800 border-2 border-stone-300 font-extrabold text-base shadow-2xs hover:shadow-sm transition-all duration-200 text-center transform hover:-translate-y-0.5 cursor-pointer"
+                >
+                  Explorar Módulos
+                </button>
+              </>
+            ) : (
+              <>
+                {/* Green / Sage Pill Button: Regístrate */}
+                <button
+                  id="hero-pill-register"
+                  onClick={() => openAuth('register')}
+                  className="w-full sm:w-60 py-3.5 px-8 rounded-full bg-[#548c71] hover:bg-[#42715b] text-white font-extrabold text-base shadow-sm hover:shadow-md transition-all duration-200 text-center transform hover:-translate-y-0.5 cursor-pointer"
+                >
+                  Regístrate
+                </button>
 
+                {/* Terracotta Orange Pill Button: Iniciar sesión */}
+                <button
+                  id="hero-pill-login"
+                  onClick={() => openAuth('login')}
+                  className="w-full sm:w-60 py-3.5 px-8 rounded-full bg-[#de6943] hover:bg-[#cb512e] text-white font-extrabold text-base shadow-sm hover:shadow-md transition-all duration-200 text-center transform hover:-translate-y-0.5 cursor-pointer"
+                >
+                  Iniciar sesión
+                </button>
+              </>
+            )}
           </div>
 
           {/* Acceso directo único permitido: explorar la aplicación interactiva de inmediato */}
           <div className="mt-8 flex items-center justify-center gap-3">
             <button
               id="hero-guest-explore-btn"
-              onClick={() => onNavigate('learn')}
+              onClick={() => onNavigate('dashboard')}
               className="text-xs sm:text-sm font-semibold text-[#548c71] hover:text-[#253d33] flex items-center gap-1.5 underline underline-offset-4 py-1 cursor-pointer"
             >
-              <span>O explora la aplicación interactiva de inmediato</span>
+              <span>{currentUser?.isLoggedIn ? 'Acceder directamente a tu resumen personal' : 'O entra al Centro de Control en modo exploración'}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>

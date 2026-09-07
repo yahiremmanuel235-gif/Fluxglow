@@ -16,31 +16,46 @@ import {
   Check,
   Tag,
   AlertCircle,
-  RotateCcw
+  RotateCcw,
+  Loader2,
+  Cloud
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { FluxGlowLogo } from '../common/FluxGlowLogo';
 import { useToast } from '../common/Toast';
-import { UserDailyMissionRecord, ViewMode } from '../../types';
-import { 
-  getStoredMissions, 
-  completeDailyMission, 
-  saveStoredMissions, 
-  calculateMissionStreak,
-  getTotalMissionsXP
-} from '../../utils/missionsManager';
+import { UserDailyMissionRecord, UserProfileData, ViewMode } from '../../types';
+import { useMissions } from '../../hooks/useMissions';
 
 interface MissionsModuleProps {
   onNavigate?: (view: ViewMode) => void;
   onOpenGuideById?: (guideId: string) => void;
+  userProfile?: UserProfileData;
+  onUpdateProfile?: (updated: Partial<UserProfileData>) => void;
 }
 
 export const MissionsModule: React.FC<MissionsModuleProps> = ({ 
   onNavigate,
-  onOpenGuideById
+  onOpenGuideById,
+  userProfile,
+  onUpdateProfile
 }) => {
-  const { success, info } = useToast();
-  const [missions, setMissions] = useState<UserDailyMissionRecord[]>(() => getStoredMissions());
+  const { success, info, warning } = useToast();
+  
+  // Custom hook para conectar las misiones con Supabase y modo invitado local
+  const {
+    missions,
+    loading: isMissionsLoading,
+    actionLoadingId,
+    error: missionsError,
+    userPoints,
+    userLevel,
+    streakDays,
+    toggleCompleteMission,
+    refreshMissions,
+    isGuest,
+    user
+  } = useMissions(userProfile, onUpdateProfile);
+
   const [filterTab, setFilterTab] = useState<'all' | 'pending' | 'completed'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('todos');
@@ -73,22 +88,6 @@ export const MissionsModule: React.FC<MissionsModuleProps> = ({
       return 'Completada';
     }
   };
-
-  // Sync state on external updates
-  useEffect(() => {
-    const handleUpdate = (e: any) => {
-      if (e.detail) {
-        setMissions(e.detail);
-      } else {
-        setMissions(getStoredMissions());
-      }
-    };
-    window.addEventListener('fluxglow_missions_updated', handleUpdate);
-    return () => window.removeEventListener('fluxglow_missions_updated', handleUpdate);
-  }, []);
-
-  const streakDays = useMemo(() => calculateMissionStreak(missions), [missions]);
-  const totalXP = useMemo(() => getTotalMissionsXP(), [missions]);
 
   const pendingMissions = useMemo(() => missions.filter(m => m.status === 'pending'), [missions]);
   const completedMissions = useMemo(() => missions.filter(m => m.status === 'completed'), [missions]);
@@ -126,31 +125,27 @@ export const MissionsModule: React.FC<MissionsModuleProps> = ({
     });
   }, [missions, filterTab, selectedCategory, searchQuery]);
 
-  const handleToggleComplete = (recordId: string, currentStatus: string) => {
-    if (currentStatus === 'pending') {
-      const res = completeDailyMission(recordId);
-      if (res.success) {
+  const handleToggleComplete = async (recordId: string, currentStatus: string) => {
+    if (actionLoadingId) return;
+    const isCompleting = currentStatus === 'pending';
+    const res = await toggleCompleteMission(recordId, currentStatus);
+    if (res.success) {
+      if (isCompleting) {
         confetti({
           particleCount: 75,
           spread: 70,
           origin: { y: 0.6 }
         });
-        success('¡Misión cumplida! 🎉', `Sumaste +${res.mission?.xp || 30} XP y fortaleciste tu racha a ${res.streakDays} días.`);
+        if (user) {
+          success('¡Misión cumplida en Supabase! 🎉', `Sumaste +${res.xpEarned} XP directamente a tu perfil en Supabase y mantienes tu racha a ${res.streakDays} días.`);
+        } else {
+          success('¡Misión cumplida! 🎉', `Sumaste +${res.xpEarned} XP y fortaleciste tu racha a ${res.streakDays} días.`);
+        }
+      } else {
+        info('Misión reactivada', 'La misión vuelve a estar marcada como pendiente.');
       }
     } else {
-      // Toggle back to pending
-      const updated = missions.map(m => {
-        if (m.id === recordId) {
-          return {
-            ...m,
-            status: 'pending' as const,
-            completedAt: undefined
-          };
-        }
-        return m;
-      });
-      saveStoredMissions(updated);
-      info('Misión reactivada', 'La misión vuelve a estar marcada como pendiente.');
+      warning('Aviso al actualizar', 'No se pudo cambiar el estado de la misión. Intenta nuevamente.');
     }
   };
 
@@ -166,26 +161,68 @@ export const MissionsModule: React.FC<MissionsModuleProps> = ({
     <div className="w-full bg-[#fbf9f5] min-h-screen pb-24 pt-4 px-4 sm:px-6 lg:px-8">
       <div className="max-w-[1280px] mx-auto">
         
-        {/* Top Header Row with Brand Logo and Back/Explore */}
-        <div className="flex items-center justify-between py-2 border-b border-[#ece4d9] mb-4">
+        {/* Top Header Row with Brand Logo, Connection Status & Back/Explore */}
+        <div className="flex flex-wrap items-center justify-between gap-3 py-2 border-b border-[#ece4d9] mb-4">
           <div className="flex items-center gap-2">
             <FluxGlowLogo imgSrc="/logo2.png" size="sm" showText={true} />
-            <span className="text-[11px] font-bold text-amber-900 bg-amber-100 border border-amber-300 px-2.5 py-0.5 rounded-full ml-2 flex items-center gap-1">
+            <span className="text-[11px] font-bold text-amber-900 bg-amber-100 border border-amber-300 px-2.5 py-0.5 rounded-full ml-1 flex items-center gap-1">
               <Target className="w-3 h-3 text-amber-700" />
               <span>Hábitos y Retos Diarios</span>
             </span>
           </div>
 
-          {onNavigate && (
-            <button
-              onClick={() => onNavigate('learn')}
-              className="text-xs font-semibold text-stone-600 hover:text-stone-900 bg-white border border-stone-300 px-3.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-2xs transition-all hover:bg-stone-50 cursor-pointer"
-            >
-              <BookOpen className="w-3.5 h-3.5 text-[#548c71]" />
-              <span>Explorar más Guías</span>
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {isMissionsLoading ? (
+              <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-medium text-stone-600 bg-stone-100 border border-stone-200 px-2.5 py-1 rounded-full">
+                <Loader2 className="w-3 h-3 animate-spin text-[#548c71]" />
+                <span>Cargando misiones...</span>
+              </div>
+            ) : user ? (
+              <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>Supabase Conectado</span>
+              </div>
+            ) : (
+              <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-medium text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full" title="Tus misiones se gestionan en este navegador. Inicia sesión para sincronizarlas en Supabase.">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                <span>Modo Exploración (Local)</span>
+              </div>
+            )}
+
+            {/* Level & Points synced Pill */}
+            <div className="hidden md:flex items-center gap-1.5 text-[11px] font-bold text-stone-700 bg-white border border-stone-200 px-3 py-1 rounded-full shadow-2xs">
+              <Sparkles className="w-3 h-3 text-amber-500" />
+              <span>{userPoints} XP • Nivel {userLevel}</span>
+            </div>
+
+            {onNavigate && (
+              <button
+                onClick={() => onNavigate('learn')}
+                className="text-xs font-semibold text-stone-600 hover:text-stone-900 bg-white border border-stone-300 px-3.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-2xs transition-all hover:bg-stone-50 cursor-pointer"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-[#548c71]" />
+                <span>Explorar más Guías</span>
+              </button>
+            )}
+          </div>
         </div>
+
+        {/* Sync notification if error occurs */}
+        {missionsError && (
+          <div className="mb-4 bg-amber-50 border border-amber-200 text-amber-900 px-4 py-2.5 rounded-2xl text-xs flex items-center justify-between gap-2 shadow-2xs">
+            <span className="flex items-center gap-1.5">
+              <Cloud className="w-3.5 h-3.5 text-amber-700" />
+              <span>Aviso de sincronización de misiones: {missionsError}</span>
+            </span>
+            <button
+              onClick={() => refreshMissions()}
+              className="text-amber-950 font-bold underline flex items-center gap-1 cursor-pointer hover:text-amber-700"
+            >
+              <RefreshCw className="w-3 h-3" />
+              <span>Reintentar</span>
+            </button>
+          </div>
+        )}
 
         {/* Big Display Title: Misiones Diarias */}
         <div className="text-center my-6">
@@ -255,21 +292,25 @@ export const MissionsModule: React.FC<MissionsModuleProps> = ({
             </div>
           </div>
 
-          {/* Card 4: Puntos de Experiencia (XP) */}
+          {/* Card 4: Puntos de Experiencia (XP) & Nivel */}
           <div className="bg-white rounded-3xl p-4 sm:p-5 border border-stone-200 shadow-xs flex items-center justify-between">
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-stone-500">
-                XP Acumulado
+              <span className="text-[11px] font-bold uppercase tracking-wider text-stone-500 flex items-center gap-1">
+                <span>XP y Nivel</span>
+                {user && <span className="text-[9px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded font-bold">Nube</span>}
               </span>
               <div className="flex items-baseline gap-1.5 mt-1">
                 <span className="text-3xl sm:text-4xl font-bold text-stone-900 font-serif">
-                  +{totalXP}
+                  +{userPoints}
                 </span>
-                <span className="text-xs font-medium text-stone-400">puntos</span>
+                <span className="text-xs font-medium text-amber-700">XP</span>
               </div>
+              <span className="text-[11px] font-semibold text-stone-500 block mt-0.5">
+                Nivel {userLevel} • {user ? 'Supabase' : 'Local'}
+              </span>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-stone-100 border border-stone-200 flex items-center justify-center text-amber-700 shadow-2xs shrink-0">
-              <Award className="w-6 h-6" />
+            <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700 shadow-2xs shrink-0">
+              <Award className="w-6 h-6 text-amber-600" />
             </div>
           </div>
 
@@ -356,10 +397,22 @@ export const MissionsModule: React.FC<MissionsModuleProps> = ({
         </div>
 
         {/* MISSIONS LIST */}
-        {filteredMissions.length > 0 ? (
+        {isMissionsLoading && filteredMissions.length === 0 ? (
+          <div className="bg-white rounded-3xl border border-stone-200 p-12 text-center shadow-xs">
+            <Loader2 className="w-10 h-10 text-[#548c71] animate-spin mx-auto mb-4" />
+            <h3 className="font-serif text-xl font-bold text-stone-900 mb-1">
+              Sincronizando tus Misiones...
+            </h3>
+            <p className="text-stone-500 text-xs sm:text-sm">
+              Consultando retos diarios y progreso en Supabase
+            </p>
+          </div>
+        ) : filteredMissions.length > 0 ? (
           <div className="space-y-4">
             {filteredMissions.map((m) => {
               const isDone = m.status === 'completed';
+              const isItemLoading = actionLoadingId === m.id || actionLoadingId === m.missionId;
+
               return (
                 <div
                   key={m.id}
@@ -378,14 +431,23 @@ export const MissionsModule: React.FC<MissionsModuleProps> = ({
                       {/* Check Button */}
                       <button
                         onClick={() => handleToggleComplete(m.id, m.status)}
+                        disabled={isItemLoading}
                         className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-all cursor-pointer mt-0.5 ${
-                          isDone
+                          isItemLoading
+                            ? 'bg-amber-100/70 border border-amber-300 text-amber-800 cursor-wait'
+                            : isDone
                             ? 'bg-[#548c71] text-white shadow-xs hover:bg-[#43705a]'
                             : 'bg-amber-100 text-amber-800 hover:bg-amber-200 border border-amber-300'
                         }`}
-                        title={isDone ? 'Misión completada. Clic para desmarcar.' : 'Clic para marcar como completada'}
+                        title={isItemLoading ? 'Guardando...' : isDone ? 'Misión completada. Clic para desmarcar.' : 'Clic para marcar como completada'}
                       >
-                        {isDone ? <Check className="w-5 h-5 stroke-[3]" /> : <Circle className="w-5 h-5" />}
+                        {isItemLoading ? (
+                          <Loader2 className="w-5 h-5 animate-spin text-amber-800" />
+                        ) : isDone ? (
+                          <Check className="w-5 h-5 stroke-[3]" />
+                        ) : (
+                          <Circle className="w-5 h-5" />
+                        )}
                       </button>
 
                       {/* Content */}
@@ -469,20 +531,35 @@ export const MissionsModule: React.FC<MissionsModuleProps> = ({
                           </span>
                           <button
                             onClick={() => handleToggleComplete(m.id, m.status)}
-                            className="p-2 rounded-xl text-stone-500 hover:text-stone-800 hover:bg-stone-100 border border-stone-200 transition-colors cursor-pointer"
+                            disabled={isItemLoading}
+                            className="p-2 rounded-xl text-stone-500 hover:text-stone-800 hover:bg-stone-100 border border-stone-200 transition-colors cursor-pointer disabled:opacity-50"
                             title="Deshacer y marcar como pendiente"
                             aria-label="Deshacer completado"
                           >
-                            <RotateCcw className="w-4 h-4" />
+                            {isItemLoading ? (
+                              <Loader2 className="w-4 h-4 animate-spin text-stone-600" />
+                            ) : (
+                              <RotateCcw className="w-4 h-4" />
+                            )}
                           </button>
                         </div>
                       ) : (
                         <button
                           onClick={() => handleToggleComplete(m.id, m.status)}
-                          className="w-full md:w-auto px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer bg-gradient-to-r from-brand-terracotta-500 to-brand-terracotta-600 hover:opacity-95 text-white"
+                          disabled={isItemLoading}
+                          className="w-full md:w-auto px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer bg-gradient-to-r from-brand-terracotta-500 to-brand-terracotta-600 hover:opacity-95 text-white disabled:opacity-75 disabled:cursor-wait"
                         >
-                          <Check className="w-4 h-4" />
-                          <span>Completar misión</span>
+                          {isItemLoading ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin text-white" />
+                              <span>{user ? 'Guardando en Supabase...' : 'Guardando...'}</span>
+                            </>
+                          ) : (
+                            <>
+                              <Check className="w-4 h-4" />
+                              <span>Completar misión</span>
+                            </>
+                          )}
                         </button>
                       )}
                     </div>

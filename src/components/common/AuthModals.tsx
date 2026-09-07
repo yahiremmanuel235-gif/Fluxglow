@@ -1,20 +1,78 @@
 import React, { useState } from 'react';
-import { 
-  X, 
-  Mail, 
-  Lock, 
-  User, 
-  Sparkles, 
-  ArrowRight, 
-  CheckCircle2, 
-  Eye, 
-  EyeOff, 
+import {
+  X,
+  Mail,
+  Lock,
+  User,
+  Sparkles,
+  ArrowRight,
+  CheckCircle2,
+  Eye,
+  EyeOff,
   ShieldCheck,
-  Heart
+  Heart,
+  AlertCircle
 } from 'lucide-react';
 import { FluxGlowLogo } from './FluxGlowLogo';
 import { ViewMode, UserProfileData } from '../../types';
 import { useToast } from './Toast';
+import { supabase } from '../../lib/supabaseClient';
+
+// Migración silenciosa y transparente de datos locales a la base de datos de Supabase
+async function migrateGuestDataToSupabase(userId: string) {
+  try {
+    // 1. Migrar entradas del Diario creadas en modo invitado
+    const rawJournal = localStorage.getItem('fluxglow_journal_entries');
+    if (rawJournal) {
+      const parsed = JSON.parse(rawJournal);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const guestEntries = parsed.filter(e => e && e.id && String(e.id).startsWith('guest-'));
+        for (const entry of guestEntries) {
+          await supabase.from('journal_entries').insert({
+            user_id: userId,
+            mood: entry.mood || 'neutral',
+            note: entry.notes || entry.note || ''
+          });
+        }
+        if (guestEntries.length > 0) {
+          window.dispatchEvent(new CustomEvent('fluxglow_journal_updated', { detail: [] }));
+        }
+      }
+    }
+
+    // 2. Migrar misiones completadas en modo invitado
+    const rawMissions = localStorage.getItem('fluxglow_daily_missions');
+    if (rawMissions) {
+      const parsedMissions = JSON.parse(rawMissions);
+      if (Array.isArray(parsedMissions) && parsedMissions.length > 0) {
+        const completedMissions = parsedMissions.filter(m => m && m.status === 'completed');
+        for (const m of completedMissions) {
+          const missionIdentifier = m.missionId || m.id;
+          const { data: existing } = await supabase
+            .from('user_missions')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('mission_id', missionIdentifier)
+            .maybeSingle();
+
+          if (!existing) {
+            await supabase.from('user_missions').insert({
+              user_id: userId,
+              mission_id: missionIdentifier,
+              completed: true,
+              completed_at: m.completedAt || new Date().toISOString()
+            });
+          }
+        }
+        if (completedMissions.length > 0) {
+          window.dispatchEvent(new CustomEvent('fluxglow_missions_updated', { detail: [] }));
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('Nota en migración de datos de invitado a Supabase:', err);
+  }
+}
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -46,6 +104,9 @@ export const AuthModals: React.FC<AuthModalProps> = ({
     'Crecimiento Personal'
   ]);
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [needsEmailConfirmation, setNeedsEmailConfirmation] = useState(false);
 
   if (!isOpen) return null;
 
@@ -75,9 +136,30 @@ export const AuthModals: React.FC<AuthModalProps> = ({
     return `${today.getDate()} de ${months[today.getMonth()]}, ${today.getFullYear()}`;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Traduce los mensajes de error más comunes de Supabase a español
+  const translateAuthError = (message: string): string => {
+    if (message.includes('Invalid login credentials')) {
+      return 'Correo o contraseña incorrectos.';
+    }
+    if (message.includes('User already registered')) {
+      return 'Ya existe una cuenta con este correo. Intenta iniciar sesión.';
+    }
+    if (message.includes('Password should be at least')) {
+      return 'La contraseña debe tener al menos 6 caracteres.';
+    }
+    if (message.includes('Unable to validate email address')) {
+      return 'El formato del correo no es válido.';
+    }
+    if (message.includes('Email not confirmed')) {
+      return 'Debes confirmar tu correo antes de iniciar sesión. Revisa tu bandeja de entrada.';
+    }
+    return 'Ocurrió un error. Intenta de nuevo en unos segundos.';
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setAuthError(null);
+    setIsSubmitting(true);
 
     const formattedGoals = goalOptions.map((g, index) => ({
       id: `goal-${index}`,
@@ -87,31 +169,126 @@ export const AuthModals: React.FC<AuthModalProps> = ({
 
     let resolvedName = name.trim();
     if (!resolvedName) {
-      if (email.trim()) {
-        const handle = email.trim().split('@')[0];
-        resolvedName = handle.charAt(0).toUpperCase() + handle.slice(1).replace(/[\._]/g, ' ');
-      } else {
-        resolvedName = 'Usuario FluxGlow';
-      }
+      const handle = email.trim().split('@')[0];
+      resolvedName = handle.charAt(0).toUpperCase() + handle.slice(1).replace(/[\._]/g, ' ');
     }
 
-    const resolvedEmail = email.trim() || 'usuario@fluxglow.com';
+    try {
+      if (mode === 'register') {
+        // 1. Crear el usuario en Supabase Auth
+        const { data, error } = await supabase.auth.signUp({
+          email: email.trim(),
+          password,
+        });
 
-    const updatedProfile: Partial<UserProfileData> = {
-      name: resolvedName,
-      email: resolvedEmail,
-      ageGroup: ageGroup,
-      memberSince: currentUser?.memberSince || formatTodaySpanish(),
-      goals: formattedGoals,
-      isLoggedIn: true,
-      avatarUrl: currentUser?.avatarUrl || '/user.png'
-    };
+        if (error) {
+          setAuthError(translateAuthError(error.message));
+          setIsSubmitting(false);
+          return;
+        }
 
-    setTimeout(() => {
-      onSuccess('learn', updatedProfile);
-      onClose();
-      setSubmitted(false);
-    }, 900);
+        // Si la confirmación de correo está ACTIVADA en Supabase,
+        // aquí no hay sesión todavía (el usuario debe confirmar su correo primero).
+        if (!data.session) {
+          setNeedsEmailConfirmation(true);
+          setIsSubmitting(false);
+          return;
+        }
+
+        // 2. Crear su fila en la tabla `profiles`
+        const { error: profileError } = await supabase.from('profiles').insert({
+          id: data.user!.id,
+          name: resolvedName,
+          age_group: ageGroup,
+          goals: formattedGoals,
+        });
+
+        if (profileError) {
+          console.error('Error creando perfil:', profileError);
+        }
+
+        // Migrar sin fricción las reflexiones y misiones de Modo Invitado a la cuenta de Supabase
+        await migrateGuestDataToSupabase(data.user!.id);
+
+        const updatedProfile: Partial<UserProfileData> = {
+          name: resolvedName,
+          email: email.trim(),
+          ageGroup,
+          memberSince: formatTodaySpanish(),
+          goals: formattedGoals,
+          isLoggedIn: true,
+          avatarUrl: '/user.png',
+        };
+
+        setSubmitted(true);
+        setTimeout(() => {
+          onSuccess('dashboard', updatedProfile);
+          onClose();
+          setSubmitted(false);
+          setIsSubmitting(false);
+        }, 900);
+
+      } else {
+        // LOGIN
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password,
+        });
+
+        if (error) {
+          setAuthError(translateAuthError(error.message));
+          setIsSubmitting(false);
+          return;
+        }
+
+        // Traer su perfil guardado en la tabla `profiles`
+        const { data: profileRow } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
+
+        // Migrar cualquier dato local residual a la cuenta autenticada
+        await migrateGuestDataToSupabase(data.user.id);
+
+        const updatedProfile: Partial<UserProfileData> = {
+          name: profileRow?.name || resolvedName,
+          email: email.trim(),
+          ageGroup: profileRow?.age_group || currentUser?.ageGroup,
+          memberSince: profileRow?.member_since
+            ? new Date(profileRow.member_since).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
+            : formatTodaySpanish(),
+          goals: profileRow?.goals || currentUser?.goals,
+          isLoggedIn: true,
+          avatarUrl: profileRow?.avatar_url || '/user.png',
+        };
+
+        setSubmitted(true);
+        setTimeout(() => {
+          onSuccess('dashboard', updatedProfile);
+          onClose();
+          setSubmitted(false);
+          setIsSubmitting(false);
+        }, 900);
+      }
+    } catch (err) {
+      console.error('Error inesperado de autenticación:', err);
+      setAuthError('Ocurrió un error inesperado. Intenta de nuevo.');
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email.trim()) {
+      setAuthError('Escribe tu correo arriba primero para poder enviarte el enlace.');
+      return;
+    }
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim());
+    if (error) {
+      setAuthError(translateAuthError(error.message));
+      return;
+    }
+    info('Enlace de recuperación enviado', 'Revisa tu bandeja de entrada (y la carpeta de spam) para restablecer tu contraseña.');
   };
 
   const handleGuestEntry = () => {
@@ -121,10 +298,10 @@ export const AuthModals: React.FC<AuthModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-xs animate-in fade-in duration-200">
-      
+
       {/* Modal Container */}
       <div className="relative w-full max-w-lg bg-[#fbf9f5] rounded-3xl shadow-2xl border border-stone-200 overflow-hidden text-stone-800">
-        
+
         {/* Close Button */}
         <button
           id="auth-modal-close-btn"
@@ -139,13 +316,13 @@ export const AuthModals: React.FC<AuthModalProps> = ({
           <div className="flex justify-center mb-3">
             <FluxGlowLogo size="md" />
           </div>
-          
+
           <h3 className="text-2xl font-extrabold text-stone-900 font-serif">
             {mode === 'login' ? 'Bienvenido de vuelta' : 'Crea tu espacio de bienestar'}
           </h3>
           <p className="text-xs sm:text-sm text-stone-600 mt-1 max-w-sm mx-auto">
-            {mode === 'login' 
-              ? 'Accede a tu diario emocional, análisis predictivo y asistente Flux AI.' 
+            {mode === 'login'
+              ? 'Accede a tu diario emocional, análisis predictivo y asistente Flux AI.'
               : 'Únete a FluxGlow de forma gratuita, confidencial y personalizada.'}
           </p>
 
@@ -154,7 +331,7 @@ export const AuthModals: React.FC<AuthModalProps> = ({
             <button
               id="tab-auth-register"
               type="button"
-              onClick={() => setMode('register')}
+              onClick={() => { setMode('register'); setAuthError(null); setNeedsEmailConfirmation(false); }}
               className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all ${
                 mode === 'register'
                   ? 'bg-[#5a8c72] text-white shadow-xs'
@@ -166,7 +343,7 @@ export const AuthModals: React.FC<AuthModalProps> = ({
             <button
               id="tab-auth-login"
               type="button"
-              onClick={() => setMode('login')}
+              onClick={() => { setMode('login'); setAuthError(null); setNeedsEmailConfirmation(false); }}
               className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all ${
                 mode === 'login'
                   ? 'bg-[#e07a52] text-white shadow-xs'
@@ -180,8 +357,25 @@ export const AuthModals: React.FC<AuthModalProps> = ({
 
         {/* Modal Form Body */}
         <div className="p-6 sm:p-8 max-h-[75vh] overflow-y-auto no-scrollbar">
-          
-          {submitted ? (
+
+          {needsEmailConfirmation ? (
+            <div className="py-10 text-center space-y-3">
+              <div className="w-16 h-16 bg-[#5a8c72]/15 text-[#3e6852] rounded-full flex items-center justify-center mx-auto">
+                <Mail className="w-8 h-8" />
+              </div>
+              <h4 className="text-xl font-bold text-stone-900">Revisa tu correo</h4>
+              <p className="text-xs text-stone-600 max-w-xs mx-auto">
+                Te enviamos un enlace de confirmación a <strong>{email}</strong>. Ábrelo para activar tu cuenta y luego inicia sesión.
+              </p>
+              <button
+                type="button"
+                onClick={() => { setMode('login'); setNeedsEmailConfirmation(false); }}
+                className="text-xs text-[#5a8c72] font-bold underline"
+              >
+                Ya confirmé mi correo, iniciar sesión
+              </button>
+            </div>
+          ) : submitted ? (
             <div className="py-10 text-center space-y-3">
               <div className="w-16 h-16 bg-[#5a8c72]/15 text-[#3e6852] rounded-full flex items-center justify-center mx-auto animate-bounce">
                 <CheckCircle2 className="w-10 h-10" />
@@ -195,7 +389,14 @@ export const AuthModals: React.FC<AuthModalProps> = ({
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
-              
+
+              {authError && (
+                <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-medium">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>{authError}</span>
+                </div>
+              )}
+
               {/* Register: Name & Age */}
               {mode === 'register' && (
                 <>
@@ -269,7 +470,7 @@ export const AuthModals: React.FC<AuthModalProps> = ({
                   {mode === 'login' && (
                     <button
                       type="button"
-                      onClick={() => info('Enlace de recuperación enviado', 'Hemos enviado las instrucciones para restablecer tu contraseña a tu correo electrónico.')}
+                      onClick={handleForgotPassword}
                       className="text-[11px] text-[#de6943] hover:underline font-semibold cursor-pointer"
                     >
                       ¿Olvidaste tu contraseña?
@@ -282,6 +483,7 @@ export const AuthModals: React.FC<AuthModalProps> = ({
                     id="auth-input-password"
                     type={showPassword ? 'text' : 'password'}
                     required
+                    minLength={6}
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -331,14 +533,19 @@ export const AuthModals: React.FC<AuthModalProps> = ({
               <button
                 id="auth-modal-submit-btn"
                 type="submit"
-                className={`w-full py-3 px-6 rounded-2xl font-bold text-sm text-white shadow-md transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2 mt-4 ${
+                disabled={isSubmitting}
+                className={`w-full py-3 px-6 rounded-2xl font-bold text-sm text-white shadow-md transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2 mt-4 disabled:opacity-60 disabled:hover:translate-y-0 ${
                   mode === 'register'
                     ? 'bg-[#5a8c72] hover:bg-[#48725c]'
                     : 'bg-[#e07a52] hover:bg-[#c9663e]'
                 }`}
               >
                 <Sparkles className="w-4 h-4" />
-                <span>{mode === 'register' ? 'Comenzar mi experiencia' : 'Entrar a mi Cuenta'}</span>
+                <span>
+                  {isSubmitting
+                    ? 'Un momento...'
+                    : mode === 'register' ? 'Comenzar mi experiencia' : 'Entrar a mi Cuenta'}
+                </span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 
@@ -357,7 +564,7 @@ export const AuthModals: React.FC<AuthModalProps> = ({
               {/* Privacy badge */}
               <div className="pt-2 flex items-center justify-center gap-2 text-[11px] text-stone-500">
                 <ShieldCheck className="w-3.5 h-3.5 text-[#5a8c72]" />
-                <span>Tus datos y registros están 100% protegidos y son privados</span>
+                <span>Tus datos y registros están protegidos con Supabase Auth</span>
               </div>
 
             </form>
