@@ -34,6 +34,8 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { FluxGlowLogo } from '../common/FluxGlowLogo';
+import { RachaIcon } from '../common/RachaIcon';
+import { MoodIcon } from '../common/MoodIcon';
 import { useToast } from '../common/Toast';
 import { Button } from '../common/Button';
 import { 
@@ -563,8 +565,8 @@ Generado con FluxGlow • Cuidado emocional consciente`;
                 <span>{streakDays === 0 ? '0% Racha por iniciar' : `+${streakDays * 10}% racha sostenida`}</span>
               </p>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600">
-              <Flame className="w-5 h-5 fill-amber-500" />
+            <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center p-1.5 shadow-2xs">
+              <RachaIcon className="w-6 h-6" />
             </div>
           </div>
 
@@ -818,11 +820,11 @@ Generado con FluxGlow • Cuidado emocional consciente`;
 
               {/* Band Legend Labels */}
               <div className="flex flex-wrap items-center justify-between text-[11px] font-bold text-stone-700 mb-2 px-1 gap-2">
-                <span className="flex items-center gap-1 text-amber-700">⭐ Felicidad</span>
-                <span className="flex items-center gap-1 text-brand-sage-700">🌿 Calma</span>
-                <span className="flex items-center gap-1 text-amber-800">💧 Inquietud</span>
-                <span className="flex items-center gap-1 text-sky-700">🌧️ Tristeza</span>
-                <span className="flex items-center gap-1 text-rose-700">🔥 Tensión</span>
+                <span className="flex items-center gap-1.5 text-amber-700"><MoodIcon mood="feliz" className="w-4 h-4" /> Felicidad</span>
+                <span className="flex items-center gap-1.5 text-brand-sage-700"><MoodIcon mood="tranquilo" className="w-4 h-4" /> Calma</span>
+                <span className="flex items-center gap-1.5 text-amber-800"><MoodIcon mood="inquieto" className="w-4 h-4" /> Inquietud</span>
+                <span className="flex items-center gap-1.5 text-sky-700"><MoodIcon mood="triste" className="w-4 h-4" /> Tristeza</span>
+                <span className="flex items-center gap-1.5 text-rose-700"><MoodIcon mood="enojado" className="w-4 h-4" /> Tensión</span>
               </div>
 
               {/* Multi-colored Banded Graph Container or Clean Zero State */}
@@ -1018,8 +1020,8 @@ Generado con FluxGlow • Cuidado emocional consciente`;
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-brand-sand-300">
             <div>
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-brand-terracotta-100 text-brand-terracotta-600 flex items-center justify-center shadow-2xs">
-                  <Flame className="w-5 h-5 fill-brand-terracotta-500 text-brand-terracotta-600" />
+                <div className="w-8 h-8 rounded-xl bg-brand-terracotta-50 border border-brand-terracotta-200/70 flex items-center justify-center p-1 shadow-2xs">
+                  <RachaIcon className="w-5 h-5" />
                 </div>
                 <div>
                   <h2 className="text-xl sm:text-2xl font-bold text-stone-900 font-serif">
@@ -1034,11 +1036,12 @@ Generado con FluxGlow • Cuidado emocional consciente`;
 
             {/* Streak & Achievements Counter */}
             <div className="flex items-center gap-3 flex-wrap">
-              <div className="bg-white px-4 py-2 rounded-2xl border border-brand-sand-300 shadow-2xs flex items-center gap-2">
-                <Flame className="w-5 h-5 text-brand-terracotta-500 fill-brand-terracotta-400 animate-pulse" />
+              <div className="bg-white px-4 py-2 rounded-2xl border border-brand-sand-300 shadow-2xs flex items-center gap-2.5">
+                <RachaIcon className="w-6 h-6 shrink-0" />
                 <div>
-                  <div className="text-xs font-extrabold text-stone-900">
-                    🔥 {streakDays} {streakDays === 1 ? 'día seguido' : 'días seguidos'}
+                  <div className="text-xs font-extrabold text-stone-900 flex items-center gap-1">
+                    <RachaIcon className="w-3.5 h-3.5" />
+                    <span>{streakDays} {streakDays === 1 ? 'día seguido' : 'días seguidos'}</span>
                   </div>
                   <span className="text-[10px] text-stone-500 font-medium">
                     Racha activa de hábitos
@@ -1195,7 +1198,10 @@ Generado con FluxGlow • Cuidado emocional consciente`;
 
               <div className="grid grid-cols-3 gap-3 text-center bg-white p-3 rounded-xl border border-brand-sand-200">
                 <div>
-                  <p className="text-base font-bold text-brand-terracotta-600">🔥 {streakDays}d</p>
+                  <p className="text-base font-bold text-brand-terracotta-600 flex items-center justify-center gap-1">
+                    <RachaIcon className="w-4 h-4" />
+                    <span>{streakDays}d</span>
+                  </p>
                   <p className="text-[10px] text-stone-500 font-medium">Racha Hábitos</p>
                 </div>
                 <div>

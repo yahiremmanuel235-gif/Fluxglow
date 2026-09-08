@@ -17,7 +17,6 @@ import {
   ChevronDown,
   ChevronUp,
   RotateCcw,
-  Flame as FireIcon,
   Quote,
   ArrowRight,
   Heart,
@@ -27,6 +26,8 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { FluxGlowLogo } from '../common/FluxGlowLogo';
+import { RachaIcon } from '../common/RachaIcon';
+import { MoodIcon } from '../common/MoodIcon';
 import { MoodType, JournalEntry, ViewMode } from '../../types';
 import { useToast } from '../common/Toast';
 import { useJournal } from '../../hooks/useJournal';
@@ -111,13 +112,13 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
   const [submittedEntry, setSubmittedEntry] = useState<JournalEntry | null>(null);
 
-  // Available Emojis matching exact requirements: 😡 🙁 😐 🙂 😄
-  const emojiMoods: { id: MoodType; emoji: string; label: string; color: string; bg: string }[] = [
-    { id: 'enojado', emoji: '😡', label: 'Enojo', color: '#b91c1c', bg: '#fee2e2' },
-    { id: 'triste', emoji: '🙁', label: 'Tristeza', color: '#dc2626', bg: '#fef2f2' },
-    { id: 'ansioso', emoji: '😐', label: 'Inquieto / Ansioso', color: '#d97706', bg: '#fef3c7' },
-    { id: 'tranquilo', emoji: '🙂', label: 'Tranquilo', color: '#65a30d', bg: '#ecfccb' },
-    { id: 'feliz', emoji: '😄', label: 'Feliz', color: '#16a34a', bg: '#dcfce7' },
+  // Available Emotions matching uploaded custom assets: Enojado, Triste, Inquieto, Tranquilo, Feliz
+  const emojiMoods: { id: MoodType; image: string; label: string; color: string; bg: string }[] = [
+    { id: 'enojado', image: '/Registro%20Emocional/Enojado.png', label: 'Enojado', color: '#b91c1c', bg: '#fee2e2' },
+    { id: 'triste', image: '/Registro%20Emocional/Triste.png', label: 'Triste', color: '#dc2626', bg: '#fef2f2' },
+    { id: 'ansioso', image: '/Registro%20Emocional/Inquieto.png', label: 'Inquieto', color: '#d97706', bg: '#fef3c7' },
+    { id: 'tranquilo', image: '/Registro%20Emocional/Tranquilo.png', label: 'Tranquilo', color: '#65a30d', bg: '#ecfccb' },
+    { id: 'feliz', image: '/Registro%20Emocional/Feliz.png', label: 'Feliz', color: '#16a34a', bg: '#dcfce7' },
   ];
 
   const availableTriggers = [
@@ -219,15 +220,15 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
 
   // Recent 7 days streak preview calculation
   const recentDays = [
-    { day: 'Lun', mood: '🙂', intensity: 7 },
-    { day: 'Mar', mood: '😄', intensity: 9 },
-    { day: 'Mié', mood: '😐', intensity: 5 },
-    { day: 'Jue', mood: '🙂', intensity: 8 },
-    { day: 'Vie', mood: '😄', intensity: 8 },
-    { day: 'Sáb', mood: '🙂', intensity: 7 },
+    { day: 'Lun', mood: 'tranquilo', intensity: 7 },
+    { day: 'Mar', mood: 'feliz', intensity: 9 },
+    { day: 'Mié', mood: 'ansioso', intensity: 5 },
+    { day: 'Jue', mood: 'tranquilo', intensity: 8 },
+    { day: 'Vie', mood: 'feliz', intensity: 8 },
+    { day: 'Sáb', mood: 'tranquilo', intensity: 7 },
     { 
       day: 'Hoy', 
-      mood: selectedMood === 'feliz' ? '😄' : selectedMood === 'tranquilo' ? '🙂' : selectedMood === 'ansioso' ? '😐' : selectedMood === 'triste' ? '🙁' : '😡', 
+      mood: selectedMood, 
       intensity, 
       isToday: true 
     },
@@ -320,11 +321,14 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
         {/* RECENT 7-DAYS STREAK ROW (Always Visible) */}
         <div className="bg-white rounded-3xl border border-stone-200 p-4 sm:p-5 mb-8 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-amber-100 border border-amber-200 flex items-center justify-center text-amber-700 shadow-2xs">
-              <FireIcon className="w-5 h-5 fill-amber-500 text-amber-600" />
+            <div className="w-11 h-11 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center p-2 shadow-2xs">
+              <RachaIcon className="w-7 h-7" />
             </div>
             <div>
-              <h4 className="text-xs sm:text-sm font-bold text-stone-900">Racha de Registro Consciente: 7 días</h4>
+              <h4 className="text-xs sm:text-sm font-bold text-stone-900 flex items-center gap-1.5">
+                <span>Racha de Registro Consciente: 7 días</span>
+                <RachaIcon className="w-4 h-4" />
+              </h4>
               <p className="text-xs text-stone-500">Constancia y hábitos emocionales de la semana</p>
             </div>
           </div>
@@ -340,7 +344,9 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
                 }`}
               >
                 <span className="text-[10px] font-bold text-stone-500 uppercase">{item.day}</span>
-                <span className="text-lg sm:text-xl my-0.5">{item.mood}</span>
+                <div className="my-1 flex items-center justify-center w-7 h-7">
+                  <MoodIcon mood={item.mood} className="w-6 h-6 sm:w-7 sm:h-7" />
+                </div>
                 <span className="text-[10px] font-semibold text-stone-600">{item.intensity}/10</span>
               </div>
             ))}
@@ -350,7 +356,7 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
         {/* STATE A: ACTIVE FORM (Visible before sending) */}
         {!isSubmitted ? (
           <>
-            {/* Main Controls Row: [Diario personal] [¿Cómo te sientes hoy? 😡 🙁 😐 🙂 😄] [Enviar] */}
+            {/* Main Controls Row: [Diario personal] [¿Cómo te sientes hoy? Enojado, Triste, Inquieto, Tranquilo, Feliz] [Enviar] */}
             <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
               
               {/* Left Pill: Diario personal */}
@@ -362,14 +368,14 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
                 <span>Diario personal</span>
               </div>
 
-              {/* Center Capsule: ¿Cómo te sientes hoy? + 5 Emojis */}
-              <div className="w-full md:w-auto flex-1 max-w-2xl bg-white border border-stone-300 rounded-full py-2.5 px-5 sm:px-7 shadow-xs flex items-center justify-between gap-3">
+              {/* Center Capsule: ¿Cómo te sientes hoy? + 5 Emotions */}
+              <div className="w-full md:w-auto flex-1 max-w-2xl bg-white border border-stone-300 rounded-full py-2 px-5 sm:px-6 shadow-xs flex items-center justify-between gap-3">
                 <span className="text-xs sm:text-sm font-semibold text-stone-800 whitespace-nowrap">
                   ¿Cómo te sientes hoy?
                 </span>
 
-                {/* 5 Emojis */}
-                <div className="flex items-center gap-2 sm:gap-3">
+                {/* 5 Emotions as Images */}
+                <div className="flex items-center gap-2 sm:gap-2.5">
                   {emojiMoods.map((m) => {
                     const isSelected = selectedMood === m.id;
                     return (
@@ -377,15 +383,19 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
                         key={m.id}
                         id={`mood-btn-${m.id}`}
                         onClick={() => setSelectedMood(m.id)}
-                        className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xl sm:text-2xl transition-all cursor-pointer ${
+                        className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center p-1 transition-all cursor-pointer ${
                           isSelected
-                            ? 'scale-125 ring-2 ring-[#5B8F76] shadow-md bg-stone-100'
+                            ? 'scale-115 ring-2 ring-[#5B8F76] shadow-md bg-stone-100'
                             : 'opacity-70 hover:opacity-100 hover:scale-110'
                         }`}
                         title={m.label}
                         aria-label={m.label}
                       >
-                        <span>{m.emoji}</span>
+                        <img 
+                          src={m.image} 
+                          alt={m.label} 
+                          className="w-full h-full object-contain pointer-events-none select-none" 
+                        />
                       </button>
                     );
                   })}
@@ -518,7 +528,7 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
                 <span className="text-xs font-bold text-stone-800">
                   Registro guardado en tu Diario Personal
                 </span>
-                <span className="text-sm">{activeEmojiItem.emoji}</span>
+                <MoodIcon mood={selectedMood} className="w-5 h-5" />
                 <span className="text-xs font-semibold text-stone-500 capitalize">
                   ({activeEmojiItem.label})
                 </span>
@@ -624,9 +634,7 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
                     <div>
                       <div className="flex items-center justify-between pb-2 border-b border-stone-100 mb-2.5">
                         <div className="flex items-center gap-2">
-                          <span className="text-xl">
-                            {entry.mood === 'feliz' ? '😄' : entry.mood === 'tranquilo' ? '🙂' : entry.mood === 'ansioso' ? '😐' : entry.mood === 'triste' ? '🙁' : '😡'}
-                          </span>
+                          <MoodIcon mood={entry.mood} className="w-6 h-6" />
                           <span className="text-xs font-bold text-stone-800 capitalize">
                             {entry.mood}
                           </span>

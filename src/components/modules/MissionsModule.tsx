@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { FluxGlowLogo } from '../common/FluxGlowLogo';
+import { RachaIcon } from '../common/RachaIcon';
 import { useToast } from '../common/Toast';
 import { UserDailyMissionRecord, UserProfileData, ViewMode } from '../../types';
 import { useMissions } from '../../hooks/useMissions';
@@ -288,8 +289,8 @@ export const MissionsModule: React.FC<MissionsModuleProps> = ({
                 <span className="text-xs font-medium text-stone-400">días seguidos</span>
               </div>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-orange-50 border border-orange-200 flex items-center justify-center text-orange-600 shadow-2xs shrink-0">
-              <Flame className="w-6 h-6 fill-orange-500" />
+            <div className="w-12 h-12 rounded-2xl bg-orange-50 border border-orange-200 flex items-center justify-center p-2 shadow-2xs shrink-0">
+              <RachaIcon className="w-7 h-7" />
             </div>
           </div>
 
