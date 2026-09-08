@@ -7,11 +7,11 @@
   --color-brand-sage-200: #c5ddd0;
   --color-brand-sage-300: #9ec4b0;
   --color-brand-sage-400: #74a78d;
-  --color-brand-sage-500: #548c71;
-  --color-brand-sage-600: #42715b;
-  --color-brand-sage-700: #365b4a;
+  --color-brand-sage-500: #5F927B;
+  --color-brand-sage-600: #4a7562;
+  --color-brand-sage-700: #3a5c4d;
   --color-brand-sage-800: #2d493c;
-  --color-brand-sage-900: #253d33;
+  --color-brand-sage-900: #1C2B26;
 
   /* Brand Terracotta Palette (Warmth & Action) */
   --color-brand-terracotta-50: #fdf5f2;
@@ -19,15 +19,15 @@
   --color-brand-terracotta-200: #f7d3c3;
   --color-brand-terracotta-300: #f0b39a;
   --color-brand-terracotta-400: #e78c6b;
-  --color-brand-terracotta-500: #de6943;
-  --color-brand-terracotta-600: #cb512e;
-  --color-brand-terracotta-700: #aa3f23;
+  --color-brand-terracotta-500: #E87A52;
+  --color-brand-terracotta-600: #d6643a;
+  --color-brand-terracotta-700: #b54f2c;
   --color-brand-terracotta-800: #8b3520;
   --color-brand-terracotta-900: #722f1f;
 
   /* Brand Sand & Cream (Refined Warm Neutral Canvas) */
-  --color-brand-sand-50: #fdfbf7;
-  --color-brand-sand-100: #faf7f2;
+  --color-brand-sand-50: #FBF9F5;
+  --color-brand-sand-100: #F7F5F0;
   --color-brand-sand-200: #f2ece1;
   --color-brand-sand-300: #e7ddcd;
   --color-brand-sand-400: #d3c4ad;
@@ -35,13 +35,22 @@
   --color-brand-sand-600: #9e896d;
   --color-brand-sand-700: #806e57;
   --color-brand-sand-800: #695a48;
-  --color-brand-sand-900: #574b3d;
+  --color-brand-sand-900: #1A1A1A;
 
   /* Warm Gold Accents */
   --color-brand-gold-100: #fdf9e2;
   --color-brand-gold-300: #f5e48e;
   --color-brand-gold-500: #d4b439;
   --color-brand-gold-700: #997a17;
+
+  /* Official FluxGlow Palette */
+  --color-flux-sage: #5F927B;
+  --color-flux-sage-light: #EBF1EA;
+  --color-flux-terracotta: #E87A52;
+  --color-flux-terracotta-light: #FDF4F0;
+  --color-flux-sand: #FBF9F5;
+  --color-flux-gold: #E5B25D;
+  --color-flux-dark: #1A1A1A;
 
   /* Typography */
   --font-serif: 'Playfair Display', Georgia, serif;
@@ -55,8 +64,8 @@
 
   body {
     font-family: var(--font-sans);
-    background-color: var(--color-brand-sand-100);
-    color: #292524;
+    background-color: #FBF9F5;
+    color: #1A1A1A;
     overflow-x: hidden;
   }
 
@@ -215,4 +224,15 @@
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Linear title gradient replicating PowerPoint 0° (sage green to terracotta) */
+.title-gradient {
+  background: linear-gradient(90deg, #628E75 0%, #DE7347 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+  display: inline-block;
+  padding-bottom: 0.15rem;
 }

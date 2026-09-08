@@ -531,8 +531,9 @@ Generado con FluxGlow • Cuidado emocional consciente`;
         {/* Big Display Title: Análisis Predictivo */}
         <div className="text-center my-6">
           <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight">
-            <span className="text-brand-sage-700">Análisis </span>
-            <span className="text-brand-terracotta-600">Predictivo</span>
+            <span className="title-gradient bg-gradient-to-r from-[#628E75] to-[#DE7347] bg-clip-text text-transparent inline-block pb-1">
+              Análisis Predictivo
+            </span>
           </h1>
           <p className="text-stone-600 text-xs sm:text-sm mt-1">Métricas de evolución cognitiva, correlación de factores detonantes y modelos de estabilidad</p>
         </div>
@@ -816,16 +817,16 @@ Generado con FluxGlow • Cuidado emocional consciente`;
               </div>
 
               {/* Band Legend Labels */}
-              <div className="flex flex-wrap items-center justify-between text-[11px] font-bold text-stone-700 mb-2 px-1">
+              <div className="flex flex-wrap items-center justify-between text-[11px] font-bold text-stone-700 mb-2 px-1 gap-2">
                 <span className="flex items-center gap-1 text-amber-700">⭐ Felicidad</span>
-                <span className="flex items-center gap-1 text-brand-sage-700">🍃 Calma</span>
-                <span className="flex items-center gap-1 text-amber-800">❓ Inquietud</span>
-                <span className="flex items-center gap-1 text-sky-700">💧 Tristeza</span>
+                <span className="flex items-center gap-1 text-brand-sage-700">🌿 Calma</span>
+                <span className="flex items-center gap-1 text-amber-800">💧 Inquietud</span>
+                <span className="flex items-center gap-1 text-sky-700">🌧️ Tristeza</span>
                 <span className="flex items-center gap-1 text-rose-700">🔥 Tensión</span>
               </div>
 
               {/* Multi-colored Banded Graph Container or Clean Zero State */}
-              {monthlyMoodPath.length === 0 ? (
+              {monthlyMoodPath.length < 2 ? (
                 <div className="relative w-full h-56 rounded-2xl overflow-hidden border border-brand-sand-300 shadow-inner flex flex-col items-center justify-center text-center p-6 bg-white">
                   <div className="absolute inset-0 grid grid-rows-5 pointer-events-none opacity-20">
                     <div className="bg-amber-200 border-b border-amber-300/50"></div>
@@ -835,14 +836,21 @@ Generado con FluxGlow • Cuidado emocional consciente`;
                     <div className="bg-rose-200"></div>
                   </div>
 
-                  <div className="relative z-10 space-y-2 max-w-xs">
-                    <div className="w-9 h-9 rounded-xl bg-brand-sand-100 text-stone-500 mx-auto flex items-center justify-center">
+                  <div className="relative z-10 space-y-2 max-w-sm">
+                    <div className="w-10 h-10 rounded-xl bg-brand-sand-100 text-stone-500 mx-auto flex items-center justify-center border border-brand-sand-200 shadow-2xs">
                       <Activity className="w-5 h-5 text-brand-sage-600" />
                     </div>
-                    <h4 className="text-sm font-bold text-stone-800">Sin registros este mes</h4>
-                    <p className="text-xs text-stone-500 leading-relaxed">
-                      Guarda cómo te sientes en el Diario Emocional para ver tu curva trazada día a día.
+                    <h4 className="text-sm font-bold text-stone-900">Mapa Emocional en Progreso</h4>
+                    <p className="text-xs text-stone-600 leading-relaxed">
+                      Aún no hay suficientes registros para generar tu mapa. Continúa registrando tus días en el Diario.
                     </p>
+                    <button
+                      onClick={() => onNavigate('journal')}
+                      className="mt-1 px-3 py-1.5 rounded-xl bg-brand-sage-600 hover:bg-brand-sage-700 text-white text-xs font-bold transition-colors inline-flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                    >
+                      <BookOpen className="w-3.5 h-3.5" />
+                      <span>Ir al Diario</span>
+                    </button>
                   </div>
                 </div>
               ) : (

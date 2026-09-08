@@ -6,7 +6,7 @@ export const DEMO_GUIDES_CATALOG: GuideItem[] = [
   {
     id: 'guide-stress-1',
     badge: 'Domina tu mente',
-    title: '5 estrategias infalibles para regular el estrés antes de que te controle',
+    title: '5 estrategias infalibles para eliminar el estrés antes de que te controle.',
     image: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&auto=format&fit=crop&q=80',
     category: 'Estrés',
     author: 'Flux AI • Psicología Cognitiva',
@@ -100,7 +100,7 @@ export const DEMO_GUIDES_CATALOG: GuideItem[] = [
   {
     id: 'guide-anxiety-2',
     badge: 'El arte de la calma',
-    title: 'Cómo transformar la ansiedad en tu mayor motor de enfoque y acción',
+    title: 'Cómo transformar la ansiedad en tu mayor motor de productividad.',
     image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&auto=format&fit=crop&q=80',
     category: 'Ansiedad',
     author: 'Flux AI • Neurociencia Aplicada',
@@ -182,10 +182,10 @@ export const DEMO_GUIDES_CATALOG: GuideItem[] = [
   },
   {
     id: 'guide-procrastination-3',
-    badge: 'Acción Imparable',
-    title: 'El método anti-procrastinación: Desbloquea tu parálisis por análisis',
+    badge: 'Organización sin caos',
+    title: 'El método definitivo para ordenar tu vida y liberar tu carga mental..',
     image: 'https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=800&auto=format&fit=crop&q=80',
-    category: 'Procrastinación',
+    category: 'Organización',
     author: 'Flux AI • Psicología del Comportamiento',
     readTime: '8 min',
     isDemoContent: true,
@@ -261,95 +261,88 @@ export const DEMO_GUIDES_CATALOG: GuideItem[] = [
     ]
   },
   {
-    id: 'guide-selfesteem-4',
-    badge: 'Mentalidad Fuerte',
-    title: 'Construyendo un autoesquema sólido: De la autocrítica a la autocompasión',
-    image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&auto=format&fit=crop&q=80',
-    category: 'Autoestima',
-    author: 'Flux AI • Desarrollo Emocional',
-    readTime: '9 min',
-    isDemoContent: true,
-    simpleSummary: 'Aprende a transformar la voz crítica interna en un diálogo de apoyo realista y compasivo que fortalezca tu valor personal incondicional.',
-    demoNotice: AI_DEMO_NOTICE_TEXT,
-    explainedContent: [
-      {
-        heading: '1. Los 3 Pilares de la Autocompasión Consciente (Kristin Neff)',
-        text: 'La autocompasión no es debilidad ni victimismo; es brindarte el mismo trato empático, comprensivo y firme que le ofrecerías a una persona que amas profundamente cuando atraviesa un mal momento.',
-        bulletPoints: [
-          'Bondad hacia uno mismo: Reemplazar el juicio despiadado por un tono comprensivo y motivador.',
-          'Humanidad compartida: Recordar que equivocarse, dudar y sentir dolor son experiencias universales que nos conectan con los demás.',
-          'Mindfulness equilibrado: Observar las emociones difíciles sin magnificarlas ni negarlas.'
-        ]
-      },
-      {
-        heading: '2. Diario de Evidencias de Competencia y Logros Reales',
-        text: 'Nuestra mente posee un sesgo de negatividad evolutivo que recuerda con intensidad las críticas y olvida con rapidez las victorias. Llevar un registro activo restablece la objetividad del cerebro:',
-        bulletPoints: [
-          'Anota cada noche 3 acciones en las que demostraste valentía, esfuerzo o empatía.',
-          'Incluye logros que no dependan de la validación externa (por ejemplo: "hoy me respeté a mí mismo al decir que no").'
-        ]
-      },
-      {
-        heading: '3. El Arte de Poner Límites Asertivos sin Culpa',
-        text: 'La autoestima se erosiona cuando complaces a los demás a expensas de tu salud mental. Decir un "no" consciente es proteger tu integridad:',
-        bulletPoints: [
-          'Usa la fórmula asertiva: "Agradezco que hayas pensado en mí, pero en este momento no cuento con el tiempo/energía para comprometerme como te mereces".',
-          'Recuerda: No necesitas justificaciones excesivas para cuidar tus tiempos.'
-        ]
-      },
-      {
-        heading: '4. Neutralizar el Síndrome del Impostor',
-        text: 'Dudar de tus capacidades cuando asumes nuevos retos es síntoma de crecimiento, no de incapacidad:',
-        bulletPoints: [
-          'Reformula: "No soy un fraude; simplemente estoy en la curva de aprendizaje de algo nuevo".',
-          'Pide retroalimentación constructiva a mentores o compañeros en lugar de asumir lo peor.'
-        ]
-      }
-    ],
-    glossary: [
-      { term: 'Autoesquema', definition: 'Red cognitiva de creencias, recuerdos e interpretaciones sobre la propia valía y capacidades.' },
-      { term: 'Sesgo de Negatividad', definition: 'Tendencia cerebral involuntaria a dar más peso a las experiencias y pensamientos desfavorables.' },
-      { term: 'Asertividad', definition: 'Habilidad de comunicar opiniones y límites de forma clara, respetuosa y sin agresividad ni sumisión.' }
-    ],
-    extraTips: [
-      'Cuando te sorprendas hablándote mal, pregúntate: "¿Le hablaría así a mi mejor amigo?".',
-      'Desconéctate temporalmente de perfiles en redes sociales que detonen comparaciones tóxicas.',
-      'Celebra las pequeñas victorias diarias por sencillas que parezcan.'
-    ],
-    dailyMissions: [
-      {
-        id: 'mission-selfesteem-1',
-        title: 'Registro de 3 Evidencias de Logro',
-        description: 'Escribe 3 cosas concretas de las que te sientas orgulloso de ti hoy, sin importar su tamaño.',
-        timeEstimate: '4 min',
-        xp: 35
-      },
-      {
-        id: 'mission-selfesteem-2',
-        title: 'Práctica de Límites Asertivos',
-        description: 'Identifica una petición o hábito que drene tu energía y pon un límite claro o di un no respetuoso hoy.',
-        timeEstimate: '5 min',
-        xp: 40
-      },
-      {
-        id: 'mission-selfesteem-3',
-        title: 'Carta breve de autocompasión',
-        description: 'Escribe un párrafo reconociendo un error reciente con palabras de aliento y cariño hacia ti mismo.',
-        timeEstimate: '6 min',
-        xp: 45
-      }
-    ]
-  },
-  {
     id: 'guide-productivity-5',
-    badge: 'Enfoque Blindado',
-    title: 'Deep Work & Enfoque blindado en un mundo de hiperestimulación digital',
+    badge: 'Enfoque blindado',
+    title: 'Cómo recuperar tu concentración en un mundo lleno de distracciones.',
     image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&auto=format&fit=crop&q=80',
     category: 'Productividad Consciente',
     author: 'Flux AI • Rendimiento Cognitivo',
     readTime: '8 min',
     isDemoContent: true,
     simpleSummary: 'Descubre cómo blindar tu atención, eliminar el costo del cambio de contexto y multiplicar tu impacto dedicando menos horas al agotamiento.',
+    demoNotice: AI_DEMO_NOTICE_TEXT,
+    explainedContent: [
+      {
+        heading: '1. El costo invisible del Residuo de Atención',
+        text: 'Cada vez que cambias de ventana para revisar un mensaje de WhatsApp o un correo electrónico durante apenas 10 segundos, tu mente deja una fracción de su capacidad anclada en esa interrupción. Tardas entre 15 y 22 minutos en recuperar la profundidad original de pensamiento.',
+        bulletPoints: [
+          'La multitarea es un mito biológico: el cerebro no procesa dos tareas cognitivas a la vez, sino que salta rápidamente entre ellas con un enorme coste energético.',
+          'Agrupar la comunicación en horarios específicos libera hasta 3 horas de foco puro al día.'
+        ]
+      },
+      {
+        heading: '2. Ritmos Ultradianos y Descanso Inteligente',
+        text: 'Nuestra biología cerebral opera en ciclos ultradianos de aproximadamente 90 minutos de alta lucidez seguidos de una caída natural de energía:',
+        bulletPoints: [
+          'Estructura tu jornada en bloques de 75 a 90 minutos de concentración profunda.',
+          'Acompaña cada bloque con 10 a 15 minutos de descanso sin pantallas (caminar, hidratarte, estiramientos).'
+        ]
+      },
+      {
+        heading: '3. Las 4 Reglas del Deep Work',
+        text: 'Implementa estas directrices para elevar la calidad de tus resultados:',
+        bulletPoints: [
+          'Regla 1: Trabaja profundamente en una sola tarea a la vez.',
+          'Regla 2: Abraza el aburrimiento; no recurras al teléfono en cada momento de espera.',
+          'Regla 3: Sal del modo reactivo; programa tus horas de mayor energía para crear, no para responder mensajes.',
+          'Regla 4: Apaga el trabajo al final de la jornada de forma tajante.'
+        ]
+      }
+    ],
+    glossary: [
+      { term: 'Residuo de Atención', definition: 'Efecto cognitivo por el cual restos de una tarea interrumpida entorpecen la concentración en la siguiente.' },
+      { term: 'Deep Work', definition: 'Actividades profesionales o académicas realizadas en un estado de concentración sin distracciones que llevan las capacidades al límite.' },
+      { term: 'Ritmo Ultradiano', definition: 'Ciclo biológico recurrente de 90 a 120 minutos que modula la atención y la alerta mental.' }
+    ],
+    extraTips: [
+      'Trabaja con un vaso de agua en el escritorio para mantener la hidratación neuronal.',
+      'Activa el modo escala de grises en tu smartphone durante las horas de trabajo para reducir su atractivo visual.',
+      'Ten a mano una libreta para anotar ideas repentinas sin salir de tu tarea principal.'
+    ],
+    dailyMissions: [
+      {
+        id: 'mission-productivity-1',
+        title: 'Bloque de Deep Work de 45 minutos',
+        description: 'Realiza 45 minutos de trabajo ininterrumpido en tu tarea principal con teléfono silenciado en otra habitación.',
+        timeEstimate: '45 min',
+        xp: 50
+      },
+      {
+        id: 'mission-productivity-2',
+        title: 'Loteo de mensajes en 2 horarios',
+        description: 'Revisa y responde mensajes únicamente en dos momentos definidos del día en lugar de hacerlo en tiempo real.',
+        timeEstimate: '15 min',
+        xp: 35
+      },
+      {
+        id: 'mission-productivity-3',
+        title: 'Pausa de recarga sin pantallas',
+        description: 'Toma una pausa de 10 minutos al mediodía para caminar o estirarte sin mirar ningún dispositivo.',
+        timeEstimate: '10 min',
+        xp: 35
+      }
+    ]
+  },
+  {
+    id: 'guide-selfesteem-4',
+    badge: 'Mentalidad ganadora',
+    title: 'Desarrolla una mentalidad fuerte y alcanza tus metas sin límites.',
+    image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&auto=format&fit=crop&q=80',
+    category: 'Autoestima',
+    author: 'Flux AI • Desarrollo Emocional',
+    readTime: '9 min',
+    isDemoContent: true,
+    simpleSummary: 'Aprende a transformar la voz crítica interna en un diálogo de apoyo realista y compasivo que fortalezca tu valor personal incondicional.',
     demoNotice: AI_DEMO_NOTICE_TEXT,
     explainedContent: [
       {

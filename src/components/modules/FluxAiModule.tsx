@@ -430,8 +430,9 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
 
             {/* Display Subtitle: ¿Cómo puedo ayudarte? */}
             <h2 className="font-serif text-3xl sm:text-4xl font-bold tracking-tight mb-3">
-              <span className="text-brand-sage-700">¿Cómo puedo </span>
-              <span className="text-brand-terracotta-600">ayudarte?</span>
+              <span className="title-gradient bg-gradient-to-r from-[#628E75] to-[#DE7347] bg-clip-text text-transparent inline-block pb-1">
+                ¿Cómo puedo ayudarte?
+              </span>
             </h2>
 
             {/* Quick Context Pills */}
@@ -526,7 +527,6 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
                 Las respuestas de Flux AI son orientativas y prácticas. Si experimentas una crisis o necesitas atención clínica, consulta siempre con un profesional de la salud mental.
               </p>
             </div>
-
           </div>
         ) : (
           /* Active Chat Screen */

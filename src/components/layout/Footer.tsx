@@ -5,12 +5,53 @@ import { Mail, Phone, Instagram, Facebook, ShieldCheck, Heart, ArrowUp } from 'l
 
 interface FooterProps {
   onNavigate: (view: ViewMode) => void;
+  variant?: 'full' | 'compact';
 }
 
-export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
+export const Footer: React.FC<FooterProps> = ({ onNavigate, variant = 'full' }) => {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  if (variant === 'compact') {
+    return (
+      <footer className="bg-[#1C2B26] text-stone-400 py-3.5 px-4 sm:px-6 lg:px-8 border-t border-stone-800/80">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-3">
+            <div 
+              className="cursor-pointer" 
+              onClick={() => { onNavigate('landing'); scrollToTop(); }}
+              title="Ir a Inicio"
+            >
+              <FluxGlowLogo size="sm" variant="light" showText={true} />
+            </div>
+            <span className="text-stone-600 hidden sm:inline">•</span>
+            <span className="text-stone-400 font-medium">© 2026 FluxGlow. Todos los derechos reservados.</span>
+          </div>
+
+          <div className="flex items-center gap-4 text-xs text-stone-400">
+            <a 
+              href="mailto:fluxglow680@gmail.com?subject=Soporte%20FluxGlow"
+              className="hover:text-emerald-400 transition-colors"
+            >
+              Soporte
+            </a>
+            <span className="text-stone-700">•</span>
+            <span className="text-stone-400">Términos y Privacidad</span>
+            <span className="text-stone-700">•</span>
+            <button 
+              onClick={scrollToTop}
+              className="flex items-center gap-1 hover:text-white transition-colors cursor-pointer"
+              title="Volver arriba"
+            >
+              <ArrowUp className="w-3.5 h-3.5" />
+              <span>Arriba</span>
+            </button>
+          </div>
+        </div>
+      </footer>
+    );
+  }
 
   return (
     <footer className="bg-[#242e28] text-stone-300 pt-14 pb-8 border-t border-stone-800">

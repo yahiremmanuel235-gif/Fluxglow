@@ -462,6 +462,18 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
           </div>
         </div>
 
+        {/* Big Display Title: Comunidad FluxGlow */}
+        <div className="text-center my-6">
+          <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight">
+            <span className="title-gradient bg-gradient-to-r from-[#628E75] to-[#DE7347] bg-clip-text text-transparent inline-block pb-1">
+              Comunidad FluxGlow
+            </span>
+          </h1>
+          <p className="text-stone-500 text-xs sm:text-sm mt-1.5 max-w-md mx-auto">
+            Espacio seguro, empático y moderado para compartir vivencias y apoyo mutuo
+          </p>
+        </div>
+
         {/* Facebook-style 3-Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           

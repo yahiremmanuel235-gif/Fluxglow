@@ -687,7 +687,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
 
           {/* Center Brand Logo */}
           <div className="flex items-center gap-2">
-            <FluxGlowLogo imgSrc="/logo2.png" size="sm" showText={true} />
+            <FluxGlowLogo size="sm" showText={true} />
           </div>
 
           {/* Right Pill: Categorías */}
@@ -712,8 +712,9 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
         {/* Big Display Title: Explora y Aprende */}
         <div className="text-center my-6">
           <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight">
-            <span className="text-brand-sage-700">Explora y </span>
-            <span className="text-brand-terracotta-600">Aprende</span>
+            <span className="title-gradient bg-gradient-to-r from-[#628E75] to-[#DE7347] bg-clip-text text-transparent inline-block pb-1">
+              Explora y Aprende
+            </span>
           </h1>
           <p className="text-xs sm:text-sm text-stone-500 mt-2 max-w-xl mx-auto">
             Guías prácticas, aprendizaje emocional y contenido respaldado por psicología científica.
@@ -1033,7 +1034,8 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
         {filteredRecommended.length > 0 && (
           <div className="mb-12">
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight flex items-center gap-2">
+              <h2 className="text-xl sm:text-2xl font-bold font-serif text-stone-900 flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-brand-terracotta-500" />
                 <span>Guías Rápidas Recomendadas (Lecturas de 5 min):</span>
                 <span className="text-xs font-medium text-stone-400 bg-stone-100 px-2.5 py-0.5 rounded-full">
                   {filteredRecommended.length}
@@ -1048,7 +1050,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                 const hasProgress = readingProgress[guide.id];
 
                 return (
-                  <div 
+                  <div
                     key={guide.id}
                     id={`guide-rec-${guide.id}`}
                     onClick={() => handleOpenGuide(guide)}

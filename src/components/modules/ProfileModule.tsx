@@ -35,7 +35,12 @@ import {
   Activity,
   Heart,
   Target,
-  LogOut
+  LogOut,
+  Sprout,
+  Crown,
+  Rocket,
+  Feather,
+  Users
 } from 'lucide-react';
 import { 
   ResponsiveContainer, 
@@ -250,6 +255,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
       title: 'Hábito Inicial (Racha 1d)', 
       desc: 'Comienza tu viaje de bienestar registrando 1 día activo', 
       icon: '🌱', 
+      vectorIcon: Sprout,
       current: activeStreak,
       target: 1,
       unlocked: activeStreak >= 1 
@@ -259,6 +265,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
       title: 'Guardián Semanal (Racha 7d)', 
       desc: 'Mantén 7 días continuos de cuidado emocional', 
       icon: '🔥', 
+      vectorIcon: Flame,
       current: activeStreak,
       target: 7,
       unlocked: activeStreak >= 7 
@@ -268,6 +275,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
       title: 'Maestro de la Constancia (30d)', 
       desc: 'Completa un mes de autorregulación y constancia', 
       icon: '👑', 
+      vectorIcon: Crown,
       current: activeStreak,
       target: 30,
       unlocked: activeStreak >= 30 
@@ -277,6 +285,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
       title: 'Explorador de Retos (3 misiones)', 
       desc: 'Supera 3 retos prácticos en tus guías de aprendizaje', 
       icon: '🎯', 
+      vectorIcon: Target,
       current: completedMissionsCount,
       target: 3,
       unlocked: completedMissionsCount >= 3 
@@ -286,6 +295,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
       title: 'Imparable (10 misiones)', 
       desc: 'Supera 10 misiones prácticas en tus guías de aprendizaje', 
       icon: '🚀', 
+      vectorIcon: Rocket,
       current: completedMissionsCount,
       target: 10,
       unlocked: completedMissionsCount >= 10 
@@ -295,6 +305,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
       title: 'Diario Consciente (5 entradas)', 
       desc: 'Reflexiona y asienta al menos 5 registros emocionales', 
       icon: '✍️', 
+      vectorIcon: Feather,
       current: journalEntries.length,
       target: 5,
       unlocked: journalEntries.length >= 5 
@@ -304,6 +315,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
       title: 'Comunidad Solidaria', 
       desc: 'Participa activamente en foros seguros o grupos de apoyo', 
       icon: '🤝', 
+      vectorIcon: Users,
       current: communityInteractionsCount,
       target: 1,
       unlocked: communityInteractionsCount >= 1 
@@ -399,8 +411,9 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
         {/* Big Display Title: Perfil y Personalización */}
         <div className="text-center my-6">
           <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight">
-            <span className="text-brand-sage-700">Perfil y </span>
-            <span className="text-brand-terracotta-600">Personalización</span>
+            <span className="title-gradient bg-gradient-to-r from-[#628E75] to-[#DE7347] bg-clip-text text-transparent inline-block pb-1">
+              Perfil y Personalización
+            </span>
           </h1>
           <p className="text-xs sm:text-sm text-stone-600 mt-2">
             Espacio personalizado para <strong className="text-stone-900">{userName}</strong>
@@ -752,26 +765,37 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
               <div className="space-y-3 max-h-[460px] overflow-y-auto pr-1">
                 {filteredAchievements.map((ach) => {
                   const percent = Math.min(100, Math.round((ach.current / ach.target) * 100));
+                  const VectorIconComponent = ach.vectorIcon;
                   return (
                     <div 
                       key={ach.id}
                       className={`flex flex-col p-3.5 rounded-2xl border transition-all ${
                         ach.unlocked 
-                          ? 'bg-brand-sage-50 border-brand-sage-300 shadow-2xs' 
-                          : 'bg-brand-sand-50 border-brand-sand-200 opacity-75'
+                          ? 'bg-brand-sage-50/85 border-brand-sage-300/80 shadow-2xs' 
+                          : 'bg-brand-sand-50/70 border-brand-sand-200/90 opacity-60'
                       }`}
                     >
                       <div className="flex items-start gap-3">
-                        <span className="text-xl shrink-0 mt-0.5">{ach.icon}</span>
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <p className="text-xs font-bold text-stone-900">{ach.title}</p>
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border transition-colors ${
+                          ach.unlocked 
+                            ? 'bg-white border-brand-sage-200 text-brand-sage-700 shadow-2xs' 
+                            : 'bg-stone-100 border-stone-200 text-stone-400'
+                        }`}>
+                          {VectorIconComponent ? (
+                            <VectorIconComponent className="w-4.5 h-4.5" />
+                          ) : (
+                            <span className="text-base">{ach.icon}</span>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-1.5">
+                            <p className="text-xs font-bold text-stone-900 truncate">{ach.title}</p>
                             {ach.unlocked ? (
-                              <span className="text-[10px] font-bold text-brand-sage-700 bg-brand-sage-100 px-2 py-0.5 rounded-full">
+                              <span className="text-[10px] font-bold text-brand-sage-700 bg-brand-sage-100/90 border border-brand-sage-200 px-2 py-0.5 rounded-full shrink-0">
                                 Obtenido
                               </span>
                             ) : (
-                              <span className="text-[10px] font-semibold text-stone-500">
+                              <span className="text-[10px] font-semibold text-stone-500 shrink-0">
                                 {ach.current}/{ach.target}
                               </span>
                             )}
@@ -785,7 +809,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
                       {/* Progress bar */}
                       <div className="mt-2.5 w-full bg-brand-sand-200 h-1.5 rounded-full overflow-hidden">
                         <div 
-                          className={`h-full transition-all duration-500 ${ach.unlocked ? 'bg-brand-sage-500' : 'bg-brand-terracotta-500'}`}
+                          className={`h-full transition-all duration-500 ${ach.unlocked ? 'bg-brand-sage-500' : 'bg-brand-terracotta-400'}`}
                           style={{ width: `${percent}%` }}
                         />
                       </div>

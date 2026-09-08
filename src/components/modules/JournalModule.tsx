@@ -307,11 +307,12 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
 
         {/* Big Display Title: Registro Emocional */}
         <div className="text-center my-6">
-          <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight">
-            <span className="text-[#548c71]">Registro </span>
-            <span className="text-[#de6943]">Emocional</span>
+          <h1 className="font-serif text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight">
+            <span className="title-gradient bg-gradient-to-r from-[#628E75] to-[#DE7347] bg-clip-text text-transparent inline-block pb-1">
+              Registro Emocional
+            </span>
           </h1>
-          <p className="text-stone-500 text-xs sm:text-sm mt-1.5 max-w-md mx-auto">
+          <p className="text-stone-500 text-xs sm:text-sm mt-2 max-w-md mx-auto">
             Tu espacio íntimo de autoconocimiento, desahogo consciente y acompañamiento reflexivo
           </p>
         </div>
@@ -334,7 +335,7 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
                 key={idx} 
                 className={`flex flex-col items-center justify-center p-2 sm:px-3 rounded-2xl transition-all ${
                   item.isToday 
-                    ? 'bg-[#e2eee6] border border-[#548c71]/40 ring-2 ring-[#548c71]/20' 
+                    ? 'bg-[#EBF1EA] border border-[#5B8F76]/40 ring-2 ring-[#5B8F76]/20' 
                     : 'bg-[#faf8f4] border border-stone-200/60'
                 }`}
               >
@@ -355,14 +356,14 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
               {/* Left Pill: Diario personal */}
               <div
                 id="personal-journal-btn"
-                className="bg-[#548c71] text-white px-6 py-2.5 rounded-full text-sm font-bold tracking-wide shadow-xs flex items-center gap-2 whitespace-nowrap"
+                className="bg-[#5B8F76] text-white px-7 py-2.5 rounded-full text-sm sm:text-base font-semibold tracking-wide shadow-xs flex items-center gap-2 whitespace-nowrap"
               >
                 <BookOpen className="w-4 h-4" />
                 <span>Diario personal</span>
               </div>
 
               {/* Center Capsule: ¿Cómo te sientes hoy? + 5 Emojis */}
-              <div className="w-full md:w-auto flex-1 max-w-2xl bg-white border border-stone-200 rounded-full py-2 px-4 sm:px-6 shadow-xs flex items-center justify-between gap-3">
+              <div className="w-full md:w-auto flex-1 max-w-2xl bg-white border border-stone-300 rounded-full py-2.5 px-5 sm:px-7 shadow-xs flex items-center justify-between gap-3">
                 <span className="text-xs sm:text-sm font-semibold text-stone-800 whitespace-nowrap">
                   ¿Cómo te sientes hoy?
                 </span>
@@ -376,9 +377,9 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
                         key={m.id}
                         id={`mood-btn-${m.id}`}
                         onClick={() => setSelectedMood(m.id)}
-                        className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xl transition-all cursor-pointer ${
+                        className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xl sm:text-2xl transition-all cursor-pointer ${
                           isSelected
-                            ? 'scale-125 ring-2 ring-[#548c71] shadow-md bg-stone-100'
+                            ? 'scale-125 ring-2 ring-[#5B8F76] shadow-md bg-stone-100'
                             : 'opacity-70 hover:opacity-100 hover:scale-110'
                         }`}
                         title={m.label}
@@ -396,29 +397,29 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
                 id="submit-journal-btn"
                 onClick={() => handleSubmit()}
                 disabled={isSubmitting}
-                className={`bg-[#de6943] hover:bg-[#cb512e] active:scale-95 text-white px-8 py-2.5 rounded-full text-sm font-bold tracking-wide shadow-xs hover:shadow-md transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                className={`bg-[#DE7347] hover:bg-[#C9643B] active:scale-95 text-white px-8 py-2.5 rounded-full text-sm sm:text-base font-semibold tracking-wide shadow-xs hover:shadow-md transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
                   isSubmitting ? 'opacity-80 cursor-not-allowed' : ''
                 }`}
               >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Guardando en {user ? 'Supabase' : 'Diario'}...</span>
+                    <span>Guardando...</span>
                   </>
                 ) : (
                   <>
                     <Send className="w-4 h-4" />
-                    <span>Enviar registro</span>
+                    <span>Enviar</span>
                   </>
                 )}
               </button>
             </div>
 
             {/* Big White Card Box with Textarea and Tools */}
-            <div className="bg-white rounded-3xl border border-stone-200 shadow-sm p-6 sm:p-8 mb-10 transition-all">
+            <div className="bg-white rounded-[26px] border-2 border-stone-800 shadow-xs p-6 sm:p-8 mb-10 transition-all">
               <div className="flex items-center justify-between pb-3 border-b border-stone-100 mb-4">
                 <span className="text-xs font-bold text-stone-500 uppercase tracking-wider flex items-center gap-1.5">
-                  <Lock className="w-3.5 h-3.5 text-[#548c71]" />
+                  <Lock className="w-3.5 h-3.5 text-[#5B8F76]" />
                   Espacio privado y seguro de desahogo
                 </span>
 
@@ -432,7 +433,7 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
                     max="10"
                     value={intensity}
                     onChange={(e) => setIntensity(Number(e.target.value))}
-                    className="w-24 accent-[#548c71] cursor-pointer"
+                    className="w-24 accent-[#5B8F76] cursor-pointer"
                     aria-label="Selector de intensidad emocional del 1 al 10"
                   />
                 </div>
@@ -443,7 +444,7 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
                 rows={6}
                 value={noteText}
                 onChange={(e) => setNoteText(e.target.value)}
-                placeholder="¿Por qué te sientes así hoy? Expresa libremente tus pensamientos, inquietudes o gratitud sin juzgarte..."
+                placeholder="¿Por qué te sientes así el día de hoy?..."
                 className="w-full bg-transparent border-none text-stone-800 placeholder-stone-400 text-base sm:text-lg focus:outline-none resize-none leading-relaxed"
               />
 

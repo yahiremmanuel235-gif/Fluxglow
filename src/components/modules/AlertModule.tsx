@@ -116,15 +116,18 @@ export const AlertModule: React.FC = () => {
   const trafficLightLevels = [
     {
       id: 'estable',
-      color: '#548c71',
-      bgColor: '#e2eee6',
-      borderColor: '#b2d5c3',
+      dotColor: '#5F927B', // Verde calmar oficial
+      color: '#5F927B',
+      bgColor: '#EBF1EA',
+      borderColor: '#5F927B',
+      selectedBg: 'bg-[#EBF1EA]',
+      selectedBorder: 'border-[#5F927B]',
       title: 'Estable',
       desc: 'Estado emocional equilibrado y tranquilo.',
       alertText: 'Tu balance emocional se encuentra en niveles saludables.',
-      alertBg: 'bg-[#e2eee6]',
-      alertBorder: 'border-[#548c71]/40',
-      alertTextCol: 'text-[#253d33]',
+      alertBg: 'bg-[#EBF1EA]',
+      alertBorder: 'border-[#5F927B]/40',
+      alertTextCol: 'text-[#1A1A1A]',
       recommendations: [
         'Mantén tu rutina de gratitud diaria.',
         'Continúa con tus 15 minutos de caminata al aire libre.',
@@ -134,9 +137,12 @@ export const AlertModule: React.FC = () => {
     },
     {
       id: 'atencion',
-      color: '#d97706',
-      bgColor: '#fef3c7',
-      borderColor: '#fde68a',
+      dotColor: '#E5B25D', // Amarillo/Dorado cálido
+      color: '#D97706',
+      bgColor: '#FEF9EE',
+      borderColor: '#E5B25D',
+      selectedBg: 'bg-[#FEF9EE]',
+      selectedBorder: 'border-[#E5B25D]',
       title: 'Atención',
       desc: 'Se detectan fluctuaciones emocionales leves.',
       alertText: 'Hemos registrado variaciones leves en tu estado de ánimo.',
@@ -152,15 +158,18 @@ export const AlertModule: React.FC = () => {
     },
     {
       id: 'moderado',
-      color: '#ea580c',
-      bgColor: '#ffedd5',
-      borderColor: '#fed7aa',
+      dotColor: '#E87A52', // Terracota oficial
+      color: '#E87A52',
+      bgColor: '#FDF4F0',
+      borderColor: '#E87A52',
+      selectedBg: 'bg-[#FDF4F0]',
+      selectedBorder: 'border-[#E87A52]',
       title: 'Riesgo moderado',
       desc: 'Estrés o ansiedad frecuente en los últimos días.',
       alertText: 'Hemos identificado un aumento en los niveles de estrés en los últimos 5 días.',
-      alertBg: 'bg-orange-50',
-      alertBorder: 'border-orange-300',
-      alertTextCol: 'text-orange-950',
+      alertBg: 'bg-[#FDF4F0]',
+      alertBorder: 'border-[#E87A52]/40',
+      alertTextCol: 'text-stone-900',
       recommendations: [
         'Realizar una caminata de 15 minutos sin pantallas.',
         'Practicar la respiración guiada 4-4-4.',
@@ -170,9 +179,12 @@ export const AlertModule: React.FC = () => {
     },
     {
       id: 'elevado',
-      color: '#dc2626',
-      bgColor: '#fee2e2',
-      borderColor: '#fca5a5',
+      dotColor: '#DC2626', // Rojo
+      color: '#DC2626',
+      bgColor: '#FEE2E2',
+      borderColor: '#FCA5A5',
+      selectedBg: 'bg-rose-50',
+      selectedBorder: 'border-rose-300',
       title: 'Riesgo elevado',
       desc: 'Tensión acumulada. Se recomienda buscar apoyo.',
       alertText: 'Alerta prioritaria: Se recomienda tomar un descanso y contactar a un especialista.',
@@ -250,8 +262,9 @@ export const AlertModule: React.FC = () => {
         {/* Big Display Title: Alerta Emocional Inteligente */}
         <div className="text-center my-6">
           <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight">
-            <span className="text-[#548c71]">Alerta </span>
-            <span className="text-[#de6943]">Emocional Inteligente</span>
+            <span className="title-gradient bg-gradient-to-r from-[#628E75] to-[#DE7347] bg-clip-text text-transparent inline-block pb-1">
+              Alerta Emocional Inteligente
+            </span>
           </h1>
           <p className="text-stone-500 text-xs sm:text-sm mt-1">Detección temprana y sugerencias de bienestar personalizadas</p>
         </div>
@@ -262,7 +275,7 @@ export const AlertModule: React.FC = () => {
             Semáforo Emocional Interactivo
           </h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 max-w-5xl mx-auto">
             {trafficLightLevels.map((lvl) => {
               const isSelected = selectedRiskLevel === lvl.id;
               return (
@@ -273,21 +286,26 @@ export const AlertModule: React.FC = () => {
                     setSelectedRiskLevel(lvl.id as any);
                     info('Nivel seleccionado', `Mostrando recomendaciones para estado: ${lvl.title}`);
                   }}
-                  className={`p-3.5 rounded-2xl border text-left transition-all flex items-start gap-3 cursor-pointer ${
+                  className={`p-4 rounded-2xl border text-left transition-all flex items-start gap-3.5 cursor-pointer shadow-2xs ${
                     isSelected
-                      ? 'ring-2 ring-stone-900 shadow-sm bg-white border-transparent'
-                      : 'bg-white/90 hover:bg-white border-stone-200'
+                      ? `${lvl.selectedBg} ${lvl.selectedBorder} shadow-sm`
+                      : 'bg-white/85 hover:bg-white border-stone-200/80 hover:border-stone-300'
                   }`}
                 >
                   <span 
-                    className="w-3.5 h-3.5 rounded-full shrink-0 mt-1 shadow-2xs" 
-                    style={{ backgroundColor: lvl.color }}
+                    className="w-3.5 h-3.5 rounded-full shrink-0 mt-0.5 shadow-xs" 
+                    style={{ backgroundColor: lvl.dotColor }}
                   ></span>
-                  <div>
-                    <h3 className="text-sm font-bold text-stone-900 leading-none mb-1">
-                      {lvl.title}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-bold text-stone-900 leading-none mb-1.5 flex items-center justify-between gap-1">
+                      <span>{lvl.title}</span>
+                      {isSelected && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-white/80 text-stone-700 border border-stone-200/50">
+                          Activo
+                        </span>
+                      )}
                     </h3>
-                    <p className="text-xs text-stone-500 leading-snug">
+                    <p className="text-xs text-stone-600 leading-relaxed">
                       {lvl.desc}
                     </p>
                   </div>

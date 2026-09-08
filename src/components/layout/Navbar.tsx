@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ViewMode } from '../../types';
 import { 
   Info, 
-  BookOpen, 
+  Calendar, 
   TrendingUp, 
   Sparkles, 
   Bell, 
@@ -14,7 +14,6 @@ import {
   Menu,
   X,
   Target,
-  ChevronDown,
   LogOut,
   LayoutDashboard
 } from 'lucide-react';
@@ -45,7 +44,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   userLevel
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [moreDropdownOpen, setMoreDropdownOpen] = useState(false);
   const [pendingMissions, setPendingMissions] = useState<number>(() => getPendingMissionsCount());
   const [currentRisk, setCurrentRisk] = useState<string>(() => {
     try {
@@ -54,7 +52,6 @@ export const Navbar: React.FC<NavbarProps> = ({
       return 'moderado';
     }
   });
-  const moreMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleMissionsUpdate = () => {
@@ -72,17 +69,6 @@ export const Navbar: React.FC<NavbarProps> = ({
     };
   }, []);
 
-  // Close dropdown on outside click
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (moreMenuRef.current && !moreMenuRef.current.contains(event.target as Node)) {
-        setMoreDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
   const handleAudioToggle = () => {
     if (onToggleAudio) {
       onToggleAudio();
@@ -91,83 +77,70 @@ export const Navbar: React.FC<NavbarProps> = ({
     }
   };
 
-  const primaryNavLinks: { id: ViewMode; label: string; icon: React.ReactNode; badge?: string }[] = [
-    { 
-      id: 'dashboard', 
-      label: 'Centro de Control', 
-      icon: <LayoutDashboard className="w-4 h-4 text-brand-sage-600" /> 
-    },
+  // The 7 official tabs according to design guidelines
+  const navTabs: { id: ViewMode; label: string; icon: React.ReactNode; badge?: string }[] = [
     { 
       id: 'learn', 
-      label: 'Explora y Aprende', 
-      icon: <Info className="w-4 h-4 text-brand-sage-600" /> 
+      label: 'Explora y aprende', 
+      icon: <Info className="w-4 h-4 shrink-0" /> 
     },
     { 
       id: 'journal', 
       label: 'Diario Emocional', 
-      icon: <BookOpen className="w-4 h-4 text-brand-sage-600" /> 
+      icon: <Calendar className="w-4 h-4 shrink-0" /> 
     },
     { 
-      id: 'missions', 
-      label: 'Misiones', 
-      icon: <Target className="w-4 h-4 text-brand-terracotta-600" />,
-      badge: pendingMissions > 0 ? `${pendingMissions}` : undefined
+      id: 'analytics', 
+      label: 'Análisis Predictivo', 
+      icon: <TrendingUp className="w-4 h-4 shrink-0" /> 
     },
     { 
       id: 'ai', 
       label: 'Flux AI', 
-      icon: (
-        <div className="w-4.5 h-4.5 rounded-md bg-gradient-to-tr from-brand-sage-500 to-brand-terracotta-500 p-0.5 flex items-center justify-center shadow-2xs">
-          <Sparkles className="w-3 h-3 text-white" />
-        </div>
-      )
-    },
-    { 
-      id: 'analytics', 
-      label: 'Análisis', 
-      icon: <TrendingUp className="w-4 h-4 text-brand-sage-600" /> 
+      icon: <Sparkles className="w-4 h-4 shrink-0 text-[#E87A52]" />
     },
     { 
       id: 'alert', 
-      label: 'Alerta', 
-      icon: <Bell className={`w-4 h-4 ${currentRisk === 'elevado' ? 'text-rose-600 animate-bounce' : currentRisk === 'moderado' ? 'text-amber-600' : 'text-brand-sage-600'}`} />,
+      label: 'Alerta Emocional', 
+      icon: <Bell className={`w-4 h-4 shrink-0 ${currentRisk === 'elevado' ? 'text-rose-600 animate-bounce' : ''}`} />,
       badge: currentRisk === 'elevado' ? 'SOS' : currentRisk === 'moderado' ? '!' : undefined
-    }
-  ];
-
-  const secondaryNavLinks: { id: ViewMode; label: string; icon: React.ReactNode; desc: string }[] = [
+    },
     { 
       id: 'profile', 
-      label: 'Perfil y Metas', 
-      icon: <User className="w-4 h-4 text-brand-sage-600" />,
-      desc: 'Avatares, objetivos personales y logros'
+      label: 'Perfil', 
+      icon: <User className="w-4 h-4 shrink-0" /> 
     },
     { 
       id: 'community', 
-      label: 'Comunidad Segura', 
-      icon: <Users className="w-4 h-4 text-brand-sage-600" />,
-      desc: 'Foros moderados, retos y testimonios'
+      label: 'Comunidad', 
+      icon: <Users className="w-4 h-4 shrink-0" /> 
     },
   ];
 
-  const allNavLinks = [...primaryNavLinks, ...secondaryNavLinks];
+  const allDrawerLinks = [
+    { id: 'dashboard' as ViewMode, label: 'Centro de Control', icon: <LayoutDashboard className="w-4 h-4" /> },
+    ...navTabs,
+    { 
+      id: 'missions' as ViewMode, 
+      label: 'Misiones Diarias', 
+      icon: <Target className="w-4 h-4 text-[#E87A52]" />,
+      badge: pendingMissions > 0 ? `${pendingMissions}` : undefined
+    },
+  ];
 
   const handleNavClick = (id: ViewMode) => {
     onNavigate(id);
     setMobileMenuOpen(false);
-    setMoreDropdownOpen(false);
   };
 
-  const isSecondaryActive = secondaryNavLinks.some(link => link.id === currentView);
-
   return (
-    <header className="sticky top-0 z-50 bg-brand-sand-50/95 backdrop-blur-md border-b border-brand-sand-300 shadow-xs">
+    <header className="sticky top-0 z-50 bg-[#FBF9F5]/95 backdrop-blur-md border-b border-[#E8E4DC] shadow-xs">
       <div className="max-w-[1440px] mx-auto px-3 sm:px-6">
-        <div className="flex items-center justify-between h-14 sm:h-16 gap-2">
+        <div className="flex items-center justify-between h-16 gap-2">
           
           {/* Logo on Left */}
           <div 
-            className="flex items-center cursor-pointer shrink-0 mr-1 sm:mr-3" 
+            className="flex items-center cursor-pointer shrink-0 mr-2 sm:mr-4" 
             onClick={() => onNavigate('landing')}
             title="Volver a la Página de Inicio"
             role="button"
@@ -178,105 +151,37 @@ export const Navbar: React.FC<NavbarProps> = ({
             <FluxGlowLogo size="sm" showText={true} />
           </div>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-1 sm:gap-1.5 py-1 text-[13px] sm:text-[14px]">
-            {primaryNavLinks.map((link, idx) => {
+          {/* Desktop Navigation Links with Active Green Bottom Indicator */}
+          <nav className="hidden lg:flex items-center gap-1 xl:gap-2 h-16">
+            {navTabs.map((link) => {
               const isActive = currentView === link.id;
               return (
-                <React.Fragment key={link.id}>
-                  {idx > 0 && (
-                    <span className="text-brand-sand-300 select-none font-light mx-0.5">|</span>
-                  )}
-                  <button
-                    id={`nav-${link.id}`}
-                    onClick={() => handleNavClick(link.id)}
-                    aria-current={isActive ? 'page' : undefined}
-                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl whitespace-nowrap transition-all duration-150 cursor-pointer relative ${
-                      isActive
-                        ? 'font-bold text-brand-sage-900 bg-brand-sage-100 border-b-2 border-brand-sage-500 shadow-2xs'
-                        : 'text-stone-700 hover:text-brand-sage-900 hover:bg-brand-sand-200'
-                    }`}
-                  >
+                <button
+                  key={link.id}
+                  id={`nav-${link.id}`}
+                  onClick={() => handleNavClick(link.id)}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`relative h-full flex items-center gap-1.5 px-2.5 xl:px-3 text-xs xl:text-[13px] whitespace-nowrap transition-colors cursor-pointer ${
+                    isActive
+                      ? 'font-bold text-[#1A1A1A]'
+                      : 'font-medium text-stone-600 hover:text-stone-900'
+                  }`}
+                >
+                  <span className={isActive ? 'text-[#5F927B]' : 'text-stone-400'}>
                     {link.icon}
-                    <span>{link.label}</span>
-                    {link.badge && (
-                      <span className="inline-flex items-center justify-center px-1.5 py-0.2 min-w-4 h-4 text-[10px] font-bold text-white bg-brand-terracotta-600 rounded-full shadow-2xs">
-                        {link.badge}
-                      </span>
-                    )}
-                  </button>
-                </React.Fragment>
+                  </span>
+                  <span>{link.label}</span>
+                  {link.badge && (
+                    <span className="inline-flex items-center justify-center px-1.5 py-0.2 min-w-4 h-4 text-[10px] font-bold text-white bg-rose-600 rounded-full">
+                      {link.badge}
+                    </span>
+                  )}
+                  {isActive && (
+                    <span className="absolute bottom-0 left-2 right-2 h-[2.5px] bg-[#5F927B] rounded-full" />
+                  )}
+                </button>
               );
             })}
-
-            {/* Always visible secondary links on very wide screens (2xl) */}
-            <div className="hidden 2xl:flex items-center gap-1.5">
-              {secondaryNavLinks.map((link) => {
-                const isActive = currentView === link.id;
-                return (
-                  <React.Fragment key={link.id}>
-                    <span className="text-brand-sand-300 select-none font-light mx-0.5">|</span>
-                    <button
-                      id={`nav-2xl-${link.id}`}
-                      onClick={() => handleNavClick(link.id)}
-                      aria-current={isActive ? 'page' : undefined}
-                      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl whitespace-nowrap transition-all duration-150 cursor-pointer ${
-                        isActive
-                          ? 'font-bold text-brand-sage-900 bg-brand-sage-100 border-b-2 border-brand-sage-500 shadow-2xs'
-                          : 'text-stone-700 hover:text-brand-sage-900 hover:bg-brand-sand-200'
-                      }`}
-                    >
-                      {link.icon}
-                      <span>{link.label}</span>
-                    </button>
-                  </React.Fragment>
-                );
-              })}
-            </div>
-
-            {/* "Más" Dropdown for Medium & Laptop Screens */}
-            <div className="relative 2xl:hidden" ref={moreMenuRef}>
-              <span className="text-brand-sand-300 select-none font-light mx-0.5">|</span>
-              <button
-                id="nav-more-menu-btn"
-                onClick={() => setMoreDropdownOpen(!moreDropdownOpen)}
-                className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[13px] sm:text-[14px] font-medium transition-all cursor-pointer ${
-                  isSecondaryActive || moreDropdownOpen
-                    ? 'font-bold text-brand-sage-900 bg-brand-sage-100 shadow-2xs'
-                    : 'text-stone-700 hover:text-brand-sage-900 hover:bg-brand-sand-200'
-                }`}
-                aria-expanded={moreDropdownOpen}
-              >
-                <span>Más</span>
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${moreDropdownOpen ? 'rotate-180 text-brand-sage-700' : 'text-stone-400'}`} />
-              </button>
-
-              {/* Dropdown Menu */}
-              {moreDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-white border border-brand-sand-300 rounded-2xl shadow-lg py-1.5 z-50 animate-fadeIn">
-                  {secondaryNavLinks.map((link) => {
-                    const isActive = currentView === link.id;
-                    return (
-                      <button
-                        key={link.id}
-                        id={`dropdown-nav-${link.id}`}
-                        onClick={() => handleNavClick(link.id)}
-                        className={`w-full text-left px-3.5 py-2 flex items-start gap-2.5 hover:bg-brand-sand-100 transition-colors cursor-pointer ${
-                          isActive ? 'bg-brand-sage-50 text-brand-sage-900 font-bold' : 'text-stone-800'
-                        }`}
-                      >
-                        <span className="mt-0.5">{link.icon}</span>
-                        <div>
-                          <div className="text-xs font-bold leading-tight">{link.label}</div>
-                          <div className="text-[10px] text-stone-500 font-normal">{link.desc}</div>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
           </nav>
 
           {/* Right helper tools: Audio sound + Landing view switcher + Mobile Menu Toggle */}
@@ -316,9 +221,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               id="nav-home-landing-toggle"
               onClick={() => onNavigate(currentView === 'landing' ? 'learn' : 'landing')}
               aria-label={currentView === 'landing' ? 'Ver Módulos de la Aplicación' : 'Ir a la Portada de Inicio'}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 border cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 border cursor-pointer ${
                 currentView === 'landing'
-                  ? 'bg-brand-sage-500 text-white border-brand-sage-500 shadow-2xs'
+                  ? 'bg-[#5F927B] text-white border-[#5F927B] shadow-2xs'
                   : 'bg-white text-stone-700 border-stone-300 hover:bg-stone-100'
               }`}
             >
@@ -355,14 +260,14 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-brand-sand-50 border-b border-brand-sand-300 px-4 py-3 shadow-lg animate-fadeIn">
+        <div className="lg:hidden bg-[#FBF9F5] border-b border-[#E8E4DC] px-4 py-3 shadow-lg animate-fadeIn">
           {userPoints !== undefined && (
             <div 
               onClick={() => {
                 setMobileMenuOpen(false);
                 onNavigate('missions');
               }}
-              className="mb-2.5 p-2.5 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between cursor-pointer hover:bg-amber-100 transition-colors"
+              className="mb-2.5 p-2.5 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-between cursor-pointer hover:bg-amber-100 transition-colors"
             >
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-amber-600" />
@@ -377,7 +282,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-            {allNavLinks.map((link) => {
+            {allDrawerLinks.map((link) => {
               const isActive = currentView === link.id;
               return (
                 <button
@@ -387,17 +292,17 @@ export const Navbar: React.FC<NavbarProps> = ({
                   aria-current={isActive ? 'page' : undefined}
                   className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
                     isActive
-                      ? 'bg-brand-sage-500 text-white shadow-xs'
-                      : 'text-stone-800 hover:bg-brand-sand-200'
+                      ? 'bg-[#5F927B] text-white shadow-xs'
+                      : 'text-stone-800 hover:bg-[#F2ECE1]'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <span className={isActive ? 'text-white' : ''}>{link.icon}</span>
+                    <span className={isActive ? 'text-white' : 'text-stone-500'}>{link.icon}</span>
                     <span>{link.label}</span>
                   </div>
                   {'badge' in link && link.badge && (
                     <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
-                      isActive ? 'bg-white text-brand-sage-600' : 'bg-brand-terracotta-600 text-white'
+                      isActive ? 'bg-white text-[#5F927B]' : 'bg-[#E87A52] text-white'
                     }`}>
                       {link.badge}
                     </span>
@@ -408,13 +313,13 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           {isLoggedIn && onSignOut && (
-            <div className="pt-2.5 mt-2.5 border-t border-brand-sand-300">
+            <div className="pt-2.5 mt-2.5 border-t border-[#E8E4DC]">
               <button
                 onClick={() => {
                   setMobileMenuOpen(false);
                   onSignOut();
                 }}
-                className="w-full py-2.5 px-3 rounded-xl text-xs font-bold text-red-600 hover:bg-red-50 border border-red-200 flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                className="w-full py-2.5 px-3 rounded-full text-xs font-bold text-red-600 hover:bg-red-50 border border-red-200 flex items-center justify-center gap-2 transition-colors cursor-pointer"
               >
                 <LogOut className="w-4 h-4" />
                 <span>Cerrar Sesión</span>

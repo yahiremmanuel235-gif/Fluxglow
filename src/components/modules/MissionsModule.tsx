@@ -227,8 +227,9 @@ export const MissionsModule: React.FC<MissionsModuleProps> = ({
         {/* Big Display Title: Misiones Diarias */}
         <div className="text-center my-6">
           <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight">
-            <span className="text-amber-700">Misiones </span>
-            <span className="text-[#548c71]">Diarias</span>
+            <span className="title-gradient bg-gradient-to-r from-[#628E75] to-[#DE7347] bg-clip-text text-transparent inline-block pb-1">
+              Misiones Diarias
+            </span>
           </h1>
           <p className="text-stone-600 text-xs sm:text-sm mt-1.5 max-w-xl mx-auto">
             Transforma los conceptos de tus lecturas en acciones prácticas de 3 a 5 minutos, suma experiencia y mantén encendida tu racha de bienestar.

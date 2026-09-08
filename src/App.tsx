@@ -362,8 +362,8 @@ export default function App() {
         </AnimatePresence>
       </main>
 
-      {/* Global Footer */}
-      <Footer onNavigate={handleNavigate} />
+      {/* Global Footer (Marketing on landing, compact on internal views) */}
+      <Footer onNavigate={handleNavigate} variant={currentView === 'landing' ? 'full' : 'compact'} />
 
       {/* Onboarding and Platform Tour Modal */}
       <OnboardingModal
