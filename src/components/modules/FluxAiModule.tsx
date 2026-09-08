@@ -429,8 +429,8 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
             </div>
 
             {/* Display Subtitle: ¿Cómo puedo ayudarte? */}
-            <h2 className="font-serif text-3xl sm:text-4xl font-bold tracking-tight mb-3">
-              <span className="title-gradient bg-gradient-to-r from-[#628E75] to-[#DE7347] bg-clip-text text-transparent inline-block pb-1">
+            <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-bold tracking-normal leading-normal overflow-visible mb-3">
+              <span className="title-gradient">
                 ¿Cómo puedo ayudarte?
               </span>
             </h2>

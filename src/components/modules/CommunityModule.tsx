@@ -463,9 +463,9 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
         </div>
 
         {/* Big Display Title: Comunidad FluxGlow */}
-        <div className="text-center my-6">
-          <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight">
-            <span className="title-gradient bg-gradient-to-r from-[#628E75] to-[#DE7347] bg-clip-text text-transparent inline-block pb-1">
+        <div className="text-center my-6 px-2 overflow-visible">
+          <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-normal leading-normal overflow-visible">
+            <span className="title-gradient">
               Comunidad FluxGlow
             </span>
           </h1>
