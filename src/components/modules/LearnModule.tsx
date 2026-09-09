@@ -1058,11 +1058,11 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                     key={guide.id}
                     id={`guide-rec-${guide.id}`}
                     onClick={() => handleOpenGuide(guide)}
-                    className="group cursor-pointer flex flex-col bg-white rounded-3xl p-3.5 border border-stone-200 hover:border-stone-300 shadow-xs hover:shadow-md transition-all justify-between"
+                    className="group cursor-pointer flex flex-col flux-card-sage p-4 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 justify-between"
                   >
                     <div>
                       {/* Card Box with Rounded Border */}
-                      <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-stone-100 mb-3">
+                      <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-stone-100 mb-3 border border-[#C5DDD0]/50 shadow-2xs">
                         <img
                           src={guide.image}
                           alt={guide.badge}
@@ -1073,18 +1073,18 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                         {/* Top Floating Badges */}
                         <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 flex-wrap">
                           {isRead && (
-                            <span className="bg-emerald-600/95 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-md border border-emerald-400/50 shadow-xs flex items-center gap-1">
+                            <span className="bg-[#3E6855]/95 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-md border border-[#C5DDD0]/50 shadow-xs flex items-center gap-1">
                               <Check className="w-2.5 h-2.5 stroke-[3]" />
                               <span>Leída</span>
                             </span>
                           )}
                           {guide.isDemoContent && (
-                            <span className="bg-amber-400/95 backdrop-blur-xs text-amber-950 text-[10px] font-bold px-2 py-0.5 rounded-md border border-amber-500/40 shadow-xs flex items-center gap-1">
+                            <span className="bg-[#E87A52]/95 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-md border border-[#F7D3C3]/40 shadow-xs flex items-center gap-1">
                               <Sparkles className="w-2.5 h-2.5" />
                               <span>Ejemplo IA</span>
                             </span>
                           )}
-                          <span className="bg-white/95 backdrop-blur-xs text-stone-900 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border border-stone-300 shadow-xs whitespace-nowrap">
+                          <span className="bg-white/95 backdrop-blur-xs text-stone-900 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-stone-200 shadow-xs whitespace-nowrap">
                             {guide.badge}
                           </span>
                         </div>
@@ -1093,7 +1093,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                         <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5">
                           <button
                             onClick={(e) => handleShareGuide(guide, e)}
-                            className="w-8 h-8 rounded-full bg-white/90 shadow-sm flex items-center justify-center hover:scale-110 text-stone-600 hover:text-stone-900 transition-transform cursor-pointer"
+                            className="w-8 h-8 rounded-full bg-white/95 shadow-sm flex items-center justify-center hover:scale-110 text-stone-600 hover:text-stone-900 transition-transform cursor-pointer border border-stone-200/80"
                             title="Compartir guía"
                             aria-label="Compartir"
                           >
@@ -1101,7 +1101,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                           </button>
                           <button
                             onClick={(e) => toggleFavorite(guide.id, e)}
-                            className="w-8 h-8 rounded-full bg-white/90 shadow-sm flex items-center justify-center hover:scale-110 transition-transform cursor-pointer"
+                            className="w-8 h-8 rounded-full bg-white/95 shadow-sm flex items-center justify-center hover:scale-110 transition-transform cursor-pointer border border-stone-200/80"
                             title="Guardar favorito"
                             aria-label="Guardar favorito"
                           >
@@ -1115,8 +1115,8 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
 
                         {/* Bottom Bookmark/Continue badge if partially read */}
                         {hasProgress && !isRead && (
-                          <div className="absolute bottom-2.5 left-2.5 bg-stone-900/80 backdrop-blur-xs text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 border border-amber-400/30">
-                            <BookmarkCheck className="w-3 h-3 text-amber-400" />
+                          <div className="absolute bottom-2.5 left-2.5 bg-stone-900/80 backdrop-blur-xs text-[#F7D3C3] text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 border border-[#E87A52]/40">
+                            <BookmarkCheck className="w-3 h-3 text-[#E87A52]" />
                             <span>En progreso</span>
                           </div>
                         )}
@@ -1124,26 +1124,26 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
 
                       {/* Subtitle / Description text below card */}
                       <div>
-                        <div className="flex items-center justify-between text-[11px] font-bold text-[#548c71] uppercase tracking-wider mb-1">
-                          <span>{guide.category}</span>
-                          <span className="text-stone-400 font-medium lowercase flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
+                        <div className="flex items-center justify-between text-[11px] font-bold text-[#3E6855] uppercase tracking-wider mb-1">
+                          <span className="bg-[#EBF1EA] px-2 py-0.5 rounded-md border border-[#C5DDD0]">{guide.category}</span>
+                          <span className="text-stone-500 font-medium lowercase flex items-center gap-1">
+                            <Clock className="w-3 h-3 text-stone-400" />
                             {guide.readTime}
                           </span>
                         </div>
-                        <h3 className="text-sm font-bold text-stone-900 leading-snug line-clamp-2 group-hover:text-[#548c71] transition-colors">
+                        <h3 className="text-sm font-bold text-stone-900 leading-snug line-clamp-2 group-hover:text-[#3E6855] transition-colors mt-1.5">
                           {guide.title}
                         </h3>
-                        <p className="text-xs text-stone-500 mt-1 line-clamp-2 leading-relaxed">
+                        <p className="text-xs text-stone-600 mt-1 line-clamp-2 leading-relaxed">
                           {guide.simpleSummary}
                         </p>
                       </div>
                     </div>
 
                     {/* Bottom Status Footnote */}
-                    <div className="mt-3 pt-2 border-t border-stone-100 flex items-center justify-between text-[11px]">
-                      <span className="text-stone-400 font-medium">{guide.author.split('•')[0]}</span>
-                      <span className="text-[#548c71] font-bold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+                    <div className="mt-3 pt-2.5 border-t border-[#C5DDD0]/60 flex items-center justify-between text-[11px]">
+                      <span className="text-stone-500 font-medium">{guide.author.split('•')[0]}</span>
+                      <span className="text-[#3E6855] font-bold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
                         {isRead ? 'Repasar →' : 'Explorar →'}
                       </span>
                     </div>
@@ -1160,7 +1160,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight flex items-center gap-2">
                 <span>Guías Rápidas Populares:</span>
-                <span className="text-xs font-medium text-stone-400 bg-stone-100 px-2.5 py-0.5 rounded-full">
+                <span className="text-xs font-bold text-[#B54F2C] bg-[#FDF4F0] border border-[#F7D3C3] px-2.5 py-0.5 rounded-full">
                   {filteredPopular.length}
                 </span>
               </h2>
@@ -1177,11 +1177,11 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                     key={guide.id}
                     id={`guide-pop-${guide.id}`}
                     onClick={() => handleOpenGuide(guide)}
-                    className="group cursor-pointer flex flex-col bg-white rounded-3xl p-3.5 border border-stone-200 hover:border-stone-300 shadow-xs hover:shadow-md transition-all justify-between"
+                    className="group cursor-pointer flex flex-col flux-card-terracotta p-4 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 justify-between"
                   >
                     <div>
                       {/* Card Box with Rounded Border */}
-                      <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-stone-100 mb-3">
+                      <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-stone-100 mb-3 border border-[#F7D3C3]/50 shadow-2xs">
                         <img
                           src={guide.image}
                           alt={guide.badge}
@@ -1192,18 +1192,18 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                         {/* Top Floating Badges */}
                         <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 flex-wrap">
                           {isRead && (
-                            <span className="bg-emerald-600/95 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-md border border-emerald-400/50 shadow-xs flex items-center gap-1">
+                            <span className="bg-[#3E6855]/95 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-md border border-[#C5DDD0]/50 shadow-xs flex items-center gap-1">
                               <Check className="w-2.5 h-2.5 stroke-[3]" />
                               <span>Leída</span>
                             </span>
                           )}
                           {guide.isDemoContent && (
-                            <span className="bg-amber-400/95 backdrop-blur-xs text-amber-950 text-[10px] font-bold px-2 py-0.5 rounded-md border border-amber-500/40 shadow-xs flex items-center gap-1">
+                            <span className="bg-[#E87A52]/95 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-md border border-[#F7D3C3]/40 shadow-xs flex items-center gap-1">
                               <Sparkles className="w-2.5 h-2.5" />
                               <span>Ejemplo IA</span>
                             </span>
                           )}
-                          <span className="bg-white/95 backdrop-blur-xs text-stone-900 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border border-stone-300 shadow-xs whitespace-nowrap">
+                          <span className="bg-white/95 backdrop-blur-xs text-stone-900 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-stone-200 shadow-xs whitespace-nowrap">
                             {guide.badge}
                           </span>
                         </div>
@@ -1212,7 +1212,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                         <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5">
                           <button
                             onClick={(e) => handleShareGuide(guide, e)}
-                            className="w-8 h-8 rounded-full bg-white/90 shadow-sm flex items-center justify-center hover:scale-110 text-stone-600 hover:text-stone-900 transition-transform cursor-pointer"
+                            className="w-8 h-8 rounded-full bg-white/95 shadow-sm flex items-center justify-center hover:scale-110 text-stone-600 hover:text-stone-900 transition-transform cursor-pointer border border-stone-200/80"
                             title="Compartir guía"
                             aria-label="Compartir"
                           >
@@ -1220,7 +1220,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                           </button>
                           <button
                             onClick={(e) => toggleFavorite(guide.id, e)}
-                            className="w-8 h-8 rounded-full bg-white/90 shadow-sm flex items-center justify-center hover:scale-110 transition-transform cursor-pointer"
+                            className="w-8 h-8 rounded-full bg-white/95 shadow-sm flex items-center justify-center hover:scale-110 transition-transform cursor-pointer border border-stone-200/80"
                             title="Guardar favorito"
                             aria-label="Guardar favorito"
                           >
@@ -1233,8 +1233,8 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                         </div>
 
                         {hasProgress && !isRead && (
-                          <div className="absolute bottom-2.5 left-2.5 bg-stone-900/80 backdrop-blur-xs text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 border border-amber-400/30">
-                            <BookmarkCheck className="w-3 h-3 text-amber-400" />
+                          <div className="absolute bottom-2.5 left-2.5 bg-stone-900/80 backdrop-blur-xs text-[#F7D3C3] text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 border border-[#E87A52]/40">
+                            <BookmarkCheck className="w-3 h-3 text-[#E87A52]" />
                             <span>En progreso</span>
                           </div>
                         )}
@@ -1242,25 +1242,25 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
 
                       {/* Subtitle / Description text below card */}
                       <div>
-                        <div className="flex items-center justify-between text-[11px] font-bold text-[#de6943] uppercase tracking-wider mb-1">
-                          <span>{guide.category}</span>
-                          <span className="text-stone-400 font-medium lowercase flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
+                        <div className="flex items-center justify-between text-[11px] font-bold text-[#B54F2C] uppercase tracking-wider mb-1">
+                          <span className="bg-[#FDF4F0] px-2 py-0.5 rounded-md border border-[#F7D3C3]">{guide.category}</span>
+                          <span className="text-stone-500 font-medium lowercase flex items-center gap-1">
+                            <Clock className="w-3 h-3 text-stone-400" />
                             {guide.readTime}
                           </span>
                         </div>
-                        <h3 className="text-sm font-bold text-stone-900 leading-snug line-clamp-2 group-hover:text-[#de6943] transition-colors">
+                        <h3 className="text-sm font-bold text-stone-900 leading-snug line-clamp-2 group-hover:text-[#B54F2C] transition-colors mt-1.5">
                           {guide.title}
                         </h3>
-                        <p className="text-xs text-stone-500 mt-1 line-clamp-2 leading-relaxed">
+                        <p className="text-xs text-stone-600 mt-1 line-clamp-2 leading-relaxed">
                           {guide.simpleSummary}
                         </p>
                       </div>
                     </div>
 
-                    <div className="mt-3 pt-2 border-t border-stone-100 flex items-center justify-between text-[11px]">
-                      <span className="text-stone-400 font-medium">{guide.author.split('•')[0]}</span>
-                      <span className="text-[#de6943] font-bold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+                    <div className="mt-3 pt-2.5 border-t border-[#F7D3C3]/60 flex items-center justify-between text-[11px]">
+                      <span className="text-stone-500 font-medium">{guide.author.split('•')[0]}</span>
+                      <span className="text-[#B54F2C] font-bold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
                         {isRead ? 'Repasar →' : 'Explorar →'}
                       </span>
                     </div>

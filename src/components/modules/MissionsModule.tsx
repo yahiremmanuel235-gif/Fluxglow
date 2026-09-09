@@ -245,7 +245,7 @@ export const MissionsModule: React.FC<MissionsModuleProps> = ({
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
           
           {/* Card 1: Misiones Pendientes (Prominent Highlight with Terracotta) */}
-          <div className="bg-gradient-to-br from-[#FDF4F0] to-[#FDF1EC] rounded-3xl p-4 sm:p-5 border-2 border-[#E87A52]/50 shadow-sm flex items-center justify-between">
+          <div className="flux-card-terracotta p-4 sm:p-5 flex items-center justify-between">
             <div>
               <span className="text-[11px] font-bold uppercase tracking-wider text-[#B54F2C]">
                 Pendientes Hoy
@@ -254,7 +254,7 @@ export const MissionsModule: React.FC<MissionsModuleProps> = ({
                 <span className="text-3xl sm:text-4xl font-bold text-[#873418] font-serif">
                   {pendingMissions.length}
                 </span>
-                <span className="text-xs font-medium text-[#B54F2C]">por realizar</span>
+                <span className="text-xs font-semibold text-[#B54F2C]">por realizar</span>
               </div>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-white border border-[#F7D3C3] flex items-center justify-center p-2.5 shadow-2xs shrink-0">
@@ -263,16 +263,16 @@ export const MissionsModule: React.FC<MissionsModuleProps> = ({
           </div>
 
           {/* Card 2: Misiones Completadas (Sage Green) */}
-          <div className="bg-gradient-to-br from-[#F2F7F4] to-[#EBF1EA] rounded-3xl p-4 sm:p-5 border-2 border-[#5F927B]/40 shadow-xs flex items-center justify-between">
+          <div className="flux-card-sage p-4 sm:p-5 flex items-center justify-between">
             <div>
               <span className="text-[11px] font-bold uppercase tracking-wider text-[#3E6855]">
                 Completadas
               </span>
               <div className="flex items-baseline gap-1.5 mt-1">
-                <span className="text-3xl sm:text-4xl font-bold text-[#3E6855] font-serif">
+                <span className="text-3xl sm:text-4xl font-bold text-[#253D33] font-serif">
                   {completedMissions.length}
                 </span>
-                <span className="text-xs font-medium text-[#5F927B]">retos listos</span>
+                <span className="text-xs font-semibold text-[#3E6855]">retos listos</span>
               </div>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-white border border-[#C5DDD0] flex items-center justify-center p-2.5 shadow-2xs shrink-0">
@@ -281,45 +281,44 @@ export const MissionsModule: React.FC<MissionsModuleProps> = ({
           </div>
 
           {/* Card 3: Racha Consecutiva (Terracotta Glow) */}
-          <div className="bg-white rounded-3xl p-4 sm:p-5 border-2 border-[#E87A52]/30 shadow-xs flex items-center justify-between">
+          <div className="flux-card-terracotta p-4 sm:p-5 flex items-center justify-between">
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-stone-600">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#B54F2C]">
                 Racha de Hábitos
               </span>
               <div className="flex items-baseline gap-1.5 mt-1">
-                <span className="text-3xl sm:text-4xl font-bold text-[#E87A52] font-serif">
+                <span className="text-3xl sm:text-4xl font-bold text-[#873418] font-serif">
                   {streakDays}
                 </span>
-                <span className="text-xs font-medium text-stone-400">días seguidos</span>
+                <span className="text-xs font-semibold text-[#B54F2C]">días seguidos</span>
               </div>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-[#FDF4F0] border border-[#F7D3C3] flex items-center justify-center p-2 shadow-2xs shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-white border border-[#F7D3C3] flex items-center justify-center p-2 shadow-2xs shrink-0">
               <img src="/assets/badges/badge-streak.png" alt="Racha" className="w-8 h-8 object-contain" />
             </div>
           </div>
 
           {/* Card 4: Puntos de Experiencia (XP) & Nivel */}
-          <div className="bg-white rounded-3xl p-4 sm:p-5 border-2 border-[#5F927B]/30 shadow-xs flex items-center justify-between">
+          <div className="flux-card-sage p-4 sm:p-5 flex items-center justify-between">
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-stone-600 flex items-center gap-1">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#3E6855] flex items-center gap-1">
                 <span>XP y Nivel</span>
                 {user && <span className="text-[9px] bg-[#EBF1EA] text-[#3E6855] px-1.5 py-0.2 rounded font-bold">Nube</span>}
               </span>
               <div className="flex items-baseline gap-1.5 mt-1">
-                <span className="text-3xl sm:text-4xl font-bold text-stone-900 font-serif">
+                <span className="text-3xl sm:text-4xl font-bold text-[#253D33] font-serif">
                   +{userPoints}
                 </span>
-                <span className="text-xs font-medium text-[#E87A52]">XP</span>
+                <span className="text-xs font-bold text-[#3E6855]">XP</span>
               </div>
-              <span className="text-[11px] font-semibold text-stone-500 block mt-0.5">
+              <span className="text-[11px] font-semibold text-stone-600 block mt-0.5">
                 Nivel {userLevel} • {user ? 'Supabase' : 'Local'}
               </span>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-[#F2F7F4] border border-[#C5DDD0] flex items-center justify-center p-2 shadow-2xs shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-white border border-[#C5DDD0] flex items-center justify-center p-2 shadow-2xs shrink-0">
               <img src="/assets/badges/badge-mastery.png" alt="Nivel" className="w-8 h-8 object-contain" />
             </div>
           </div>
-
         </div>
 
         {/* SEARCH & FILTERS BAR */}
@@ -426,13 +425,20 @@ export const MissionsModule: React.FC<MissionsModuleProps> = ({
                 <div
                   key={m.id}
                   id={`mission-card-${m.id}`}
-                  className={`rounded-3xl p-5 sm:p-6 border transition-all ${
+                  className={`relative rounded-3xl p-5 sm:p-6 border-2 transition-all duration-300 overflow-hidden ${
                     isDone 
-                      ? 'bg-white/80 border-emerald-200 opacity-90 shadow-2xs' 
-                      : 'bg-white border-amber-200/90 shadow-xs hover:shadow-md hover:border-amber-300'
+                      ? 'bg-[#F2F7F4]/90 border-[#5F927B]/40 shadow-2xs' 
+                      : 'bg-white border-[#E87A52]/30 hover:border-[#E87A52] shadow-xs hover:shadow-md group hover:-translate-y-0.5'
                   }`}
                 >
-                  <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                  {/* Decorative indicator accent on left */}
+                  <div 
+                    className={`absolute top-4 bottom-4 left-0 w-1.5 rounded-r-full transition-colors ${
+                      isDone ? 'bg-[#5F927B]' : 'bg-[#E87A52]'
+                    }`}
+                  />
+
+                  <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pl-2">
                     
                     {/* Left: Status Icon & Details */}
                     <div className="flex items-start gap-4 flex-1">
@@ -441,51 +447,51 @@ export const MissionsModule: React.FC<MissionsModuleProps> = ({
                       <button
                         onClick={() => handleToggleComplete(m.id, m.status)}
                         disabled={isItemLoading}
-                        className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 transition-all cursor-pointer mt-0.5 ${
+                        className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 transition-all cursor-pointer mt-0.5 ${
                           isItemLoading
-                            ? 'bg-amber-100/70 border border-amber-300 text-amber-800 cursor-wait'
+                            ? 'bg-[#FDF4F0] border border-[#F7D3C3] text-[#B54F2C] cursor-wait'
                             : isDone
-                            ? 'bg-[#548c71] text-white shadow-xs hover:bg-[#43705a]'
-                            : 'bg-amber-100 text-amber-800 hover:bg-amber-200 border border-amber-300'
+                            ? 'bg-[#5F927B] text-white shadow-xs hover:bg-[#3E6855]'
+                            : 'bg-[#FDF4F0] text-[#B54F2C] hover:bg-[#FCEAE2] border-2 border-[#F7D3C3] hover:border-[#E87A52]'
                         }`}
                         title={isItemLoading ? 'Guardando...' : isDone ? 'Misión completada. Clic para desmarcar.' : 'Clic para marcar como completada'}
                       >
                         {isItemLoading ? (
-                          <Loader2 className="w-5 h-5 animate-spin text-amber-800" />
+                          <Loader2 className="w-5 h-5 animate-spin text-[#E87A52]" />
                         ) : isDone ? (
                           <Check className="w-5 h-5 stroke-[3]" />
                         ) : (
-                          <Circle className="w-5 h-5" />
+                          <Circle className="w-5 h-5 stroke-[2.5]" />
                         )}
                       </button>
 
                       {/* Content */}
-                      <div className="flex-1">
+                      <div className="flex-1 min-w-0">
                         
-                        {/* Origin Guide Pill */}
-                        <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                        {/* Origin Guide Pill & Badges */}
+                        <div className="flex items-center gap-2 flex-wrap mb-2">
                           <button
                             onClick={() => handleGoToGuide(m.guideId)}
-                            className="bg-brand-sand-100 hover:bg-brand-sand-200 text-stone-700 text-[11px] font-semibold px-2.5 py-0.5 rounded-full flex items-center gap-1 border border-brand-sand-300 transition-colors cursor-pointer group"
+                            className="bg-white hover:bg-[#FAF7F2] text-stone-800 text-[11px] font-semibold px-3 py-0.5 rounded-full flex items-center gap-1.5 border border-stone-200/90 shadow-2xs transition-colors cursor-pointer group/guide"
                             title="Ver guía de origen"
                           >
-                            <BookOpen className="w-3 h-3 text-brand-sage-600 group-hover:scale-110 transition-transform" />
-                            <span className="line-clamp-1 max-w-[200px] sm:max-w-none">Guía: {m.guideTitle}</span>
+                            <BookOpen className="w-3.5 h-3.5 text-[#5F927B] group-hover/guide:scale-110 transition-transform" />
+                            <span className="line-clamp-1 max-w-[220px] sm:max-w-none">Guía: {m.guideTitle}</span>
                           </button>
 
                           {/* Category Badge */}
-                          <span className="text-[10px] font-bold text-brand-terracotta-800 bg-brand-terracotta-50 border border-brand-terracotta-200 px-2 py-0.5 rounded-md uppercase tracking-wider">
+                          <span className="text-[10px] font-bold text-[#B54F2C] bg-[#FDF4F0] border border-[#F7D3C3] px-2.5 py-0.5 rounded-full uppercase tracking-wider">
                             {m.category}
                           </span>
 
                           {/* Status Badge */}
                           {isDone ? (
-                            <span className="text-[10px] font-bold text-brand-sage-700 bg-brand-sage-50 border border-brand-sage-200 px-2 py-0.5 rounded-md flex items-center gap-1">
-                              <CheckCircle2 className="w-3 h-3" />
+                            <span className="text-[10px] font-bold text-[#3E6855] bg-[#EBF1EA] border border-[#C5DDD0] px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-2xs">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-[#5F927B]" />
                               <span>Completada</span>
                             </span>
                           ) : (
-                            <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md">
+                            <span className="text-[10px] font-bold text-[#873418] bg-[#FDF4F0] border border-[#F7D3C3] px-2.5 py-0.5 rounded-full">
                               Pendiente
                             </span>
                           )}
@@ -493,34 +499,34 @@ export const MissionsModule: React.FC<MissionsModuleProps> = ({
                         </div>
 
                         {/* Mission Title */}
-                        <h3 className={`text-base sm:text-lg font-bold leading-snug ${
-                          isDone ? 'text-stone-500 line-through' : 'text-stone-900'
+                        <h3 className={`text-base sm:text-lg font-bold leading-snug tracking-tight ${
+                          isDone ? 'text-stone-400 line-through' : 'text-stone-900 group-hover:text-[#873418] transition-colors'
                         }`}>
                           {m.title}
                         </h3>
 
                         {/* Mission Description */}
-                        <p className={`text-xs sm:text-sm mt-1 leading-relaxed ${
+                        <p className={`text-xs sm:text-sm mt-1.5 leading-relaxed ${
                           isDone ? 'text-stone-400' : 'text-stone-600'
                         }`}>
                           {m.description}
                         </p>
 
                         {/* Time, XP and Real Relative Date Badges */}
-                        <div className="flex items-center gap-3 mt-3 text-xs text-stone-500 flex-wrap">
-                          <span className="flex items-center gap-1 font-medium">
+                        <div className="flex items-center gap-3 mt-3 text-xs text-stone-600 flex-wrap">
+                          <span className="flex items-center gap-1 font-medium bg-stone-50 border border-stone-200 px-2 py-0.5 rounded-md">
                             <Clock className="w-3.5 h-3.5 text-stone-400" />
                             <span>{m.timeEstimate || '5 min'}</span>
                           </span>
 
-                          <span className="flex items-center gap-1 font-bold text-brand-terracotta-800 bg-brand-terracotta-100/80 px-2 py-0.5 rounded-full">
-                            <Sparkles className="w-3 h-3 text-brand-terracotta-600" />
+                          <span className="flex items-center gap-1 font-bold text-[#873418] bg-[#FDF4F0] border border-[#F7D3C3] px-2.5 py-0.5 rounded-full shadow-2xs">
+                            <Sparkles className="w-3.5 h-3.5 text-[#E87A52]" />
                             <span>+{m.xp || 30} XP</span>
                           </span>
 
                           {m.completedAt && (
-                            <span className="text-[11px] font-medium text-brand-sage-700 bg-brand-sage-50 border border-brand-sage-200 px-2 py-0.5 rounded-md flex items-center gap-1">
-                              <CheckCircle2 className="w-3 h-3 text-brand-sage-600" />
+                            <span className="text-[11px] font-semibold text-[#3E6855] bg-[#EBF1EA] border border-[#C5DDD0] px-2.5 py-0.5 rounded-md flex items-center gap-1">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-[#5F927B]" />
                               <span>{formatCompletionDate(m.completedAt)}</span>
                             </span>
                           )}
@@ -534,14 +540,14 @@ export const MissionsModule: React.FC<MissionsModuleProps> = ({
                     <div className="w-full md:w-auto flex md:flex-col items-center justify-end gap-2 pt-2 md:pt-0 border-t md:border-t-0 border-stone-100">
                       {isDone ? (
                         <div className="w-full md:w-auto flex items-center gap-2">
-                          <span className="flex-1 md:flex-initial text-xs font-bold text-brand-sage-800 bg-brand-sage-100 border border-brand-sage-200 px-3.5 py-2 rounded-xl flex items-center justify-center gap-1.5">
-                            <CheckCircle2 className="w-4 h-4 text-brand-sage-600" />
+                          <span className="flex-1 md:flex-initial text-xs font-bold text-[#3E6855] bg-[#EBF1EA] border border-[#C5DDD0] px-4 py-2.5 rounded-xl flex items-center justify-center gap-1.5 shadow-2xs">
+                            <CheckCircle2 className="w-4 h-4 text-[#5F927B]" />
                             <span>Completada</span>
                           </span>
                           <button
                             onClick={() => handleToggleComplete(m.id, m.status)}
                             disabled={isItemLoading}
-                            className="p-2 rounded-xl text-stone-500 hover:text-stone-800 hover:bg-stone-100 border border-stone-200 transition-colors cursor-pointer disabled:opacity-50"
+                            className="p-2.5 rounded-xl text-stone-500 hover:text-stone-800 hover:bg-stone-100 border border-stone-200 transition-colors cursor-pointer disabled:opacity-50"
                             title="Deshacer y marcar como pendiente"
                             aria-label="Deshacer completado"
                           >
@@ -556,7 +562,7 @@ export const MissionsModule: React.FC<MissionsModuleProps> = ({
                         <button
                           onClick={() => handleToggleComplete(m.id, m.status)}
                           disabled={isItemLoading}
-                          className="w-full md:w-auto px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer bg-gradient-to-r from-brand-terracotta-500 to-brand-terracotta-600 hover:opacity-95 text-white disabled:opacity-75 disabled:cursor-wait"
+                          className="w-full md:w-auto px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all shadow-xs hover:shadow-md flex items-center justify-center gap-2 cursor-pointer bg-gradient-to-r from-[#E87A52] to-[#B54F2C] hover:opacity-95 text-white disabled:opacity-75 disabled:cursor-wait active:scale-95"
                         >
                           {isItemLoading ? (
                             <>
@@ -565,7 +571,7 @@ export const MissionsModule: React.FC<MissionsModuleProps> = ({
                             </>
                           ) : (
                             <>
-                              <Check className="w-4 h-4" />
+                              <Check className="w-4 h-4 stroke-[2.5]" />
                               <span>Completar misión</span>
                             </>
                           )}

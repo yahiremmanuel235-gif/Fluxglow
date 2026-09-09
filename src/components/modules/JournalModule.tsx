@@ -431,8 +431,8 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
             </div>
 
             {/* Big White Card Box with Textarea and Tools */}
-            <div className="bg-gradient-to-b from-white to-[#FAF7F2] rounded-[26px] border-2 border-[#5F927B]/40 hover:border-[#5F927B] shadow-xs p-6 sm:p-8 mb-10 transition-all">
-              <div className="flex items-center justify-between pb-3 border-b border-stone-200/80 mb-4">
+            <div className="flux-card-sage p-6 sm:p-8 mb-10">
+              <div className="flex items-center justify-between pb-3.5 border-b border-[#C5DDD0]/70 mb-4">
                 <span className="text-xs font-bold text-[#3E6855] uppercase tracking-wider flex items-center gap-1.5">
                   <Lock className="w-3.5 h-3.5 text-[#5F927B]" />
                   Espacio privado y seguro de desahogo
@@ -630,26 +630,29 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 {entries.map((entry) => (
                   <div 
                     key={entry.id}
-                    className="bg-white rounded-3xl p-5 border border-stone-200 shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between"
+                    className="relative bg-white rounded-3xl p-5 sm:p-6 border-2 border-[#5F927B]/30 hover:border-[#5F927B] shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between group hover:-translate-y-0.5 overflow-hidden"
                   >
-                    <div>
-                      <div className="flex items-center justify-between pb-2 border-b border-stone-100 mb-2.5">
+                    {/* Sage indicator stripe on left */}
+                    <div className="absolute top-4 bottom-4 left-0 w-1.5 bg-[#5F927B] rounded-r-full" />
+
+                    <div className="pl-2">
+                      <div className="flex items-center justify-between pb-3 border-b border-stone-100 mb-3">
                         <div className="flex items-center gap-2">
                           <MoodIcon mood={entry.mood} className="w-6 h-6" />
-                          <span className="text-xs font-bold text-stone-800 capitalize">
+                          <span className="text-xs font-bold text-stone-900 capitalize">
                             {entry.mood}
                           </span>
-                          <span className="text-[10px] bg-stone-100 px-2 py-0.5 rounded-full text-stone-600 font-bold">
+                          <span className="text-[10px] bg-[#EBF1EA] border border-[#C5DDD0] px-2 py-0.5 rounded-full text-[#3E6855] font-bold">
                             {entry.intensity}/10
                           </span>
                         </div>
 
                         <div className="flex items-center gap-2 text-xs text-stone-400">
-                          <span>{entry.date}</span>
+                          <span className="text-[11px] font-medium text-stone-500">{entry.date}</span>
                           <button 
                             onClick={() => handleDeleteEntry(entry.id)}
                             className="text-stone-300 hover:text-red-500 transition-colors cursor-pointer p-1"
@@ -660,14 +663,16 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
                         </div>
                       </div>
 
-                      <p className="text-xs sm:text-sm text-stone-700 leading-relaxed line-clamp-3 mb-3">
-                        "{entry.notes}"
-                      </p>
+                      <div className="bg-[#FAF7F2] p-3.5 rounded-2xl border border-stone-200/80 mb-3 shadow-2xs">
+                        <p className="text-xs sm:text-sm text-stone-700 italic leading-relaxed line-clamp-4">
+                          "{entry.notes}"
+                        </p>
+                      </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-1 pt-2 border-t border-stone-100">
+                    <div className="flex flex-wrap gap-1.5 pt-2 border-t border-stone-100 pl-2">
                       {entry.triggers.map((t, idx) => (
-                        <span key={idx} className="text-[10px] bg-[#e8f1ec] text-[#2d5a3f] px-2 py-0.5 rounded-md font-medium">
+                        <span key={idx} className="text-[10px] bg-[#EBF1EA] text-[#3E6855] border border-[#C5DDD0] px-2 py-0.5 rounded-full font-semibold">
                           #{t}
                         </span>
                       ))}

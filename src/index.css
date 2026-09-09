@@ -103,6 +103,112 @@
   box-shadow: 0 8px 24px -4px rgba(232, 122, 82, 0.22);
 }
 
+/* ==========================================================================
+   FLUXGLOW CARDS: PRETTIER FRAMES & INNER HIGHLIGHT SYSTEM
+   Borders that subtly blend sage (#5F927B) and terracotta (#E87A52) with
+   distinct inner contrast for numbers, badges, and typography.
+   ========================================================================== */
+
+.flux-card {
+  position: relative;
+  background-color: #ffffff;
+  border-radius: 1.5rem;
+  border: 1.5px solid rgba(95, 146, 123, 0.28);
+  box-shadow: 0 4px 20px -2px rgba(95, 146, 123, 0.07), 0 2px 6px -1px rgba(232, 122, 82, 0.04);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.flux-card:hover {
+  border-color: rgba(95, 146, 123, 0.65);
+  box-shadow: 0 14px 30px -4px rgba(95, 146, 123, 0.15), 0 6px 12px -2px rgba(232, 122, 82, 0.08);
+  transform: translateY(-2px);
+}
+
+/* Card with dual-tone top accent frame */
+.flux-card-dual {
+  position: relative;
+  background-color: #ffffff;
+  border-radius: 1.5rem;
+  border: 1.5px solid rgba(95, 146, 123, 0.24);
+  box-shadow: 0 4px 20px -2px rgba(95, 146, 123, 0.06), 0 2px 6px -1px rgba(232, 122, 82, 0.05);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.flux-card-dual::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #5F927B 0%, #E5B25D 50%, #E87A52 100%);
+  opacity: 0.9;
+  transition: opacity 0.3s ease;
+  z-index: 10;
+}
+
+.flux-card-dual:hover {
+  border-color: rgba(232, 122, 82, 0.5);
+  box-shadow: 0 14px 32px -4px rgba(95, 146, 123, 0.14), 0 8px 16px -2px rgba(232, 122, 82, 0.12);
+  transform: translateY(-3px);
+}
+
+.flux-card-dual:hover::before {
+  opacity: 1;
+  height: 5px;
+}
+
+/* Terracotta dominant card (action, energy, streak, XP) */
+.flux-card-terracotta {
+  position: relative;
+  background: linear-gradient(145deg, #ffffff 60%, #FDF4F0 100%);
+  border-radius: 1.5rem;
+  border: 1.5px solid rgba(232, 122, 82, 0.35);
+  box-shadow: 0 4px 18px -2px rgba(232, 122, 82, 0.08);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.flux-card-terracotta:hover {
+  border-color: #E87A52;
+  box-shadow: 0 12px 28px -4px rgba(232, 122, 82, 0.18), 0 4px 10px -2px rgba(95, 146, 123, 0.06);
+  transform: translateY(-2px);
+}
+
+/* Sage dominant card (calm, reflection, wisdom, guides) */
+.flux-card-sage {
+  position: relative;
+  background: linear-gradient(145deg, #ffffff 60%, #F2F7F4 100%);
+  border-radius: 1.5rem;
+  border: 1.5px solid rgba(95, 146, 123, 0.35);
+  box-shadow: 0 4px 18px -2px rgba(95, 146, 123, 0.08);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.flux-card-sage:hover {
+  border-color: #5F927B;
+  box-shadow: 0 12px 28px -4px rgba(95, 146, 123, 0.18), 0 4px 10px -2px rgba(232, 122, 82, 0.06);
+  transform: translateY(-2px);
+}
+
+/* Inner highlighted panels for prominent cards */
+.flux-inner-box {
+  background: rgba(251, 249, 245, 0.85);
+  border: 1px solid rgba(95, 146, 123, 0.18);
+  border-radius: 1rem;
+  padding: 0.875rem 1rem;
+  transition: all 0.2s ease;
+}
+
+.flux-inner-box:hover {
+  background: #ffffff;
+  border-color: rgba(95, 146, 123, 0.35);
+}
+
+.glow-flux-terracotta {
+  box-shadow: 0 8px 24px -4px rgba(232, 122, 82, 0.22);
+}
+
 .badge-sage {
   background-color: #EBF1EA;
   color: #3e6855;

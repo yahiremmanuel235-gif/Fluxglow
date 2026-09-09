@@ -549,53 +549,53 @@ Generado con FluxGlow • Cuidado emocional consciente`;
         </div>
 
         {/* STATS DELTA STRIP (Comparative Periods %) */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-          <div className="bg-gradient-to-br from-white to-[#F2F7F4] p-4 rounded-3xl border-2 border-[#5F927B]/30 shadow-2xs flex items-center justify-between">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-7">
+          <div className="flux-card-sage p-5 flex items-center justify-between">
             <div>
-              <p className="text-[11px] font-semibold text-stone-500">Bienestar Subjetivo</p>
-              <h3 className="text-xl font-bold text-stone-900 mt-0.5">{subjectiveWellbeing.score} / 10</h3>
-              <p className="text-[11px] text-[#3E6855] font-bold flex items-center gap-0.5 mt-1">
+              <p className="text-[11px] font-bold text-stone-600 uppercase tracking-wider">Bienestar Subjetivo</p>
+              <h3 className="text-2xl font-bold text-stone-900 mt-1">{subjectiveWellbeing.score} / 10</h3>
+              <p className="text-xs text-[#3E6855] font-bold flex items-center gap-1 mt-1.5">
                 <ArrowUpRight className="w-3.5 h-3.5 text-[#5F927B]" />
                 <span>{subjectiveWellbeing.deltaText}</span>
               </p>
             </div>
-            <div className="w-11 h-11 rounded-2xl bg-white border border-[#C5DDD0] flex items-center justify-center p-2 shadow-2xs">
-              <img src="/assets/icons/trophy.png" alt="Bienestar" className="w-6 h-6 object-contain" />
+            <div className="w-12 h-12 rounded-2xl bg-white border border-[#C5DDD0] flex items-center justify-center p-2.5 shadow-2xs">
+              <img src="/assets/icons/trophy.png" alt="Bienestar" className="w-7 h-7 object-contain" />
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-white to-[#FDF4F0] p-4 rounded-3xl border-2 border-[#E87A52]/30 shadow-2xs flex items-center justify-between">
+          <div className="flux-card-terracotta p-5 flex items-center justify-between">
             <div>
-              <p className="text-[11px] font-semibold text-stone-500">Consistencia de Hábitos</p>
-              <h3 className="text-xl font-bold text-stone-900 mt-0.5">{streakDays} días activos</h3>
-              <p className="text-[11px] text-[#B54F2C] font-bold flex items-center gap-0.5 mt-1">
+              <p className="text-[11px] font-bold text-stone-600 uppercase tracking-wider">Consistencia de Hábitos</p>
+              <h3 className="text-2xl font-bold text-stone-900 mt-1">{streakDays} días activos</h3>
+              <p className="text-xs text-[#B54F2C] font-bold flex items-center gap-1 mt-1.5">
                 <ArrowUpRight className="w-3.5 h-3.5 text-[#E87A52]" />
                 <span>{streakDays === 0 ? '0% Racha por iniciar' : `+${streakDays * 10}% racha sostenida`}</span>
               </p>
             </div>
-            <div className="w-11 h-11 rounded-2xl bg-[#FDF4F0] border border-[#F7D3C3] flex items-center justify-center p-1.5 shadow-2xs">
-              <img src="/assets/badges/badge-streak.png" alt="Racha" className="w-7 h-7 object-contain" />
+            <div className="w-12 h-12 rounded-2xl bg-[#FDF4F0] border border-[#F7D3C3] flex items-center justify-center p-2 shadow-2xs">
+              <img src="/assets/badges/badge-streak.png" alt="Racha" className="w-8 h-8 object-contain" />
             </div>
           </div>
 
-          <div className="bg-white p-4 rounded-3xl border-2 border-[#5F927B]/30 shadow-2xs flex items-center justify-between">
+          <div className="flux-card-dual p-5 flex items-center justify-between">
             <div>
-              <p className="text-[11px] font-semibold text-stone-500">Picos de Estrés Reactivo</p>
-              <h3 className="text-xl font-bold text-stone-900 mt-0.5">{reactiveStressEpisodes.count} episodios</h3>
-              <p className="text-[11px] text-stone-600 font-medium flex items-center gap-0.5 mt-1">
+              <p className="text-[11px] font-bold text-stone-600 uppercase tracking-wider">Picos de Estrés Reactivo</p>
+              <h3 className="text-2xl font-bold text-stone-900 mt-1">{reactiveStressEpisodes.count} episodios</h3>
+              <p className="text-xs text-stone-600 font-medium flex items-center gap-1 mt-1.5">
                 <img src="/assets/icons/alert-shield.png" alt="Escudo" className="w-3.5 h-3.5 object-contain" />
                 <span>{reactiveStressEpisodes.text}</span>
               </p>
             </div>
-            <div className="w-11 h-11 rounded-2xl bg-[#FDF4F0] border border-[#F7D3C3] flex items-center justify-center p-2 shadow-2xs">
-              <img src="/assets/icons/alert-shield.png" alt="Alerta" className="w-6 h-6 object-contain" />
+            <div className="w-12 h-12 rounded-2xl bg-white border border-[#C5DDD0] flex items-center justify-center p-2.5 shadow-2xs">
+              <img src="/assets/icons/alert-shield.png" alt="Alerta" className="w-7 h-7 object-contain" />
             </div>
           </div>
         </div>
 
         {/* SECTION: Correlación entre Factores Detonantes y Ánimo */}
-        <div className="bg-white rounded-3xl border-2 border-[#5F927B]/20 shadow-2xs p-6 sm:p-7 mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-stone-200">
+        <div className="flux-card-sage p-6 sm:p-7 mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#C5DDD0]/70">
             <div>
               <div className="flex items-center gap-2">
                 <Tag className="w-5 h-5 text-brand-sage-600" />
@@ -695,10 +695,10 @@ Generado con FluxGlow • Cuidado emocional consciente`;
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
 
           {/* CARD 1 (LEFT): Aprendizaje y Conocimiento */}
-          <div className="bg-white rounded-3xl border border-brand-sand-300 shadow-2xs p-6 sm:p-8 flex flex-col justify-between">
+          <div className="flux-card-sage p-6 sm:p-8 flex flex-col justify-between">
             <div>
               {/* Header inside Card 1 */}
-              <div className="flex items-start justify-between gap-4 pb-4 border-b border-brand-sand-200">
+              <div className="flex items-start justify-between gap-4 pb-4 border-b border-[#C5DDD0]/70">
                 <div>
                   <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight font-serif">
                     Aprendizaje y Conocimiento
@@ -709,7 +709,7 @@ Generado con FluxGlow • Cuidado emocional consciente`;
                       Guías y retos completados
                     </span>
                   </div>
-                  <p className="text-xs text-brand-sage-700 font-bold mt-0.5">
+                  <p className="text-xs text-[#3E6855] font-bold mt-0.5">
                     {completedMissionsCount === 0 ? 'Comienza tu primera guía o reto hoy' : `+${completedMissionsCount * 10}% Completado en este periodo`}
                   </p>
                 </div>
