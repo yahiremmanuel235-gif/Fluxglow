@@ -226,15 +226,15 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
   const userName = userProfile?.name || user?.user_metadata?.name || 'Explorador';
 
   return (
-    <div className="w-full bg-[#fbf9f5] min-h-screen pb-24 pt-4 px-4 sm:px-6 lg:px-8 text-stone-800">
+    <div className="w-full bg-flux-brand-bath min-h-screen pb-24 pt-4 px-4 sm:px-6 lg:px-8 text-stone-800">
       <div className="max-w-[1280px] mx-auto space-y-6">
 
         {/* 1. TOP BAR HEADER: Marca, Estado de Conexión y Accesos directos */}
-        <div className="flex flex-wrap items-center justify-between gap-3 py-2 border-b border-[#ece4d9]">
+        <div className="flex flex-wrap items-center justify-between gap-3 py-2 border-b border-[#5F927B]/20">
           <div className="flex items-center gap-2">
-            <FluxGlowLogo imgSrc="/logo2.png" size="sm" showText={true} />
-            <span className="text-[11px] font-bold text-brand-sage-900 bg-brand-sage-100 border border-brand-sage-300 px-2.5 py-0.5 rounded-full ml-1 flex items-center gap-1">
-              <Compass className="w-3 h-3 text-brand-sage-700" />
+            <FluxGlowLogo size="xs" showText={true} />
+            <span className="text-[11px] font-bold text-[#3E6855] bg-[#EBF1EA] border border-[#C5DDD0] px-2.5 py-0.5 rounded-full ml-1 flex items-center gap-1.5 shadow-2xs">
+              <span className="w-2 h-2 rounded-full bg-[#5F927B] animate-pulse" />
               <span>Centro de Control</span>
             </span>
           </div>
@@ -242,8 +242,8 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
           <div className="flex items-center gap-2">
             {/* Estado de sincronización en tiempo real */}
             {authLoading || isJournalLoading || isMissionsLoading ? (
-              <div className="flex items-center gap-1.5 text-[11px] font-medium text-stone-600 bg-stone-100 border border-stone-200 px-2.5 py-1 rounded-full">
-                <Loader2 className="w-3 h-3 animate-spin text-[#548c71]" />
+              <div className="flex items-center gap-1.5 text-[11px] font-medium text-stone-600 bg-white border border-stone-200 px-2.5 py-1 rounded-full shadow-2xs">
+                <Loader2 className="w-3 h-3 animate-spin text-[#5F927B]" />
                 <span className="hidden sm:inline">Sincronizando...</span>
               </div>
             ) : user && (isJournalFallback || isMissionsFallback) ? (
@@ -252,13 +252,13 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
                 <span>Respaldo Local (Offline)</span>
               </div>
             ) : user ? (
-              <div className="flex items-center gap-1.5 text-[11px] font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full shadow-2xs">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <div className="flex items-center gap-1.5 text-[11px] font-medium text-[#3E6855] bg-[#EBF1EA] border border-[#C5DDD0] px-2.5 py-1 rounded-full shadow-2xs">
+                <span className="w-2 h-2 rounded-full bg-[#5F927B] animate-pulse"></span>
                 <span>Supabase Conectado</span>
               </div>
             ) : (
-              <div className="flex items-center gap-1.5 text-[11px] font-medium text-amber-900 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full shadow-2xs">
-                <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+              <div className="flex items-center gap-1.5 text-[11px] font-medium text-[#B54F2C] bg-[#FDF4F0] border border-[#F7D3C3] px-2.5 py-1 rounded-full shadow-2xs">
+                <span className="w-2 h-2 rounded-full bg-[#E87A52]"></span>
                 <span>Modo Exploración (Local)</span>
               </div>
             )}
@@ -268,7 +268,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
               id="dashboard-refresh-btn"
               onClick={handleRefreshAll}
               title="Refrescar datos del Centro de Control"
-              className="p-1.5 rounded-full text-stone-500 hover:text-stone-900 bg-white border border-stone-200 hover:bg-stone-50 transition-colors shadow-2xs cursor-pointer"
+              className="p-1.5 rounded-full text-stone-500 hover:text-[#5F927B] bg-white border border-stone-200 hover:border-[#5F927B]/50 hover:bg-[#EBF1EA]/50 transition-colors shadow-2xs cursor-pointer"
             >
               <RefreshCw className="w-3.5 h-3.5" />
             </button>
@@ -277,19 +277,19 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
 
         {/* 2. GUEST NOTICE BANNER (si !user) */}
         {isGuest && !user && (
-          <div className="bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 border border-amber-200 rounded-3xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
+          <div className="bg-gradient-to-r from-[#FDF4F0] via-[#FAF7F2] to-[#EBF1EA] border-2 border-[#E87A52]/30 rounded-3xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
             <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-2xl bg-amber-100 border border-amber-300 flex items-center justify-center shrink-0 text-amber-800 mt-0.5">
+              <div className="w-9 h-9 rounded-2xl bg-[#FDF4F0] border border-[#F7D3C3] flex items-center justify-center shrink-0 text-[#B54F2C] mt-0.5 shadow-2xs">
                 <Lock className="w-4 h-4" />
               </div>
               <div>
-                <h4 className="text-xs sm:text-sm font-bold text-amber-950 flex items-center gap-1.5">
+                <h4 className="text-xs sm:text-sm font-bold text-stone-900 flex items-center gap-1.5">
                   <span>Modo Exploración Activo</span>
-                  <span className="text-[10px] bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full font-extrabold uppercase">
+                  <span className="text-[10px] bg-[#E87A52] text-white px-2 py-0.5 rounded-full font-extrabold uppercase shadow-2xs">
                     Sin Cuenta
                   </span>
                 </h4>
-                <p className="text-xs text-amber-800/90 mt-0.5 max-w-2xl leading-relaxed">
+                <p className="text-xs text-stone-600 mt-0.5 max-w-2xl leading-relaxed">
                   Tus misiones y reflexiones se están guardando localmente en este navegador. Crea una cuenta gratuita para sincronizar tus logros en Supabase y acceder desde cualquier dispositivo.
                 </p>
               </div>
@@ -301,7 +301,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
                   setAuthMode('register');
                   setAuthModalOpen(true);
                 }}
-                className="w-full sm:w-auto px-4 py-2 rounded-2xl bg-[#548c71] hover:bg-[#43705a] text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                className="w-full sm:w-auto px-4 py-2 rounded-2xl bg-[#5F927B] hover:bg-[#4D7764] text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <UserPlus className="w-3.5 h-3.5" />
                 <span>Crear Cuenta Gratis</span>
@@ -312,7 +312,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
                   setAuthMode('login');
                   setAuthModalOpen(true);
                 }}
-                className="w-full sm:w-auto px-3.5 py-2 rounded-2xl bg-white hover:bg-stone-50 text-stone-800 text-xs font-bold border border-stone-300 transition-all shadow-2xs flex items-center justify-center cursor-pointer"
+                className="w-full sm:w-auto px-3.5 py-2 rounded-2xl bg-white hover:bg-[#FDF4F0] text-[#B54F2C] text-xs font-bold border border-[#F7D3C3] transition-all shadow-2xs flex items-center justify-center cursor-pointer"
               >
                 <span>Iniciar Sesión</span>
               </button>
@@ -320,13 +320,18 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
           </div>
         )}
 
-        {/* 3. HERO GREETING & STATUS BANNER */}
-        <div className="bg-white rounded-3xl border border-stone-200 p-6 sm:p-8 shadow-xs relative overflow-hidden">
+        {/* 3. HERO GREETING & STATUS BANNER (Bathed in Sage Green & Terracotta) */}
+        <div className="bg-gradient-to-r from-white via-[#FBF9F5] to-white rounded-3xl border-2 border-[#5F927B]/30 p-6 sm:p-8 shadow-xs relative overflow-hidden">
+          {/* Subtle brand ambient orbs */}
+          <div className="absolute top-0 right-0 w-72 h-72 bg-gradient-to-bl from-[#5F927B]/10 via-[#E87A52]/10 to-transparent rounded-full blur-2xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-60 h-60 bg-gradient-to-tr from-[#E87A52]/10 to-transparent rounded-full blur-2xl pointer-events-none" />
+
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
             <div className="space-y-2 max-w-2xl">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-[#548c71] bg-brand-sage-50 border border-brand-sage-200 px-2.5 py-0.5 rounded-full">
-                  {greetingTime}
+                <span className="text-xs font-bold uppercase tracking-wider text-[#3E6855] bg-[#EBF1EA] border border-[#C5DDD0] px-2.5 py-0.5 rounded-full shadow-2xs flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#5F927B]" />
+                  <span>{greetingTime}</span>
                 </span>
                 {latestEntry && (
                   <span className="text-xs text-stone-500 font-medium">
@@ -335,12 +340,12 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
                 )}
               </div>
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-stone-900 font-sans tracking-tight">
-                Hola, {userName}
+                Hola, <span className="bg-gradient-to-r from-[#3E6855] via-[#5F927B] to-[#E87A52] bg-clip-text text-transparent">{userName}</span>
               </h1>
               <p className="text-stone-600 text-xs sm:text-sm leading-relaxed font-normal">
                 {latestEntry ? (
                   <>
-                    Tu última reflexión en el diario registró un estado de <strong className="text-stone-900 capitalize font-bold">{latestEntry.mood}</strong> (intensidad {latestEntry.intensity}/10). Revisa tus recomendaciones personalizadas para equilibrar tu día.
+                    Tu última reflexión en el diario registró un estado de <strong className="text-[#3E6855] capitalize font-bold">{latestEntry.mood}</strong> (intensidad {latestEntry.intensity}/10). Revisa tus recomendaciones personalizadas para equilibrar tu día.
                   </>
                 ) : (
                   <>
@@ -350,71 +355,71 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
               </p>
             </div>
 
-            {/* Quick action buttons */}
+            {/* Quick action buttons with brand colors and local icons */}
             <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 shrink-0 w-full md:w-auto">
               <button
                 id="hero-quick-journal-btn"
                 onClick={() => onNavigate('journal')}
-                className="flex-1 sm:flex-none px-4 py-2.5 rounded-2xl bg-stone-900 hover:bg-stone-800 text-white text-xs sm:text-sm font-bold shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="flex-1 sm:flex-none px-4 py-2.5 rounded-2xl bg-[#5F927B] hover:bg-[#4D7764] text-white text-xs sm:text-sm font-bold shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer group"
               >
-                <BookOpen className="w-4 h-4 text-brand-sage-300" />
+                <img src="/assets/icons/send.png" alt="Escribir" className="w-4 h-4 object-contain brightness-0 invert group-hover:translate-x-0.5 transition-transform" />
                 <span>Escribir en Diario</span>
               </button>
               <button
                 id="hero-quick-missions-btn"
                 onClick={() => onNavigate('missions')}
-                className="flex-1 sm:flex-none px-4 py-2.5 rounded-2xl bg-white hover:bg-stone-50 text-stone-800 border border-stone-300 text-xs sm:text-sm font-bold shadow-2xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="flex-1 sm:flex-none px-4 py-2.5 rounded-2xl bg-[#E87A52] hover:bg-[#D4653E] text-white text-xs sm:text-sm font-bold shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer group"
               >
-                <Target className="w-4 h-4 text-amber-600" />
+                <img src="/assets/icons/medal.png" alt="Misiones" className="w-4 h-4 object-contain brightness-0 invert group-hover:scale-105 transition-transform" />
                 <span>Ver Misiones</span>
               </button>
             </div>
           </div>
         </div>
 
-        {/* 4. REAL PROGRESS METRIC CARDS (Responsive Bento Grid: 2-col on mobile, 4-col on desktop) */}
+        {/* 4. REAL PROGRESS METRIC CARDS (Bathed in Sage Green and Terracotta Orange) */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           
-          {/* Tarjeta 1: Entradas este mes */}
+          {/* Tarjeta 1: Entradas este mes (Sage Green Theme) */}
           <div 
             onClick={() => onNavigate('journal')}
-            className="bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 border border-stone-200 shadow-xs hover:border-[#548c71]/40 transition-all cursor-pointer group flex flex-col justify-between"
+            className="bg-gradient-to-br from-white to-[#F2F7F4] rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 border-2 border-[#5F927B]/30 hover:border-[#5F927B] shadow-xs transition-all cursor-pointer group flex flex-col justify-between"
           >
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-stone-500 truncate">
+              <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#3E6855] truncate">
                 Diario este Mes
               </span>
-              <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-brand-sage-50 border border-brand-sage-200 flex items-center justify-center text-[#548c71] shrink-0 group-hover:scale-105 transition-transform">
-                <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-[#EBF1EA] border border-[#C5DDD0] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+                <img src="/assets/icons/nav-journal.png" alt="Diario" className="w-4 h-4 object-contain" />
               </div>
             </div>
             <div>
               <div className="flex items-baseline gap-1 sm:gap-1.5">
-                <span className="text-2xl sm:text-3xl lg:text-4xl font-bold text-stone-900 font-serif">
+                <span className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#3E6855] font-serif">
                   {entriesThisMonth.length}
                 </span>
                 <span className="text-[10px] sm:text-xs font-semibold text-stone-500">
                   {entriesThisMonth.length === 1 ? 'entrada' : 'entradas'}
                 </span>
               </div>
-              <p className="text-[10px] sm:text-[11px] text-stone-500 mt-1 flex items-center gap-1">
+              <p className="text-[10px] sm:text-[11px] text-[#3E6855] mt-1 flex items-center gap-1 font-semibold">
                 <span>Total: {entries.length}</span>
-                <ChevronRight className="w-3 h-3 text-stone-400 group-hover:translate-x-0.5 transition-transform" />
+                <ChevronRight className="w-3 h-3 text-[#5F927B] group-hover:translate-x-0.5 transition-transform" />
               </p>
             </div>
           </div>
 
-          {/* Tarjeta 2: Hábitos completados */}
+          {/* Tarjeta 2: Hábitos completados (Sage Green Theme) */}
           <div 
             onClick={() => onNavigate('missions')}
-            className="bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 border border-stone-200 shadow-xs hover:border-emerald-300 transition-all cursor-pointer group flex flex-col justify-between"
+            className="bg-gradient-to-br from-white to-[#F2F7F4] rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 border-2 border-[#5F927B]/30 hover:border-[#5F927B] shadow-xs transition-all cursor-pointer group flex flex-col justify-between"
           >
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-stone-500 truncate">
+              <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#3E6855] truncate">
                 Hábitos Hoy
               </span>
-              <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700 shrink-0 group-hover:scale-105 transition-transform">
-                <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-[#EBF1EA] border border-[#C5DDD0] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+                <img src="/assets/badges/badge-explorer.png" alt="Hábitos" className="w-5 h-5 object-contain" />
               </div>
             </div>
             <div>
@@ -427,78 +432,78 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
                 </span>
               </div>
               {/* Progress bar */}
-              <div className="w-full bg-stone-100 rounded-full h-1.5 mt-2 overflow-hidden">
+              <div className="w-full bg-[#EBF1EA] rounded-full h-2 mt-2 overflow-hidden border border-[#C5DDD0]/50">
                 <div 
-                  className="bg-emerald-600 h-1.5 rounded-full transition-all duration-500" 
+                  className="bg-gradient-to-r from-[#5F927B] to-[#3E6855] h-2 rounded-full transition-all duration-500" 
                   style={{ width: `${missionsProgressPercent}%` }}
                 />
               </div>
               <p className="text-[10px] sm:text-[11px] text-stone-500 mt-1 flex items-center justify-between">
-                <span>{missionsProgressPercent}%</span>
-                <span className="text-emerald-700 font-bold">{pendingMissions.length} pend.</span>
+                <span className="font-semibold text-[#3E6855]">{missionsProgressPercent}%</span>
+                <span className="text-[#E87A52] font-bold">{pendingMissions.length} pend.</span>
               </p>
             </div>
           </div>
 
-          {/* Tarjeta 3: Nivel y XP Acumulado */}
+          {/* Tarjeta 3: Nivel y XP Acumulado (Terracotta Theme) */}
           <div 
             onClick={() => onNavigate('missions')}
-            className="bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 border border-stone-200 shadow-xs hover:border-amber-300 transition-all cursor-pointer group flex flex-col justify-between"
+            className="bg-gradient-to-br from-white to-[#FDF4F0] rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 border-2 border-[#E87A52]/30 hover:border-[#E87A52] shadow-xs transition-all cursor-pointer group flex flex-col justify-between"
           >
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-stone-500 truncate">
+              <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#B54F2C] truncate">
                 Nivel & XP
               </span>
-              <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700 shrink-0 group-hover:scale-105 transition-transform">
-                <Award className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-[#FDF4F0] border border-[#F7D3C3] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+                <img src="/assets/icons/trophy.png" alt="XP" className="w-4 h-4 object-contain" />
               </div>
             </div>
             <div>
               <div className="flex items-baseline gap-1 sm:gap-1.5">
-                <span className="text-2xl sm:text-3xl lg:text-4xl font-bold text-stone-900 font-serif">
+                <span className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#B54F2C] font-serif">
                   +{userPoints}
                 </span>
-                <span className="text-[10px] sm:text-xs font-bold text-amber-700">XP</span>
+                <span className="text-[10px] sm:text-xs font-bold text-[#E87A52]">XP</span>
               </div>
               {/* Level Progress */}
-              <div className="w-full bg-stone-100 rounded-full h-1.5 mt-2 overflow-hidden">
+              <div className="w-full bg-[#FDF4F0] rounded-full h-2 mt-2 overflow-hidden border border-[#F7D3C3]/50">
                 <div 
-                  className="bg-amber-500 h-1.5 rounded-full transition-all duration-500" 
+                  className="bg-gradient-to-r from-[#E87A52] to-[#B54F2C] h-2 rounded-full transition-all duration-500" 
                   style={{ width: `${userPoints % 100}%` }}
                 />
               </div>
               <p className="text-[10px] sm:text-[11px] text-stone-500 mt-1 flex items-center justify-between">
-                <span className="font-bold text-stone-700">Nv. {userLevel}</span>
+                <span className="font-bold text-[#B54F2C]">Nv. {userLevel}</span>
                 <span>Faltan {100 - (userPoints % 100)} XP</span>
               </p>
             </div>
           </div>
 
-          {/* Tarjeta 4: Racha Activa */}
+          {/* Tarjeta 4: Racha Activa (Terracotta Orange Theme) */}
           <div 
             onClick={() => onNavigate('missions')}
-            className="bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 border border-stone-200 shadow-xs hover:border-[#de6943]/40 transition-all cursor-pointer group flex flex-col justify-between"
+            className="bg-gradient-to-br from-white to-[#FDF4F0] rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 border-2 border-[#E87A52]/30 hover:border-[#E87A52] shadow-xs transition-all cursor-pointer group flex flex-col justify-between"
           >
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-stone-500 truncate">
+              <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#B54F2C] truncate">
                 Racha Activa
               </span>
-              <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-orange-50 border border-orange-200 flex items-center justify-center text-[#de6943] shrink-0 group-hover:scale-105 transition-transform">
-                <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-[#FDF4F0] border border-[#F7D3C3] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+                <img src="/assets/badges/badge-streak.png" alt="Racha" className="w-5 h-5 object-contain" />
               </div>
             </div>
             <div>
               <div className="flex items-baseline gap-1 sm:gap-1.5">
-                <span className="text-2xl sm:text-3xl lg:text-4xl font-bold text-stone-900 font-serif">
+                <span className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#B54F2C] font-serif">
                   {streakDays}
                 </span>
                 <span className="text-[10px] sm:text-xs font-semibold text-stone-500">
                   {streakDays === 1 ? 'día' : 'días'}
                 </span>
               </div>
-              <p className="text-[10px] sm:text-[11px] text-[#de6943] font-semibold mt-1 flex items-center gap-1">
-                <span>Constancia</span>
-                <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+              <p className="text-[10px] sm:text-[11px] text-[#E87A52] font-semibold mt-1 flex items-center gap-1">
+                <span>Constancia Diaria</span>
+                <ChevronRight className="w-3 h-3 text-[#E87A52] group-hover:translate-x-0.5 transition-transform" />
               </p>
             </div>
           </div>
@@ -506,16 +511,16 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
         </div>
 
         {/* 5. SECCIÓN PRINCIPAL: RECOMENDACIÓN BASADA EN EL ESTADO EMOCIONAL */}
-        <div className={`rounded-3xl border ${recommendation.borderColor} ${recommendation.bgLight} p-6 sm:p-8 shadow-xs relative overflow-hidden`}>
+        <div className="rounded-3xl border-2 border-[#5F927B]/30 bg-gradient-to-r from-white via-[#F2F7F4] to-white p-6 sm:p-8 shadow-xs relative overflow-hidden">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
             <div className="space-y-3 max-w-2xl">
               <div className="flex items-center gap-2">
-                <span className="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-white/80 text-stone-800 border border-stone-200 shadow-2xs flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                <span className="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-white text-[#3E6855] border border-[#C5DDD0] shadow-2xs flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-[#E87A52]" />
                   <span>{recommendation.badge}</span>
                 </span>
                 {latestEntry && (
-                  <span className="text-xs font-semibold text-stone-600 bg-white/60 px-2.5 py-0.5 rounded-full">
+                  <span className="text-xs font-semibold text-stone-600 bg-white/80 border border-stone-200 px-2.5 py-0.5 rounded-full shadow-2xs">
                     Basado en: {latestEntry.mood}
                   </span>
                 )}
@@ -530,10 +535,10 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
               </p>
 
               {/* Guía recomendada embed */}
-              <div className="bg-white/90 backdrop-blur-xs rounded-2xl p-4 border border-stone-200/80 shadow-2xs mt-2">
+              <div className="bg-white/95 backdrop-blur-xs rounded-2xl p-4 border border-[#5F927B]/30 shadow-2xs mt-2">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#548c71]">
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#3E6855]">
                       Guía recomendada
                     </span>
                     <h3 className="text-sm font-bold text-stone-900 mt-0.5">
@@ -546,7 +551,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
                   {onOpenGuideById && (
                     <button
                       onClick={() => onOpenGuideById(recommendation.guideId)}
-                      className="px-3.5 py-2 rounded-xl bg-[#548c71] hover:bg-[#43705a] text-white text-xs font-bold shrink-0 transition-all shadow-2xs flex items-center gap-1 cursor-pointer"
+                      className="px-3.5 py-2 rounded-xl bg-[#5F927B] hover:bg-[#4D7764] text-white text-xs font-bold shrink-0 transition-all shadow-2xs flex items-center gap-1 cursor-pointer"
                     >
                       <span>Leer Guía</span>
                       <ArrowRight className="w-3.5 h-3.5" />
@@ -557,10 +562,10 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
             </div>
 
             {/* Columna derecha: Acción complementaria o desahogo con Flux AI */}
-            <div className="w-full lg:w-72 shrink-0 bg-white rounded-2xl p-5 border border-stone-200 shadow-2xs flex flex-col justify-between space-y-4">
+            <div className="w-full lg:w-72 shrink-0 bg-white rounded-2xl p-5 border-2 border-[#5F927B]/30 shadow-2xs flex flex-col justify-between space-y-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-sage-500 to-brand-terracotta-500 p-0.5 flex items-center justify-center text-white shadow-2xs shrink-0">
-                  <Bot className="w-5 h-5" />
+                <div className="w-10 h-10 rounded-xl bg-[#EBF1EA] border border-[#C5DDD0] p-1.5 flex items-center justify-center shrink-0 shadow-2xs">
+                  <img src="/assets/icons/nav-ai.png" alt="Flux AI" className="w-6 h-6 object-contain" />
                 </div>
                 <div>
                   <h4 className="text-xs font-bold text-stone-900">¿Necesitas conversar?</h4>
@@ -571,9 +576,9 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
               <button
                 id="dashboard-talk-ai-btn"
                 onClick={() => onNavigate('ai')}
-                className="w-full py-2.5 px-4 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#5F927B] to-[#E87A52] hover:opacity-95 text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
               >
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <img src="/assets/icons/send.png" alt="Enviar" className="w-3.5 h-3.5 object-contain brightness-0 invert" />
                 <span>Conversar con Flux AI</span>
               </button>
             </div>
@@ -584,12 +589,12 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           
           {/* Columna A: Hábitos y Misiones Diarias Prioritarias */}
-          <div className="bg-white rounded-3xl border border-stone-200 p-6 shadow-xs flex flex-col justify-between">
+          <div className="bg-white rounded-3xl border-2 border-[#E87A52]/30 p-6 shadow-xs flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700">
-                    <Target className="w-4 h-4" />
+                  <div className="w-8 h-8 rounded-xl bg-[#FDF4F0] border border-[#F7D3C3] flex items-center justify-center shrink-0 shadow-2xs">
+                    <img src="/assets/icons/medal.png" alt="Misiones" className="w-4 h-4 object-contain" />
                   </div>
                   <div>
                     <h3 className="text-sm sm:text-base font-bold text-stone-900">
@@ -603,7 +608,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
 
                 <button
                   onClick={() => onNavigate('missions')}
-                  className="text-xs font-bold text-[#548c71] hover:text-[#3e6854] flex items-center gap-1 cursor-pointer"
+                  className="text-xs font-bold text-[#E87A52] hover:text-[#B54F2C] flex items-center gap-1 cursor-pointer"
                 >
                   <span>Ver todas</span>
                   <ChevronRight className="w-3.5 h-3.5" />
@@ -621,8 +626,8 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
                       key={m.id}
                       className={`p-3.5 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
                         isDone 
-                          ? 'bg-emerald-50/50 border-emerald-200/80 text-stone-600' 
-                          : 'bg-stone-50/70 border-stone-200 hover:bg-stone-50 text-stone-900'
+                          ? 'bg-[#EBF1EA]/60 border-[#C5DDD0] text-stone-600' 
+                          : 'bg-[#FAF7F2] border-stone-200 hover:border-[#5F927B]/40 hover:bg-[#F2F7F4] text-stone-900'
                       }`}
                     >
                       <div className="flex items-start gap-3 min-w-0">
@@ -631,15 +636,15 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
                           disabled={isItemLoading}
                           className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all cursor-pointer mt-0.5 ${
                             isItemLoading
-                              ? 'bg-amber-100 border border-amber-300 text-amber-800'
+                              ? 'bg-[#FDF4F0] border border-[#F7D3C3] text-[#B54F2C]'
                               : isDone
-                              ? 'bg-[#548c71] text-white shadow-2xs'
-                              : 'bg-white border border-stone-300 text-stone-400 hover:border-[#548c71] hover:text-[#548c71]'
+                              ? 'bg-[#5F927B] text-white shadow-2xs'
+                              : 'bg-white border border-stone-300 text-stone-400 hover:border-[#5F927B] hover:text-[#5F927B]'
                           }`}
                           title={isDone ? 'Misión completada. Clic para desmarcar.' : 'Completar misión'}
                         >
                           {isItemLoading ? (
-                            <Loader2 className="w-4 h-4 animate-spin text-amber-700" />
+                            <Loader2 className="w-4 h-4 animate-spin text-[#E87A52]" />
                           ) : isDone ? (
                             <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
                           ) : (
@@ -658,7 +663,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
                       </div>
 
                       <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-[10px] font-bold text-amber-800 bg-amber-100 border border-amber-200 px-2 py-0.5 rounded-full">
+                        <span className="text-[10px] font-bold text-[#B54F2C] bg-[#FDF4F0] border border-[#F7D3C3] px-2 py-0.5 rounded-full shadow-2xs">
                           +{m.xp} XP
                         </span>
                       </div>
@@ -674,7 +679,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
               </span>
               <button
                 onClick={() => onNavigate('missions')}
-                className="font-bold text-stone-800 hover:text-[#548c71] flex items-center gap-1 cursor-pointer"
+                className="font-bold text-[#3E6855] hover:text-[#5F927B] flex items-center gap-1 cursor-pointer"
               >
                 <span>Ir al Módulo de Misiones</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -683,12 +688,12 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
           </div>
 
           {/* Columna B: Diario Emocional y Última Reflexión */}
-          <div className="bg-white rounded-3xl border border-stone-200 p-6 shadow-xs flex flex-col justify-between">
+          <div className="bg-white rounded-3xl border-2 border-[#5F927B]/30 p-6 shadow-xs flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-brand-sage-50 border border-brand-sage-200 flex items-center justify-center text-[#548c71]">
-                    <BookOpen className="w-4 h-4" />
+                  <div className="w-8 h-8 rounded-xl bg-[#EBF1EA] border border-[#C5DDD0] flex items-center justify-center shrink-0 shadow-2xs">
+                    <img src="/assets/icons/nav-journal.png" alt="Diario" className="w-4 h-4 object-contain" />
                   </div>
                   <div>
                     <h3 className="text-sm sm:text-base font-bold text-stone-900">
@@ -702,7 +707,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
 
                 <button
                   onClick={() => onNavigate('journal')}
-                  className="text-xs font-bold text-[#548c71] hover:text-[#3e6854] flex items-center gap-1 cursor-pointer"
+                  className="text-xs font-bold text-[#3E6855] hover:text-[#5F927B] flex items-center gap-1 cursor-pointer"
                 >
                   <span>Ver Diario</span>
                   <ChevronRight className="w-3.5 h-3.5" />
@@ -711,10 +716,10 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
 
               {/* Contenido de la última entrada o invitación a escribir */}
               {latestEntry ? (
-                <div className="bg-stone-50 rounded-2xl p-4 border border-stone-200 space-y-3">
+                <div className="bg-[#FAF7F2] rounded-2xl p-4 border border-[#C5DDD0] space-y-3">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-[#548c71]/15 text-[#253d33] border border-[#548c71]/30 capitalize">
+                      <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-[#EBF1EA] text-[#3E6855] border border-[#C5DDD0] capitalize shadow-2xs">
                         {latestEntry.mood}
                       </span>
                       <span className="text-xs text-stone-500 font-medium">
@@ -742,7 +747,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
                       {latestEntry.triggers.map((trig, idx) => (
                         <span 
                           key={idx}
-                          className="text-[10px] font-medium text-stone-600 bg-white border border-stone-200 px-2 py-0.5 rounded-full"
+                          className="text-[10px] font-medium text-[#3E6855] bg-white border border-[#C5DDD0] px-2 py-0.5 rounded-full"
                         >
                           {trig}
                         </span>
@@ -751,8 +756,8 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
                   )}
                 </div>
               ) : (
-                <div className="bg-stone-50 rounded-2xl p-6 border border-dashed border-stone-300 text-center space-y-2">
-                  <Smile className="w-8 h-8 text-stone-400 mx-auto" />
+                <div className="bg-[#FAF7F2] rounded-2xl p-6 border border-dashed border-[#5F927B]/40 text-center space-y-2">
+                  <Smile className="w-8 h-8 text-[#5F927B] mx-auto" />
                   <h4 className="text-xs font-bold text-stone-800">
                     Aún no hay entradas registradas
                   </h4>
@@ -769,8 +774,9 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
               </span>
               <button
                 onClick={() => onNavigate('journal')}
-                className="px-3.5 py-2 rounded-xl bg-[#548c71] hover:bg-[#43705a] text-white font-bold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                className="px-3.5 py-2 rounded-xl bg-[#5F927B] hover:bg-[#4D7764] text-white font-bold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
               >
+                <img src="/assets/icons/send.png" alt="Enviar" className="w-3.5 h-3.5 object-contain brightness-0 invert" />
                 <span>Nueva Entrada</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
@@ -779,56 +785,100 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
 
         </div>
 
-        {/* 7. ACCESOS RÁPIDOS A MÓDULOS CLAVE */}
-        <div className="bg-white rounded-3xl border border-stone-200 p-6 shadow-xs">
+        {/* 7. ACCESOS RÁPIDOS A MÓDULOS CLAVE (8 Ecosystem Apartados) */}
+        <div className="bg-white rounded-3xl border-2 border-[#5F927B]/30 p-6 shadow-xs">
           <h3 className="text-sm font-bold text-stone-900 mb-4 flex items-center gap-2">
-            <Zap className="w-4 h-4 text-amber-600" />
-            <span>Accesos Directos del Ecosistema FluxGlow</span>
+            <span className="w-2 h-2 rounded-full bg-[#E87A52]" />
+            <span>Explora los 8 Módulos de FluxGlow</span>
           </h3>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <button
               onClick={() => onNavigate('learn')}
-              className="p-3.5 rounded-2xl bg-stone-50 hover:bg-brand-sage-50 border border-stone-200 hover:border-brand-sage-300 transition-all text-left group cursor-pointer"
+              className="p-3.5 rounded-2xl bg-gradient-to-br from-white to-[#F2F7F4] hover:bg-[#EBF1EA] border border-[#C5DDD0] hover:border-[#5F927B] transition-all text-left group cursor-pointer shadow-2xs"
             >
-              <div className="w-8 h-8 rounded-xl bg-brand-sage-100 flex items-center justify-center text-brand-sage-800 mb-2 group-hover:scale-105 transition-transform">
-                <BookOpen className="w-4 h-4" />
+              <div className="w-8 h-8 rounded-xl bg-[#EBF1EA] border border-[#C5DDD0] flex items-center justify-center mb-2 group-hover:scale-105 transition-transform">
+                <img src="/assets/icons/nav-info.png" alt="Aprende" className="w-4 h-4 object-contain" />
               </div>
-              <h4 className="text-xs font-bold text-stone-900">Aprende y Explora</h4>
+              <h4 className="text-xs font-bold text-[#3E6855]">Aprende y Explora</h4>
               <p className="text-[10px] text-stone-500 mt-0.5">Biblioteca de guías</p>
             </button>
 
             <button
-              onClick={() => onNavigate('analytics')}
-              className="p-3.5 rounded-2xl bg-stone-50 hover:bg-emerald-50 border border-stone-200 hover:border-emerald-300 transition-all text-left group cursor-pointer"
+              onClick={() => onNavigate('journal')}
+              className="p-3.5 rounded-2xl bg-gradient-to-br from-white to-[#FDF4F0] hover:bg-[#FDF1EC] border border-[#F7D3C3] hover:border-[#E87A52] transition-all text-left group cursor-pointer shadow-2xs"
             >
-              <div className="w-8 h-8 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-800 mb-2 group-hover:scale-105 transition-transform">
-                <TrendingUp className="w-4 h-4" />
+              <div className="w-8 h-8 rounded-xl bg-[#FDF4F0] border border-[#F7D3C3] flex items-center justify-center mb-2 group-hover:scale-105 transition-transform">
+                <img src="/assets/icons/nav-journal.png" alt="Diario" className="w-4 h-4 object-contain" />
               </div>
-              <h4 className="text-xs font-bold text-stone-900">Análisis Predictivo</h4>
+              <h4 className="text-xs font-bold text-[#B54F2C]">Diario Emocional</h4>
+              <p className="text-[10px] text-stone-500 mt-0.5">Registros y reflexiones</p>
+            </button>
+
+            <button
+              onClick={() => onNavigate('missions')}
+              className="p-3.5 rounded-2xl bg-gradient-to-br from-white to-[#F2F7F4] hover:bg-[#EBF1EA] border border-[#C5DDD0] hover:border-[#5F927B] transition-all text-left group cursor-pointer shadow-2xs"
+            >
+              <div className="w-8 h-8 rounded-xl bg-[#EBF1EA] border border-[#C5DDD0] flex items-center justify-center mb-2 group-hover:scale-105 transition-transform">
+                <img src="/assets/icons/medal.png" alt="Misiones" className="w-4 h-4 object-contain" />
+              </div>
+              <h4 className="text-xs font-bold text-[#3E6855]">Misiones & Hábitos</h4>
+              <p className="text-[10px] text-stone-500 mt-0.5">Puntos XP y rachas</p>
+            </button>
+
+            <button
+              onClick={() => onNavigate('analytics')}
+              className="p-3.5 rounded-2xl bg-gradient-to-br from-white to-[#FDF4F0] hover:bg-[#FDF1EC] border border-[#F7D3C3] hover:border-[#E87A52] transition-all text-left group cursor-pointer shadow-2xs"
+            >
+              <div className="w-8 h-8 rounded-xl bg-[#FDF4F0] border border-[#F7D3C3] flex items-center justify-center mb-2 group-hover:scale-105 transition-transform">
+                <img src="/assets/icons/nav-analytics.png" alt="Análisis" className="w-4 h-4 object-contain" />
+              </div>
+              <h4 className="text-xs font-bold text-[#B54F2C]">Análisis Predictivo</h4>
               <p className="text-[10px] text-stone-500 mt-0.5">Detección de patrones</p>
             </button>
 
             <button
-              onClick={() => onNavigate('alert')}
-              className="p-3.5 rounded-2xl bg-stone-50 hover:bg-rose-50 border border-stone-200 hover:border-rose-300 transition-all text-left group cursor-pointer"
+              onClick={() => onNavigate('ai')}
+              className="p-3.5 rounded-2xl bg-gradient-to-br from-white to-[#F2F7F4] hover:bg-[#EBF1EA] border border-[#C5DDD0] hover:border-[#5F927B] transition-all text-left group cursor-pointer shadow-2xs"
             >
-              <div className="w-8 h-8 rounded-xl bg-rose-100 flex items-center justify-center text-rose-800 mb-2 group-hover:scale-105 transition-transform">
-                <Bell className="w-4 h-4" />
+              <div className="w-8 h-8 rounded-xl bg-[#EBF1EA] border border-[#C5DDD0] flex items-center justify-center mb-2 group-hover:scale-105 transition-transform">
+                <img src="/assets/icons/nav-ai.png" alt="Flux AI" className="w-4 h-4 object-contain" />
               </div>
-              <h4 className="text-xs font-bold text-stone-900">Alerta Emocional</h4>
+              <h4 className="text-xs font-bold text-[#3E6855]">Flux AI</h4>
+              <p className="text-[10px] text-stone-500 mt-0.5">Asistente empático 24/7</p>
+            </button>
+
+            <button
+              onClick={() => onNavigate('alert')}
+              className="p-3.5 rounded-2xl bg-gradient-to-br from-white to-[#FDF4F0] hover:bg-[#FDF1EC] border border-[#F7D3C3] hover:border-[#E87A52] transition-all text-left group cursor-pointer shadow-2xs"
+            >
+              <div className="w-8 h-8 rounded-xl bg-[#FDF4F0] border border-[#F7D3C3] flex items-center justify-center mb-2 group-hover:scale-105 transition-transform">
+                <img src="/assets/icons/alert-shield.png" alt="Alerta SOS" className="w-4 h-4 object-contain" />
+              </div>
+              <h4 className="text-xs font-bold text-[#B54F2C]">Alerta Emocional</h4>
               <p className="text-[10px] text-stone-500 mt-0.5">Líneas SOS y grounding</p>
             </button>
 
             <button
               onClick={() => onNavigate('community')}
-              className="p-3.5 rounded-2xl bg-stone-50 hover:bg-amber-50 border border-stone-200 hover:border-amber-300 transition-all text-left group cursor-pointer"
+              className="p-3.5 rounded-2xl bg-gradient-to-br from-white to-[#F2F7F4] hover:bg-[#EBF1EA] border border-[#C5DDD0] hover:border-[#5F927B] transition-all text-left group cursor-pointer shadow-2xs"
             >
-              <div className="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center text-amber-800 mb-2 group-hover:scale-105 transition-transform">
-                <Users className="w-4 h-4" />
+              <div className="w-8 h-8 rounded-xl bg-[#EBF1EA] border border-[#C5DDD0] flex items-center justify-center mb-2 group-hover:scale-105 transition-transform">
+                <img src="/assets/icons/nav-community.png" alt="Comunidad" className="w-4 h-4 object-contain" />
               </div>
-              <h4 className="text-xs font-bold text-stone-900">Comunidad Segura</h4>
+              <h4 className="text-xs font-bold text-[#3E6855]">Comunidad Segura</h4>
               <p className="text-[10px] text-stone-500 mt-0.5">Foro libre de juicios</p>
+            </button>
+
+            <button
+              onClick={() => onNavigate('profile')}
+              className="p-3.5 rounded-2xl bg-gradient-to-br from-white to-[#FDF4F0] hover:bg-[#FDF1EC] border border-[#F7D3C3] hover:border-[#E87A52] transition-all text-left group cursor-pointer shadow-2xs"
+            >
+              <div className="w-8 h-8 rounded-xl bg-[#FDF4F0] border border-[#F7D3C3] flex items-center justify-center mb-2 group-hover:scale-105 transition-transform">
+                <img src="/assets/icons/nav-profile.png" alt="Perfil" className="w-4 h-4 object-contain" />
+              </div>
+              <h4 className="text-xs font-bold text-[#B54F2C]">Perfil y Progreso</h4>
+              <p className="text-[10px] text-stone-500 mt-0.5">Métricas personales</p>
             </button>
           </div>
         </div>

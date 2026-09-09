@@ -41,34 +41,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const [authMode, setAuthMode] = useState<'login' | 'register'>('register');
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
 
-  // Breathing pacer state (Pure visual animation, no audio)
-  const [isBreathingActive, setIsBreathingActive] = useState(false);
-  const [breathingPhase, setBreathingPhase] = useState<'Inhala' | 'Sostén' | 'Exhala'>('Inhala');
-  const [breathingSeconds, setBreathingSeconds] = useState(4);
-
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (isBreathingActive) {
-      if (breathingPhase === 'Inhala') {
-        timer = setTimeout(() => {
-          setBreathingPhase('Sostén');
-          setBreathingSeconds(4);
-        }, 4000);
-      } else if (breathingPhase === 'Sostén') {
-        timer = setTimeout(() => {
-          setBreathingPhase('Exhala');
-          setBreathingSeconds(4);
-        }, 4000);
-      } else if (breathingPhase === 'Exhala') {
-        timer = setTimeout(() => {
-          setBreathingPhase('Inhala');
-          setBreathingSeconds(4);
-        }, 4000);
-      }
-    }
-    return () => clearTimeout(timer);
-  }, [isBreathingActive, breathingPhase]);
-
   const openAuth = (mode: 'login' | 'register') => {
     setAuthMode(mode);
     setAuthModalOpen(true);
@@ -143,7 +115,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <button
                     id="top-nav-dashboard-btn"
                     onClick={() => onNavigate('dashboard')}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#548c71] hover:bg-[#43705a] text-white text-xs sm:text-sm font-bold shadow-2xs transition-all cursor-pointer"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#5F927B] hover:bg-[#4E7D68] text-white text-xs sm:text-sm font-bold shadow-2xs transition-all cursor-pointer"
                   >
                     <LayoutDashboard className="w-3.5 h-3.5" />
                     <span>Centro de Control</span>
@@ -151,10 +123,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
                   <button
                     onClick={() => onNavigate('profile')}
-                    className="flex items-center gap-2 text-stone-800 hover:text-[#4a7c59] text-xs sm:text-sm font-semibold transition-colors py-1 px-3 rounded-full bg-stone-100 border border-stone-200 cursor-pointer"
+                    className="flex items-center gap-2 text-stone-800 hover:text-[#5F927B] text-xs sm:text-sm font-semibold transition-colors py-1 px-3 rounded-full bg-white border border-[#5F927B]/30 shadow-2xs cursor-pointer"
                   >
                     <img 
-                      src={currentUser.avatarUrl || '/user.png'} 
+                      src={currentUser.avatarUrl || '/assets/icons/nav-profile.png'} 
                       alt="avatar" 
                       className="w-5 h-5 rounded-full object-cover" 
                     />
@@ -174,9 +146,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <button
                     id="top-nav-register-btn"
                     onClick={() => openAuth('register')}
-                    className="flex items-center gap-1.5 text-stone-800 hover:text-[#4a7c59] text-sm sm:text-base font-semibold transition-colors py-1 px-2 rounded-lg cursor-pointer"
+                    className="flex items-center gap-1.5 text-stone-800 hover:text-[#5F927B] text-sm sm:text-base font-semibold transition-colors py-1 px-2 rounded-lg cursor-pointer"
                   >
-                    <div className="w-5 h-5 rounded-full border border-stone-400 flex items-center justify-center text-xs font-serif text-stone-600">
+                    <div className="w-5 h-5 rounded-full border border-[#5F927B] flex items-center justify-center text-xs font-serif text-[#5F927B] font-bold">
                       i
                     </div>
                     <span>Regístrate</span>
@@ -185,9 +157,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <button
                     id="top-nav-login-btn"
                     onClick={() => openAuth('login')}
-                    className="flex items-center gap-1.5 text-stone-800 hover:text-[#de6943] text-sm sm:text-base font-semibold transition-colors py-1 px-2 rounded-lg cursor-pointer"
+                    className="flex items-center gap-1.5 text-stone-800 hover:text-[#E87A52] text-sm sm:text-base font-semibold transition-colors py-1 px-2 rounded-lg cursor-pointer"
                   >
-                    <User className="w-4 h-4 sm:w-5 sm:h-5 text-stone-600" />
+                    <img src="/assets/icons/nav-profile.png" alt="Usuario" className="w-4 h-4 sm:w-5 sm:h-5 object-contain" />
                     <span>Iniciar sesión</span>
                   </button>
                 </>
@@ -199,10 +171,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       </header>
 
       {/* SECCIÓN HERO PRINCIPAL RECREADA EXACTAMENTE COMO LA CAPTURA */}
-      <section className="relative pt-12 pb-20 sm:pt-20 sm:pb-28 bg-white border-b border-stone-200/80 overflow-hidden" id="inicio">
+      <section className="relative pt-12 pb-20 sm:pt-20 sm:pb-28 bg-flux-brand-bath border-b border-[#5F927B]/20 overflow-hidden" id="inicio">
         
         {/* Soft background ambient glow (Organic FluxGlow Halo) */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[380px] bg-gradient-to-tr from-[#548c71]/20 via-[#d4b439]/15 to-[#de6943]/20 blur-3xl rounded-full pointer-events-none animate-pulseGlow"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[680px] h-[400px] bg-gradient-to-tr from-[#5F927B]/25 via-[#D8C97B]/15 to-[#E87A52]/25 blur-3xl rounded-full pointer-events-none animate-pulseGlow"></div>
 
         <div className="max-w-4xl mx-auto px-4 sm:px-6 relative z-10 text-center">
           
@@ -212,8 +184,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
 
           {/* Main Headline exact text: "Inteligente y a tu alcance" */}
-          <h1 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tight text-stone-950 mb-5 font-sans leading-tight">
-            Inteligente y a tu alcance
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tight text-stone-950 mb-5 font-serif leading-tight">
+            <span className="bg-gradient-to-r from-[#2F5343] via-[#3E6855] to-[#E87A52] bg-clip-text text-transparent">
+              Inteligente y a tu alcance
+            </span>
           </h1>
 
           {/* Subtitle text matching reference screenshot */}
@@ -229,7 +203,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <button
                   id="hero-pill-dashboard"
                   onClick={() => onNavigate('dashboard')}
-                  className="w-full sm:w-64 py-3.5 px-8 rounded-full bg-[#548c71] hover:bg-[#42715b] text-white font-extrabold text-base shadow-sm hover:shadow-md transition-all duration-200 text-center transform hover:-translate-y-0.5 cursor-pointer flex items-center justify-center gap-2"
+                  className="w-full sm:w-64 py-3.5 px-8 rounded-full bg-[#5F927B] hover:bg-[#4E7D68] text-white font-extrabold text-base shadow-sm hover:shadow-md transition-all duration-200 text-center transform hover:-translate-y-0.5 cursor-pointer flex items-center justify-center gap-2"
                 >
                   <LayoutDashboard className="w-5 h-5" />
                   <span>Ir al Centro de Control</span>
@@ -239,7 +213,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <button
                   id="hero-pill-explore"
                   onClick={() => onNavigate('learn')}
-                  className="w-full sm:w-60 py-3.5 px-8 rounded-full bg-white hover:bg-stone-50 text-stone-800 border-2 border-stone-300 font-extrabold text-base shadow-2xs hover:shadow-sm transition-all duration-200 text-center transform hover:-translate-y-0.5 cursor-pointer"
+                  className="w-full sm:w-60 py-3.5 px-8 rounded-full bg-white hover:bg-stone-50 text-stone-800 border-2 border-[#5F927B]/30 hover:border-[#5F927B] font-extrabold text-base shadow-2xs hover:shadow-sm transition-all duration-200 text-center transform hover:-translate-y-0.5 cursor-pointer"
                 >
                   Explorar Módulos
                 </button>
@@ -250,7 +224,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <button
                   id="hero-pill-register"
                   onClick={() => openAuth('register')}
-                  className="w-full sm:w-60 py-3.5 px-8 rounded-full bg-[#548c71] hover:bg-[#42715b] text-white font-extrabold text-base shadow-sm hover:shadow-md transition-all duration-200 text-center transform hover:-translate-y-0.5 cursor-pointer"
+                  className="w-full sm:w-60 py-3.5 px-8 rounded-full bg-[#5F927B] hover:bg-[#4E7D68] text-white font-extrabold text-base shadow-sm hover:shadow-md transition-all duration-200 text-center transform hover:-translate-y-0.5 cursor-pointer"
                 >
                   Regístrate
                 </button>
@@ -259,7 +233,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <button
                   id="hero-pill-login"
                   onClick={() => openAuth('login')}
-                  className="w-full sm:w-60 py-3.5 px-8 rounded-full bg-[#de6943] hover:bg-[#cb512e] text-white font-extrabold text-base shadow-sm hover:shadow-md transition-all duration-200 text-center transform hover:-translate-y-0.5 cursor-pointer"
+                  className="w-full sm:w-60 py-3.5 px-8 rounded-full bg-[#E87A52] hover:bg-[#D9663D] text-white font-extrabold text-base shadow-sm hover:shadow-md transition-all duration-200 text-center transform hover:-translate-y-0.5 cursor-pointer"
                 >
                   Iniciar sesión
                 </button>
@@ -272,7 +246,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <button
               id="hero-guest-explore-btn"
               onClick={() => onNavigate('dashboard')}
-              className="text-xs sm:text-sm font-semibold text-[#548c71] hover:text-[#253d33] flex items-center gap-1.5 underline underline-offset-4 py-1 cursor-pointer"
+              className="text-xs sm:text-sm font-semibold text-[#5F927B] hover:text-[#3E6855] flex items-center gap-1.5 underline underline-offset-4 py-1 cursor-pointer"
             >
               <span>{currentUser?.isLoggedIn ? 'Acceder directamente a tu resumen personal' : 'O entra al Centro de Control en modo exploración'}</span>
               <ArrowRight className="w-4 h-4" />
@@ -287,19 +261,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               referrerPolicy="no-referrer"
               className="w-full h-64 sm:h-96 object-cover transition-transform duration-700 group-hover:scale-[1.02]"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex flex-col justify-end p-6 sm:p-8 text-left text-white">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="px-3 py-1 bg-[#548c71] text-white text-[11px] font-extrabold uppercase tracking-wider rounded-full shadow-xs">
-                  Espacio Seguro
-                </span>
-                <span className="px-3 py-1 bg-white/20 backdrop-blur-md text-white text-[11px] font-semibold rounded-full">
-                  Juventud 15-30 Años
-                </span>
-              </div>
-              <h3 className="text-xl sm:text-2xl font-black text-white drop-shadow-md">
-                Un refugio digital donde cada emoción cuenta y cada día floreces.
-              </h3>
-            </div>
           </div>
 
           {/* Scroll Down Hint */}
@@ -481,72 +442,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </div>
           </div>
 
-        </div>
-      </section>
-
-      {/* SECCIÓN INTERACTIVA: OASIS DE RESPIRACIÓN Y CALMA RÁPIDA (Visual y sin audio) */}
-      <section className="py-16 bg-[#faf7f2] border-b border-stone-200">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#5a8c72]/15 text-[#4a7c59] text-xs font-bold uppercase tracking-wider mb-3">
-            <Waves className="w-3.5 h-3.5" />
-            <span>Herramienta Interactiva en Vivo</span>
-          </div>
-
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-stone-900 mb-3">
-            Oasis de Respiración Rápida
-          </h2>
-          <p className="text-stone-600 text-sm sm:text-base max-w-xl mx-auto mb-8">
-            Tómate 60 segundos para sincronizar tu ritmo cardíaco y liberar tensión acumulada.
-          </p>
-
-          <div className="bg-white rounded-3xl p-8 sm:p-12 border border-stone-200/90 shadow-sm flex flex-col items-center justify-center">
-            {/* Animated Sphere */}
-            <div className="relative w-44 h-44 sm:w-52 sm:h-52 flex items-center justify-center mb-6">
-              <div 
-                className={`absolute inset-0 rounded-full transition-all duration-4000 ease-in-out ${
-                  isBreathingActive && breathingPhase === 'Inhala' 
-                    ? 'scale-110 bg-[#8DB596]/30 shadow-2xl' 
-                    : isBreathingActive && breathingPhase === 'Sostén'
-                    ? 'scale-110 bg-[#D8C97B]/30'
-                    : isBreathingActive && breathingPhase === 'Exhala'
-                    ? 'scale-75 bg-[#E89A6B]/30'
-                    : 'scale-90 bg-stone-100'
-                }`}
-              />
-              <div 
-                className={`w-32 h-32 sm:w-36 sm:h-36 rounded-full flex flex-col items-center justify-center text-white transition-all duration-4000 shadow-md ${
-                  isBreathingActive && breathingPhase === 'Inhala'
-                    ? 'bg-[#5a8c72] scale-105'
-                    : isBreathingActive && breathingPhase === 'Sostén'
-                    ? 'bg-[#b8860b] scale-105'
-                    : isBreathingActive && breathingPhase === 'Exhala'
-                    ? 'bg-[#e07a52] scale-90'
-                    : 'bg-stone-400'
-                }`}
-              >
-                <span className="font-extrabold text-lg sm:text-xl">
-                  {isBreathingActive ? breathingPhase : 'Listo'}
-                </span>
-                <span className="text-xs text-white/90 mt-0.5">
-                  {isBreathingActive ? `${breathingSeconds}s` : 'Toca Iniciar'}
-                </span>
-              </div>
-            </div>
-
-            {/* Controls */}
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setIsBreathingActive(!isBreathingActive)}
-                className={`px-6 py-3 rounded-full text-sm font-extrabold flex items-center gap-2 transition-all cursor-pointer ${
-                  isBreathingActive
-                    ? 'bg-stone-200 text-stone-800 hover:bg-stone-300'
-                    : 'bg-[#5a8c72] text-white hover:bg-[#4a7c59] shadow-md hover:scale-105'
-                }`}
-              >
-                <span>{isBreathingActive ? 'Pausar Ejercicio' : 'Iniciar Respiración Guiada'}</span>
-              </button>
-            </div>
-          </div>
         </div>
       </section>
 

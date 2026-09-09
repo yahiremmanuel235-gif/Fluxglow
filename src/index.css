@@ -64,14 +64,55 @@
 
   body {
     font-family: var(--font-sans);
-    background-color: #FBF9F5;
+    background: linear-gradient(180deg, #F2F7F4 0%, #FBF9F5 45%, #FDF5F2 100%);
     color: #1A1A1A;
     overflow-x: hidden;
+    min-height: 100vh;
   }
 
   h1, h2, h3, .font-serif {
     font-family: var(--font-serif);
   }
+}
+
+/* Atmospheric brand bath backgrounds */
+.bg-flux-brand-bath {
+  background: 
+    radial-gradient(circle at 8% 12%, rgba(95, 146, 123, 0.12) 0%, transparent 45%),
+    radial-gradient(circle at 92% 88%, rgba(232, 122, 82, 0.12) 0%, transparent 45%),
+    linear-gradient(180deg, #F2F7F4 0%, #FBF9F5 50%, #FDF5F2 100%);
+}
+
+.bg-flux-brand-soft {
+  background: linear-gradient(135deg, rgba(95, 146, 123, 0.08) 0%, #FBF9F5 50%, rgba(232, 122, 82, 0.08) 100%);
+}
+
+.border-flux-sage {
+  border-color: rgba(95, 146, 123, 0.35);
+}
+
+.border-flux-terracotta {
+  border-color: rgba(232, 122, 82, 0.35);
+}
+
+.glow-flux-sage {
+  box-shadow: 0 8px 24px -4px rgba(95, 146, 123, 0.22);
+}
+
+.glow-flux-terracotta {
+  box-shadow: 0 8px 24px -4px rgba(232, 122, 82, 0.22);
+}
+
+.badge-sage {
+  background-color: #EBF1EA;
+  color: #3e6855;
+  border: 1px solid #c5ddd0;
+}
+
+.badge-terracotta {
+  background-color: #FDF4F0;
+  color: #b54f2c;
+  border: 1px solid #f7d3c3;
 }
 
 /* Keyframes for smooth animations */

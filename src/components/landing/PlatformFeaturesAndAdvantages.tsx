@@ -33,8 +33,9 @@ export const PlatformFeaturesAndAdvantages: React.FC = () => {
       title: 'Centro de Aprendizaje Emocional',
       tagline: 'Biblioteca de psicoeducación interactiva y basada en evidencia',
       icon: BookOpen,
-      color: 'bg-brand-sage-50 text-brand-sage-700 border-brand-sage-200',
-      badgeColor: 'bg-brand-sage-100 text-brand-sage-800',
+      iconUrl: '/assets/icons/nav-info.png',
+      color: 'bg-[#EBF1EA] text-[#3E6855] border-[#C5DDD0]',
+      badgeColor: 'bg-[#EBF1EA] text-[#3E6855] border border-[#C5DDD0]',
       description: 'Accede a módulos interactivos, guías completas paso a paso, audios reflexivos y herramientas prácticas sobre gestión del estrés, burnout académico, relaciones y regulación del sistema nervioso.',
       features: [
         'Guías interactivas completas con seguimiento día a día y ejercicios de reflexión.',
@@ -49,8 +50,9 @@ export const PlatformFeaturesAndAdvantages: React.FC = () => {
       title: 'Diario Emocional Inteligente',
       tagline: 'Registro guiado de estados de ánimo, factores detonantes e intensidad',
       icon: PenLine,
-      color: 'bg-amber-50 text-amber-700 border-amber-200',
-      badgeColor: 'bg-amber-100 text-amber-800',
+      iconUrl: '/assets/icons/nav-journal.png',
+      color: 'bg-[#FDF4F0] text-[#E87A52] border-[#F7D3C3]',
+      badgeColor: 'bg-[#FDF4F0] text-[#E87A52] border border-[#F7D3C3]',
       description: 'Registra diariamente tus emociones con escalas de intensidad, factores desencadenantes (como estudio, sueño, relaciones) y notas de gratitud, generando un historial profundo de tu bienestar.',
       features: [
         'Selector intuitivo de emociones con indicador de intensidad del 1 al 10.',
@@ -65,8 +67,9 @@ export const PlatformFeaturesAndAdvantages: React.FC = () => {
       title: 'Misiones y Hábitos Diarios',
       tagline: 'Gamificación positiva para consolidar rutinas saludables de autocuidado',
       icon: Target,
-      color: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-      badgeColor: 'bg-emerald-100 text-emerald-800',
+      iconUrl: '/assets/icons/trophy.png',
+      color: 'bg-[#EBF1EA] text-[#3E6855] border-[#C5DDD0]',
+      badgeColor: 'bg-[#EBF1EA] text-[#3E6855] border border-[#C5DDD0]',
       description: 'Convierte el autocuidado en un hábito motivador mediante micro-retos diarios, contador de rachas y puntos de experiencia que celebran tu constancia.',
       features: [
         'Retos diarios de respiración consciente, pausas de hidratación y desconexión.',
@@ -81,8 +84,9 @@ export const PlatformFeaturesAndAdvantages: React.FC = () => {
       title: 'Análisis Predictivo Avanzado',
       tagline: 'Visualización de datos, radar emocional y prevención anticipada',
       icon: TrendingUp,
-      color: 'bg-sky-50 text-sky-700 border-sky-200',
-      badgeColor: 'bg-sky-100 text-sky-800',
+      iconUrl: '/assets/icons/nav-analytics.png',
+      color: 'bg-[#FDF4F0] text-[#E87A52] border-[#F7D3C3]',
+      badgeColor: 'bg-[#FDF4F0] text-[#E87A52] border border-[#F7D3C3]',
       description: 'Transforma tus registros en gráficas claras que revelan correlaciones entre detonantes y estados anímicos, pronosticando tendencias a 7, 14 y 30 días.',
       features: [
         'Mapa y gráfico de evolución emocional a lo largo de las semanas.',
@@ -97,8 +101,9 @@ export const PlatformFeaturesAndAdvantages: React.FC = () => {
       title: 'Acompañante Virtual Flux AI',
       tagline: 'Asistencia empática disponible 24/7 con respaldo de Gemini',
       icon: Bot,
-      color: 'bg-purple-50 text-purple-700 border-purple-200',
-      badgeColor: 'bg-purple-100 text-purple-800',
+      iconUrl: '/assets/icons/nav-ai.png',
+      color: 'bg-[#EBF1EA] text-[#3E6855] border-[#C5DDD0]',
+      badgeColor: 'bg-[#EBF1EA] text-[#3E6855] border border-[#C5DDD0]',
       description: 'Conversa con un asistente entrenado en escucha activa y técnicas de psicología cognitivo-conductual (TCC) para ordenar tus pensamientos en momentos difíciles.',
       features: [
         'Acompañamiento cálido, respetuoso y libre de juicios a cualquier hora.',
@@ -113,8 +118,9 @@ export const PlatformFeaturesAndAdvantages: React.FC = () => {
       title: 'Alerta Emocional Inteligente & SOS',
       tagline: 'Contención inmediata, protocolo de emergencia y líneas de apoyo',
       icon: ShieldAlert,
-      color: 'bg-rose-50 text-rose-700 border-rose-200',
-      badgeColor: 'bg-rose-100 text-rose-800',
+      iconUrl: '/assets/icons/heart.png',
+      color: 'bg-[#FDF4F0] text-[#E87A52] border-[#F7D3C3]',
+      badgeColor: 'bg-[#FDF4F0] text-[#E87A52] border border-[#F7D3C3]',
       description: 'Espacio de emergencia emocional con técnicas rápidas de grounding (5-4-3-2-1), ejercicios de respiración diafragmática y directorio de líneas telefónicas gratuitas 24/7.',
       features: [
         'Técnica sensorial de conexión con el presente (Grounding 5-4-3-2-1).',
@@ -129,8 +135,9 @@ export const PlatformFeaturesAndAdvantages: React.FC = () => {
       title: 'Comunidad Segura y Moderada',
       tagline: 'Espacio de empatía y apoyo mutuo entre pares',
       icon: Users,
-      color: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-      badgeColor: 'bg-indigo-100 text-indigo-800',
+      iconUrl: '/assets/icons/nav-community.png',
+      color: 'bg-[#EBF1EA] text-[#3E6855] border-[#C5DDD0]',
+      badgeColor: 'bg-[#EBF1EA] text-[#3E6855] border border-[#C5DDD0]',
       description: 'Comparte reflexiones, consejos y experiencias con otros jóvenes en un entorno constructivo, respetuoso y con filtros activos de moderación y privacidad.',
       features: [
         'Publicaciones organizadas por temas de interés (estudios, vida, motivación).',
@@ -145,8 +152,9 @@ export const PlatformFeaturesAndAdvantages: React.FC = () => {
       title: 'Perfil y Personalización Integral',
       tagline: 'Control total sobre tus datos, metas personales y preferencias',
       icon: UserCheck,
-      color: 'bg-teal-50 text-teal-700 border-teal-200',
-      badgeColor: 'bg-teal-100 text-teal-800',
+      iconUrl: '/assets/icons/nav-profile.png',
+      color: 'bg-[#FDF4F0] text-[#E87A52] border-[#F7D3C3]',
+      badgeColor: 'bg-[#FDF4F0] text-[#E87A52] border border-[#F7D3C3]',
       description: 'Configura tus metas de bienestar, gestiona tus insignias ganadas, ajusta temas visuales y exporta o edita tu historial cuando lo desees.',
       features: [
         'Selección y seguimiento de objetivos personales (sueño, estrés, enfoque).',
@@ -267,13 +275,13 @@ export const PlatformFeaturesAndAdvantages: React.FC = () => {
           </p>
 
           {/* Navigation Pill Tabs */}
-          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mt-8 p-1.5 bg-white rounded-2xl border border-stone-200/80 shadow-xs max-w-lg mx-auto">
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mt-8 p-1.5 bg-white rounded-2xl border border-[#5F927B]/30 shadow-xs max-w-lg mx-auto">
             <button
               onClick={() => setActiveTab('functions')}
               className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
                 activeTab === 'functions'
-                  ? 'bg-[#548c71] text-white shadow-xs'
-                  : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
+                  ? 'bg-[#5F927B] text-white shadow-xs'
+                  : 'text-stone-600 hover:text-stone-900 hover:bg-[#EBF1EA]/50'
               }`}
             >
               Funciones y Módulos
@@ -282,8 +290,8 @@ export const PlatformFeaturesAndAdvantages: React.FC = () => {
               onClick={() => setActiveTab('advantages')}
               className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
                 activeTab === 'advantages'
-                  ? 'bg-[#548c71] text-white shadow-xs'
-                  : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
+                  ? 'bg-[#5F927B] text-white shadow-xs'
+                  : 'text-stone-600 hover:text-stone-900 hover:bg-[#EBF1EA]/50'
               }`}
             >
               Ventajas Principales
@@ -292,8 +300,8 @@ export const PlatformFeaturesAndAdvantages: React.FC = () => {
               onClick={() => setActiveTab('comparison')}
               className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
                 activeTab === 'comparison'
-                  ? 'bg-[#548c71] text-white shadow-xs'
-                  : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
+                  ? 'bg-[#E87A52] text-white shadow-xs'
+                  : 'text-stone-600 hover:text-stone-900 hover:bg-[#FDF4F0]/50'
               }`}
             >
               ¿En qué nos diferenciamos?
@@ -314,18 +322,22 @@ export const PlatformFeaturesAndAdvantages: React.FC = () => {
                   >
                     <div>
                       <div className="flex items-center justify-between gap-3 mb-4">
-                        <div className={`p-3 rounded-2xl border ${m.color}`}>
-                          <Icon className="w-5 h-5" />
+                        <div className={`p-2.5 rounded-2xl border ${m.color} flex items-center justify-center shadow-2xs`}>
+                          {m.iconUrl ? (
+                            <img src={m.iconUrl} alt={m.title} className="w-6 h-6 object-contain" />
+                          ) : (
+                            <Icon className="w-5 h-5" />
+                          )}
                         </div>
                         <span className={`text-[11px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider ${m.badgeColor}`}>
                           Módulo #{m.number}
                         </span>
                       </div>
 
-                      <h3 className="text-xl font-bold text-stone-900 mb-1">
+                      <h3 className="text-xl font-bold text-stone-900 mb-1 font-serif">
                         {m.title}
                       </h3>
-                      <p className="text-xs font-semibold text-[#548c71] mb-3">
+                      <p className="text-xs font-semibold text-[#5F927B] mb-3">
                         {m.tagline}
                       </p>
                       <p className="text-stone-600 text-sm leading-relaxed mb-5">
@@ -338,7 +350,7 @@ export const PlatformFeaturesAndAdvantages: React.FC = () => {
                         </p>
                         {m.features.map((feat, fIdx) => (
                           <div key={fIdx} className="flex items-start gap-2 text-xs text-stone-700">
-                            <CheckCircle2 className="w-4 h-4 text-[#548c71] shrink-0 mt-0.5" />
+                            <CheckCircle2 className="w-4 h-4 text-[#5F927B] shrink-0 mt-0.5" />
                             <span>{feat}</span>
                           </div>
                         ))}
@@ -385,11 +397,11 @@ export const PlatformFeaturesAndAdvantages: React.FC = () => {
         {/* TAB 3: TABLA COMPARATIVA: FLUXGLOW VS OTRAS SOLUCIONES */}
         {activeTab === 'comparison' && (
           <div className="bg-white rounded-3xl border border-stone-200 shadow-xs overflow-hidden">
-            <div className="p-6 sm:p-8 bg-gradient-to-r from-stone-900 to-stone-800 text-white">
-              <h3 className="text-xl sm:text-2xl font-black">
+            <div className="p-6 sm:p-8 bg-gradient-to-r from-[#3E6855] via-[#5F927B] to-[#E87A52] text-white">
+              <h3 className="text-xl sm:text-2xl font-black font-serif">
                 ¿En qué se diferencia FluxGlow de otras aplicaciones?
               </h3>
-              <p className="text-stone-300 text-xs sm:text-sm mt-1">
+              <p className="text-white/90 text-xs sm:text-sm mt-1">
                 Comparamos la experiencia integral de FluxGlow frente a chatbots genéricos, apps de hábitos estándar y diarios de notas convencionales.
               </p>
             </div>
@@ -399,7 +411,7 @@ export const PlatformFeaturesAndAdvantages: React.FC = () => {
                 <thead>
                   <tr className="border-b border-stone-200 bg-stone-50 text-stone-700">
                     <th className="py-4 px-4 sm:px-6 font-bold">Característica / Capacidad</th>
-                    <th className="py-4 px-3 sm:px-4 font-black text-[#2d6a4f] bg-emerald-50/70 border-x border-emerald-100 text-center">
+                    <th className="py-4 px-3 sm:px-4 font-black text-[#3E6855] bg-[#EBF1EA] border-x border-[#C5DDD0] text-center">
                       FluxGlow
                     </th>
                     <th className="py-4 px-3 sm:px-4 font-medium text-stone-500 text-center">Chatbots de IA Genéricos</th>
@@ -415,9 +427,9 @@ export const PlatformFeaturesAndAdvantages: React.FC = () => {
                       </td>
 
                       {/* FluxGlow */}
-                      <td className="py-3.5 px-3 sm:px-4 bg-emerald-50/50 border-x border-emerald-100 text-center">
-                        <span className="inline-flex items-center gap-1 font-bold text-emerald-700">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <td className="py-3.5 px-3 sm:px-4 bg-[#EBF1EA]/50 border-x border-[#C5DDD0] text-center">
+                        <span className="inline-flex items-center gap-1 font-bold text-[#3E6855]">
+                          <CheckCircle2 className="w-4 h-4 text-[#5F927B] shrink-0" />
                           <span>Completo</span>
                         </span>
                       </td>

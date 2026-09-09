@@ -504,18 +504,22 @@ Generado con FluxGlow • Cuidado emocional consciente`;
   };
 
   return (
-    <div className="w-full bg-brand-sand-50 min-h-screen pb-20 pt-4 px-4 sm:px-6 lg:px-8">
+    <div className="w-full bg-flux-brand-bath min-h-screen pb-20 pt-4 px-4 sm:px-6 lg:px-8">
       <div className="max-w-[1360px] mx-auto">
 
         {/* Top Header with Brand Logo */}
-        <div className="flex items-center justify-between py-2 border-b border-brand-sand-300 mb-4">
+        <div className="flex items-center justify-between py-2 border-b border-[#5F927B]/20 mb-4">
           <div className="flex items-center gap-2">
-            <FluxGlowLogo imgSrc="/logo2.png" size="sm" showText={true} />
+            <FluxGlowLogo size="xs" showText={true} />
+            <span className="text-[11px] font-bold text-[#3E6855] bg-[#EBF1EA] border border-[#C5DDD0] px-2.5 py-0.5 rounded-full ml-1 hidden sm:inline-flex items-center gap-1.5 shadow-2xs">
+              <img src="/assets/icons/nav-analytics.png" alt="Métricas" className="w-3.5 h-3.5 object-contain" />
+              <span>Modelos Predictivos</span>
+            </span>
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="text-xs font-semibold text-stone-700 bg-white border border-brand-sand-300 px-3.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-2xs">
-              <Calendar className="w-3.5 h-3.5 text-brand-sage-600" />
+            <div className="text-xs font-semibold text-stone-700 bg-white border border-[#C5DDD0] px-3.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-2xs">
+              <Calendar className="w-3.5 h-3.5 text-[#5F927B]" />
               <span>Periodo: Junio 2026</span>
             </div>
 
@@ -523,7 +527,7 @@ Generado con FluxGlow • Cuidado emocional consciente`;
               onClick={() => setShowWeeklySummaryModal(true)}
               variant="terracotta"
               size="sm"
-              leftIcon={<FileText className="w-4 h-4" />}
+              leftIcon={<img src="/assets/icons/send.png" alt="Exportar" className="w-3.5 h-3.5 object-contain brightness-0 invert" />}
             >
               Exportar Informe PDF
             </Button>
@@ -532,8 +536,12 @@ Generado con FluxGlow • Cuidado emocional consciente`;
 
         {/* Big Display Title: Análisis Predictivo */}
         <div className="text-center my-6 px-2 overflow-visible">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#EBF1EA] border border-[#C5DDD0] text-xs font-bold text-[#3E6855] mb-2 shadow-2xs">
+            <img src="/assets/icons/nav-analytics.png" alt="Predictivo" className="w-3.5 h-3.5 object-contain" />
+            <span>Inteligencia de Datos Clínicos</span>
+          </div>
           <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-normal leading-normal overflow-visible">
-            <span className="title-gradient">
+            <span className="bg-gradient-to-r from-[#3E6855] via-[#5F927B] to-[#E87A52] bg-clip-text text-transparent">
               Análisis Predictivo
             </span>
           </h1>
@@ -542,52 +550,52 @@ Generado con FluxGlow • Cuidado emocional consciente`;
 
         {/* STATS DELTA STRIP (Comparative Periods %) */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white p-4 rounded-2xl border border-brand-sand-300 shadow-2xs flex items-center justify-between">
+          <div className="bg-gradient-to-br from-white to-[#F2F7F4] p-4 rounded-3xl border-2 border-[#5F927B]/30 shadow-2xs flex items-center justify-between">
             <div>
               <p className="text-[11px] font-semibold text-stone-500">Bienestar Subjetivo</p>
               <h3 className="text-xl font-bold text-stone-900 mt-0.5">{subjectiveWellbeing.score} / 10</h3>
-              <p className="text-[11px] text-brand-sage-700 font-bold flex items-center gap-0.5 mt-1">
-                <ArrowUpRight className="w-3.5 h-3.5 text-brand-sage-600" />
+              <p className="text-[11px] text-[#3E6855] font-bold flex items-center gap-0.5 mt-1">
+                <ArrowUpRight className="w-3.5 h-3.5 text-[#5F927B]" />
                 <span>{subjectiveWellbeing.deltaText}</span>
               </p>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-brand-sage-50 border border-brand-sage-200 flex items-center justify-center text-brand-sage-700">
-              <TrendingUp className="w-5 h-5" />
+            <div className="w-11 h-11 rounded-2xl bg-white border border-[#C5DDD0] flex items-center justify-center p-2 shadow-2xs">
+              <img src="/assets/icons/trophy.png" alt="Bienestar" className="w-6 h-6 object-contain" />
             </div>
           </div>
 
-          <div className="bg-white p-4 rounded-2xl border border-brand-sand-300 shadow-2xs flex items-center justify-between">
+          <div className="bg-gradient-to-br from-white to-[#FDF4F0] p-4 rounded-3xl border-2 border-[#E87A52]/30 shadow-2xs flex items-center justify-between">
             <div>
               <p className="text-[11px] font-semibold text-stone-500">Consistencia de Hábitos</p>
               <h3 className="text-xl font-bold text-stone-900 mt-0.5">{streakDays} días activos</h3>
-              <p className="text-[11px] text-brand-sage-700 font-bold flex items-center gap-0.5 mt-1">
-                <ArrowUpRight className="w-3.5 h-3.5 text-brand-sage-600" />
+              <p className="text-[11px] text-[#B54F2C] font-bold flex items-center gap-0.5 mt-1">
+                <ArrowUpRight className="w-3.5 h-3.5 text-[#E87A52]" />
                 <span>{streakDays === 0 ? '0% Racha por iniciar' : `+${streakDays * 10}% racha sostenida`}</span>
               </p>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center p-1.5 shadow-2xs">
-              <RachaIcon className="w-6 h-6" />
+            <div className="w-11 h-11 rounded-2xl bg-[#FDF4F0] border border-[#F7D3C3] flex items-center justify-center p-1.5 shadow-2xs">
+              <img src="/assets/badges/badge-streak.png" alt="Racha" className="w-7 h-7 object-contain" />
             </div>
           </div>
 
-          <div className="bg-white p-4 rounded-2xl border border-brand-sand-300 shadow-2xs flex items-center justify-between">
+          <div className="bg-white p-4 rounded-3xl border-2 border-[#5F927B]/30 shadow-2xs flex items-center justify-between">
             <div>
               <p className="text-[11px] font-semibold text-stone-500">Picos de Estrés Reactivo</p>
               <h3 className="text-xl font-bold text-stone-900 mt-0.5">{reactiveStressEpisodes.count} episodios</h3>
-              <p className="text-[11px] text-stone-500 font-medium flex items-center gap-0.5 mt-1">
-                <ShieldCheck className="w-3.5 h-3.5 text-brand-sage-600" />
+              <p className="text-[11px] text-stone-600 font-medium flex items-center gap-0.5 mt-1">
+                <img src="/assets/icons/alert-shield.png" alt="Escudo" className="w-3.5 h-3.5 object-contain" />
                 <span>{reactiveStressEpisodes.text}</span>
               </p>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-brand-terracotta-50 border border-brand-terracotta-200 flex items-center justify-center text-brand-terracotta-600">
-              <ShieldCheck className="w-5 h-5" />
+            <div className="w-11 h-11 rounded-2xl bg-[#FDF4F0] border border-[#F7D3C3] flex items-center justify-center p-2 shadow-2xs">
+              <img src="/assets/icons/alert-shield.png" alt="Alerta" className="w-6 h-6 object-contain" />
             </div>
           </div>
         </div>
 
         {/* SECTION: Correlación entre Factores Detonantes y Ánimo */}
-        <div className="bg-white rounded-3xl border border-brand-sand-300 shadow-2xs p-6 sm:p-7 mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-brand-sand-200">
+        <div className="bg-white rounded-3xl border-2 border-[#5F927B]/20 shadow-2xs p-6 sm:p-7 mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-stone-200">
             <div>
               <div className="flex items-center gap-2">
                 <Tag className="w-5 h-5 text-brand-sage-600" />

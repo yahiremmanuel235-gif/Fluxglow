@@ -159,49 +159,49 @@ export const MissionsModule: React.FC<MissionsModuleProps> = ({
   };
 
   return (
-    <div className="w-full bg-[#fbf9f5] min-h-screen pb-24 pt-4 px-4 sm:px-6 lg:px-8">
+    <div className="w-full bg-flux-brand-bath min-h-screen pb-24 pt-4 px-4 sm:px-6 lg:px-8">
       <div className="max-w-[1280px] mx-auto">
         
         {/* Top Header Row with Brand Logo, Connection Status & Back/Explore */}
-        <div className="flex flex-wrap items-center justify-between gap-3 py-2 border-b border-[#ece4d9] mb-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 py-2 border-b border-[#5F927B]/20 mb-4">
           <div className="flex items-center gap-2">
-            <FluxGlowLogo imgSrc="/logo2.png" size="sm" showText={true} />
-            <span className="text-[11px] font-bold text-amber-900 bg-amber-100 border border-amber-300 px-2.5 py-0.5 rounded-full ml-1 flex items-center gap-1">
-              <Target className="w-3 h-3 text-amber-700" />
+            <FluxGlowLogo size="xs" showText={true} />
+            <span className="text-[11px] font-bold text-[#B54F2C] bg-[#FDF4F0] border border-[#F7D3C3] px-2.5 py-0.5 rounded-full ml-1 flex items-center gap-1.5 shadow-2xs">
+              <img src="/assets/icons/medal.png" alt="Misiones" className="w-3.5 h-3.5 object-contain" />
               <span>Hábitos y Retos Diarios</span>
             </span>
           </div>
 
           <div className="flex items-center gap-2">
             {isMissionsLoading ? (
-              <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-medium text-stone-600 bg-stone-100 border border-stone-200 px-2.5 py-1 rounded-full">
-                <Loader2 className="w-3 h-3 animate-spin text-[#548c71]" />
+              <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-medium text-stone-600 bg-white border border-stone-200 px-2.5 py-1 rounded-full shadow-2xs">
+                <Loader2 className="w-3 h-3 animate-spin text-[#5F927B]" />
                 <span>Cargando misiones...</span>
               </div>
             ) : user ? (
-              <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-medium text-[#3E6855] bg-[#EBF1EA] border border-[#C5DDD0] px-2.5 py-1 rounded-full shadow-2xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#5F927B] animate-pulse"></span>
                 <span>Supabase Conectado</span>
               </div>
             ) : (
-              <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-medium text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full" title="Tus misiones se gestionan en este navegador. Inicia sesión para sincronizarlas en Supabase.">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+              <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-medium text-[#B54F2C] bg-[#FDF4F0] border border-[#F7D3C3] px-2.5 py-1 rounded-full shadow-2xs" title="Tus misiones se gestionan en este navegador. Inicia sesión para sincronizarlas en Supabase.">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#E87A52]"></span>
                 <span>Modo Exploración (Local)</span>
               </div>
             )}
 
             {/* Level & Points synced Pill */}
-            <div className="hidden md:flex items-center gap-1.5 text-[11px] font-bold text-stone-700 bg-white border border-stone-200 px-3 py-1 rounded-full shadow-2xs">
-              <Sparkles className="w-3 h-3 text-amber-500" />
+            <div className="hidden md:flex items-center gap-1.5 text-[11px] font-bold text-stone-700 bg-white border border-[#C5DDD0] px-3 py-1 rounded-full shadow-2xs">
+              <img src="/assets/icons/medal.png" alt="XP" className="w-3.5 h-3.5 object-contain" />
               <span>{userPoints} XP • Nivel {userLevel}</span>
             </div>
 
             {onNavigate && (
               <button
                 onClick={() => onNavigate('learn')}
-                className="text-xs font-semibold text-stone-600 hover:text-stone-900 bg-white border border-stone-300 px-3.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-2xs transition-all hover:bg-stone-50 cursor-pointer"
+                className="text-xs font-semibold text-stone-700 hover:text-[#3E6855] bg-white border border-[#C5DDD0] hover:border-[#5F927B] px-3.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-2xs transition-all hover:bg-stone-50 cursor-pointer"
               >
-                <BookOpen className="w-3.5 h-3.5 text-[#548c71]" />
+                <img src="/assets/icons/nav-info.png" alt="Guías" className="w-3.5 h-3.5 object-contain" />
                 <span>Explorar más Guías</span>
               </button>
             )}
@@ -210,14 +210,14 @@ export const MissionsModule: React.FC<MissionsModuleProps> = ({
 
         {/* Sync notification if error occurs */}
         {missionsError && (
-          <div className="mb-4 bg-amber-50 border border-amber-200 text-amber-900 px-4 py-2.5 rounded-2xl text-xs flex items-center justify-between gap-2 shadow-2xs">
+          <div className="mb-4 bg-[#FDF4F0] border border-[#F7D3C3] text-[#B54F2C] px-4 py-2.5 rounded-2xl text-xs flex items-center justify-between gap-2 shadow-2xs">
             <span className="flex items-center gap-1.5">
-              <Cloud className="w-3.5 h-3.5 text-amber-700" />
+              <Cloud className="w-3.5 h-3.5 text-[#E87A52]" />
               <span>Aviso de sincronización de misiones: {missionsError}</span>
             </span>
             <button
               onClick={() => refreshMissions()}
-              className="text-amber-950 font-bold underline flex items-center gap-1 cursor-pointer hover:text-amber-700"
+              className="text-[#873418] font-bold underline flex items-center gap-1 cursor-pointer hover:text-[#B54F2C]"
             >
               <RefreshCw className="w-3 h-3" />
               <span>Reintentar</span>
@@ -227,8 +227,12 @@ export const MissionsModule: React.FC<MissionsModuleProps> = ({
 
         {/* Big Display Title: Misiones Diarias */}
         <div className="text-center my-6 px-2 overflow-visible">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FDF4F0] border border-[#F7D3C3] text-xs font-bold text-[#B54F2C] mb-2 shadow-2xs">
+            <img src="/assets/icons/trophy.png" alt="Retos" className="w-3.5 h-3.5 object-contain" />
+            <span>Hábitos & Micro-Acciones</span>
+          </div>
           <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-normal leading-normal overflow-visible">
-            <span className="title-gradient">
+            <span className="bg-gradient-to-r from-[#3E6855] via-[#5F927B] to-[#E87A52] bg-clip-text text-transparent">
               Misiones Diarias
             </span>
           </h1>
@@ -240,86 +244,86 @@ export const MissionsModule: React.FC<MissionsModuleProps> = ({
         {/* TOP STATS DASHBOARD BANNER */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
           
-          {/* Card 1: Misiones Pendientes (Prominent Highlight) */}
-          <div className="bg-gradient-to-br from-amber-50 to-orange-50/80 rounded-3xl p-4 sm:p-5 border-2 border-amber-300 shadow-sm flex items-center justify-between">
+          {/* Card 1: Misiones Pendientes (Prominent Highlight with Terracotta) */}
+          <div className="bg-gradient-to-br from-[#FDF4F0] to-[#FDF1EC] rounded-3xl p-4 sm:p-5 border-2 border-[#E87A52]/50 shadow-sm flex items-center justify-between">
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-amber-800">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#B54F2C]">
                 Pendientes Hoy
               </span>
               <div className="flex items-baseline gap-1.5 mt-1">
-                <span className="text-3xl sm:text-4xl font-bold text-amber-950 font-serif">
+                <span className="text-3xl sm:text-4xl font-bold text-[#873418] font-serif">
                   {pendingMissions.length}
                 </span>
-                <span className="text-xs font-medium text-amber-700">por realizar</span>
+                <span className="text-xs font-medium text-[#B54F2C]">por realizar</span>
               </div>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-amber-400/30 border border-amber-400 flex items-center justify-center text-amber-800 shadow-2xs shrink-0">
-              <Target className="w-6 h-6" />
+            <div className="w-12 h-12 rounded-2xl bg-white border border-[#F7D3C3] flex items-center justify-center p-2.5 shadow-2xs shrink-0">
+              <img src="/assets/badges/badge-explorer.png" alt="Pendientes" className="w-7 h-7 object-contain" />
             </div>
           </div>
 
-          {/* Card 2: Misiones Completadas */}
-          <div className="bg-white rounded-3xl p-4 sm:p-5 border border-stone-200 shadow-xs flex items-center justify-between">
+          {/* Card 2: Misiones Completadas (Sage Green) */}
+          <div className="bg-gradient-to-br from-[#F2F7F4] to-[#EBF1EA] rounded-3xl p-4 sm:p-5 border-2 border-[#5F927B]/40 shadow-xs flex items-center justify-between">
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-stone-500">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#3E6855]">
                 Completadas
               </span>
               <div className="flex items-baseline gap-1.5 mt-1">
-                <span className="text-3xl sm:text-4xl font-bold text-[#548c71] font-serif">
+                <span className="text-3xl sm:text-4xl font-bold text-[#3E6855] font-serif">
                   {completedMissions.length}
                 </span>
-                <span className="text-xs font-medium text-stone-400">retos listos</span>
+                <span className="text-xs font-medium text-[#5F927B]">retos listos</span>
               </div>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-[#548c71] shadow-2xs shrink-0">
-              <CheckCircle2 className="w-6 h-6" />
+            <div className="w-12 h-12 rounded-2xl bg-white border border-[#C5DDD0] flex items-center justify-center p-2.5 shadow-2xs shrink-0">
+              <img src="/assets/icons/trophy.png" alt="Completadas" className="w-7 h-7 object-contain" />
             </div>
           </div>
 
-          {/* Card 3: Racha Consecutiva */}
-          <div className="bg-white rounded-3xl p-4 sm:p-5 border border-stone-200 shadow-xs flex items-center justify-between">
+          {/* Card 3: Racha Consecutiva (Terracotta Glow) */}
+          <div className="bg-white rounded-3xl p-4 sm:p-5 border-2 border-[#E87A52]/30 shadow-xs flex items-center justify-between">
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-stone-500">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-stone-600">
                 Racha de Hábitos
               </span>
               <div className="flex items-baseline gap-1.5 mt-1">
-                <span className="text-3xl sm:text-4xl font-bold text-orange-600 font-serif">
+                <span className="text-3xl sm:text-4xl font-bold text-[#E87A52] font-serif">
                   {streakDays}
                 </span>
                 <span className="text-xs font-medium text-stone-400">días seguidos</span>
               </div>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-orange-50 border border-orange-200 flex items-center justify-center p-2 shadow-2xs shrink-0">
-              <RachaIcon className="w-7 h-7" />
+            <div className="w-12 h-12 rounded-2xl bg-[#FDF4F0] border border-[#F7D3C3] flex items-center justify-center p-2 shadow-2xs shrink-0">
+              <img src="/assets/badges/badge-streak.png" alt="Racha" className="w-8 h-8 object-contain" />
             </div>
           </div>
 
           {/* Card 4: Puntos de Experiencia (XP) & Nivel */}
-          <div className="bg-white rounded-3xl p-4 sm:p-5 border border-stone-200 shadow-xs flex items-center justify-between">
+          <div className="bg-white rounded-3xl p-4 sm:p-5 border-2 border-[#5F927B]/30 shadow-xs flex items-center justify-between">
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-stone-500 flex items-center gap-1">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-stone-600 flex items-center gap-1">
                 <span>XP y Nivel</span>
-                {user && <span className="text-[9px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded font-bold">Nube</span>}
+                {user && <span className="text-[9px] bg-[#EBF1EA] text-[#3E6855] px-1.5 py-0.2 rounded font-bold">Nube</span>}
               </span>
               <div className="flex items-baseline gap-1.5 mt-1">
                 <span className="text-3xl sm:text-4xl font-bold text-stone-900 font-serif">
                   +{userPoints}
                 </span>
-                <span className="text-xs font-medium text-amber-700">XP</span>
+                <span className="text-xs font-medium text-[#E87A52]">XP</span>
               </div>
               <span className="text-[11px] font-semibold text-stone-500 block mt-0.5">
                 Nivel {userLevel} • {user ? 'Supabase' : 'Local'}
               </span>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700 shadow-2xs shrink-0">
-              <Award className="w-6 h-6 text-amber-600" />
+            <div className="w-12 h-12 rounded-2xl bg-[#F2F7F4] border border-[#C5DDD0] flex items-center justify-center p-2 shadow-2xs shrink-0">
+              <img src="/assets/badges/badge-mastery.png" alt="Nivel" className="w-8 h-8 object-contain" />
             </div>
           </div>
 
         </div>
 
         {/* SEARCH & FILTERS BAR */}
-        <div className="bg-white rounded-3xl border border-stone-200 p-4 sm:p-5 mb-8 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="bg-white rounded-3xl border-2 border-[#5F927B]/20 p-4 sm:p-5 mb-8 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
           
           {/* Tabs: Todas, Pendientes, Completadas */}
           <div className="flex items-center bg-[#f5f1ea] p-1 rounded-2xl w-full md:w-auto">
@@ -338,13 +342,13 @@ export const MissionsModule: React.FC<MissionsModuleProps> = ({
               onClick={() => setFilterTab('pending')}
               className={`flex-1 md:flex-initial px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                 filterTab === 'pending'
-                  ? 'bg-amber-500 text-white shadow-xs'
-                  : 'text-stone-600 hover:text-stone-900'
+                  ? 'bg-[#E87A52] text-white shadow-xs'
+                  : 'text-stone-600 hover:text-[#B54F2C]'
               }`}
             >
               <span>Pendientes</span>
               <span className={`text-xs px-1.5 py-0.2 rounded-full font-bold ${
-                filterTab === 'pending' ? 'bg-amber-700 text-white' : 'bg-stone-200 text-stone-700'
+                filterTab === 'pending' ? 'bg-[#873418] text-white' : 'bg-stone-200 text-stone-700'
               }`}>
                 {pendingMissions.length}
               </span>
@@ -354,13 +358,13 @@ export const MissionsModule: React.FC<MissionsModuleProps> = ({
               onClick={() => setFilterTab('completed')}
               className={`flex-1 md:flex-initial px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                 filterTab === 'completed'
-                  ? 'bg-[#548c71] text-white shadow-xs'
-                  : 'text-stone-600 hover:text-stone-900'
+                  ? 'bg-[#5F927B] text-white shadow-xs'
+                  : 'text-stone-600 hover:text-[#3E6855]'
               }`}
             >
               <span>Completadas</span>
               <span className={`text-xs px-1.5 py-0.2 rounded-full font-bold ${
-                filterTab === 'completed' ? 'bg-[#37614d] text-white' : 'bg-stone-200 text-stone-700'
+                filterTab === 'completed' ? 'bg-[#253D33] text-white' : 'bg-stone-200 text-stone-700'
               }`}>
                 {completedMissions.length}
               </span>
@@ -371,27 +375,30 @@ export const MissionsModule: React.FC<MissionsModuleProps> = ({
           <div className="flex items-center gap-2.5 w-full md:w-auto flex-1 max-w-lg justify-end">
             
             <div className="relative flex-1">
-              <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <img src="/assets/icons/search.png" alt="Buscar" className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 object-contain" />
               <input
                 type="text"
                 placeholder="Buscar misión o guía..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-[#fbf9f5] border border-stone-200 rounded-2xl pl-10 pr-4 py-2 text-xs sm:text-sm text-stone-800 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#548c71]/40"
+                className="w-full bg-[#fbf9f5] border border-stone-200 focus:border-[#5F927B] rounded-2xl pl-10 pr-4 py-2 text-xs sm:text-sm text-stone-800 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#5F927B]/30"
               />
             </div>
 
             {availableCategories.length > 0 && (
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="bg-[#fbf9f5] border border-stone-200 rounded-2xl px-3 py-2 text-xs sm:text-sm text-stone-700 focus:outline-none focus:ring-2 focus:ring-[#548c71]/40 cursor-pointer"
-              >
-                <option value="todos">Todas las categorías</option>
-                {availableCategories.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
+              <div className="relative flex items-center">
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="bg-[#fbf9f5] border border-stone-200 focus:border-[#5F927B] rounded-2xl pl-3 pr-8 py-2 text-xs sm:text-sm text-stone-700 focus:outline-none focus:ring-2 focus:ring-[#5F927B]/30 cursor-pointer appearance-none"
+                >
+                  <option value="todos">Todas las categorías</option>
+                  {availableCategories.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+                <img src="/assets/icons/filter.png" alt="Filtro" className="w-3.5 h-3.5 absolute right-2.5 pointer-events-none object-contain" />
+              </div>
             )}
 
           </div>

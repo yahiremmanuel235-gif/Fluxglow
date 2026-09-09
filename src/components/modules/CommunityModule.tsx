@@ -423,15 +423,16 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
   }, [posts, activeFeedFilter, joinedGroupIds]);
 
   return (
-    <div className="w-full bg-[#fbf9f5] min-h-screen pb-20 pt-4 px-3 sm:px-6 lg:px-8">
+    <div className="w-full bg-flux-brand-bath min-h-screen pb-20 pt-4 px-3 sm:px-6 lg:px-8">
       <div className="max-w-[1360px] mx-auto">
 
         {/* Top Header Row with Logo */}
-        <div className="flex items-center justify-between py-2 border-b border-brand-sand-300 mb-6">
+        <div className="flex items-center justify-between py-2 border-b border-[#5F927B]/20 mb-6">
           <div className="flex items-center gap-3">
-            <FluxGlowLogo imgSrc="/logo2.png" size="sm" showText={true} />
-            <span className="hidden sm:inline text-xs font-bold text-brand-sage-700 bg-brand-sage-100 px-3 py-1 rounded-full border border-brand-sage-300">
-              👥 Comunidad & Grupos de Apoyo
+            <FluxGlowLogo size="xs" showText={true} />
+            <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold text-[#3E6855] bg-[#EBF1EA] px-3 py-1 rounded-full border border-[#C5DDD0] shadow-2xs">
+              <img src="/assets/icons/nav-community.png" alt="Comunidad" className="w-3.5 h-3.5 object-contain" />
+              <span>Comunidad & Grupos de Apoyo</span>
             </span>
           </div>
 
@@ -440,38 +441,54 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
               onClick={handleRefreshFeed}
               disabled={isRefreshing}
               title="Recargar publicaciones de Supabase"
-              className="text-xs font-semibold text-stone-600 hover:text-brand-sage-700 bg-white border border-brand-sand-300 px-3 py-1.5 rounded-full flex items-center gap-1.5 hover:bg-brand-sand-100 transition-colors cursor-pointer disabled:opacity-60"
+              className="text-xs font-semibold text-stone-600 hover:text-[#3E6855] bg-white border border-[#C5DDD0] px-3 py-1.5 rounded-full flex items-center gap-1.5 hover:bg-[#EBF1EA] transition-colors cursor-pointer disabled:opacity-60 shadow-2xs"
             >
-              <RefreshCw className={`w-3.5 h-3.5 text-brand-sage-600 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-3.5 h-3.5 text-[#5F927B] ${isRefreshing ? 'animate-spin' : ''}`} />
               <span className="hidden sm:inline">Actualizar</span>
             </button>
-            <div className="flex items-center gap-1.5 text-[11px] font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#3E6855] bg-[#EBF1EA] border border-[#C5DDD0] px-2.5 py-1 rounded-full shadow-2xs">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#5F927B] animate-pulse"></span>
               <span className="hidden md:inline">Supabase</span> En vivo
             </div>
             <button
               onClick={() => {
                 setActiveGroupModal(COMMUNITY_GROUPS[0]);
               }}
-              className="text-xs font-semibold text-stone-600 hover:text-brand-sage-700 bg-white border border-brand-sand-300 px-3.5 py-1.5 rounded-full flex items-center gap-1.5 hover:bg-brand-sand-100 transition-colors cursor-pointer"
+              className="text-xs font-semibold text-stone-700 hover:text-[#B54F2C] bg-white border border-[#F7D3C3] px-3.5 py-1.5 rounded-full flex items-center gap-1.5 hover:bg-[#FDF4F0] transition-colors cursor-pointer shadow-2xs"
             >
-              <ShieldCheck className="w-4 h-4 text-[#548c71]" />
+              <img src="/assets/icons/alert-shield.png" alt="Normas" className="w-4 h-4 object-contain" />
               <span className="hidden sm:inline">Normas de Convivencia</span>
               <span className="sm:hidden">Normas</span>
             </button>
           </div>
         </div>
 
-        {/* Big Display Title: Comunidad FluxGlow */}
-        <div className="text-center my-6 px-2 overflow-visible">
-          <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-normal leading-normal overflow-visible">
-            <span className="title-gradient">
-              Comunidad FluxGlow
-            </span>
-          </h1>
-          <p className="text-stone-500 text-xs sm:text-sm mt-1.5 max-w-md mx-auto">
-            Espacio seguro, empático y moderado para compartir vivencias y apoyo mutuo
-          </p>
+        {/* Community Header Banner */}
+        <div className="relative w-full rounded-3xl overflow-hidden border-2 border-[#5F927B]/30 shadow-xs mb-6 bg-gradient-to-r from-[#EBF1EA] via-white to-[#FDF4F0]">
+          <div className="flex flex-col md:flex-row items-center justify-between p-5 sm:p-7 gap-6">
+            <div className="text-left max-w-xl">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#5F927B]/15 text-[#3E6855] mb-2.5 border border-[#5F927B]/20">
+                <img src="/assets/icons/nav-community.png" alt="Comunidad" className="w-3.5 h-3.5 object-contain" />
+                Espacio de Apoyo Seguro y Moderado
+              </span>
+              <h1 className="font-serif text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight leading-tight">
+                <span className="bg-gradient-to-r from-[#3E6855] via-[#5F927B] to-[#E87A52] bg-clip-text text-transparent">
+                  Comunidad FluxGlow
+                </span>
+              </h1>
+              <p className="text-stone-600 text-xs sm:text-sm mt-2 leading-relaxed">
+                Espacio seguro, empático y moderado para compartir vivencias, conectar con grupos de apoyo y crecer juntos en bienestar emocional.
+              </p>
+            </div>
+            <div className="w-full md:w-auto shrink-0 flex justify-center">
+              <img
+                src="/assets/illustrations/community-banner.png"
+                alt="Comunidad FluxGlow"
+                className="w-full max-w-[360px] sm:max-w-[420px] h-40 sm:h-48 object-contain rounded-2xl transition-transform hover:scale-[1.01]"
+                loading="eager"
+              />
+            </div>
+          </div>
         </div>
 
         {/* Facebook-style 3-Column Layout */}
@@ -499,7 +516,7 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
 
               {/* Group Search input */}
               <div className="relative flex items-center bg-brand-sand-50 rounded-xl border border-stone-200 px-3 py-2 text-xs mb-3 focus-within:border-brand-sage-500">
-                <Search className="w-3.5 h-3.5 text-stone-400 mr-2 shrink-0" />
+                <img src="/assets/icons/search.png" alt="Buscar" className="w-3.5 h-3.5 mr-2 shrink-0 object-contain" />
                 <input
                   type="text"
                   value={groupSearchQuery}
@@ -694,7 +711,7 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
                   isLoading={isPublishing}
                   className="px-5 py-2 text-xs font-bold shadow-xs shrink-0 self-end sm:self-center"
                 >
-                  <Send className="w-3.5 h-3.5 mr-1.5" /> Publicar
+                  <img src="/assets/icons/send.png" alt="Publicar" className="w-3.5 h-3.5 mr-1.5 object-contain brightness-0 invert" /> Publicar
                 </Button>
               </div>
             </div>
@@ -911,7 +928,7 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
                             variant="primary"
                             className="px-3.5 py-2 text-xs font-bold"
                           >
-                            <Send className="w-3 h-3" />
+                            <img src="/assets/icons/send.png" alt="Enviar" className="w-3 h-3 object-contain brightness-0 invert" />
                           </Button>
                         </div>
                       </div>
@@ -1075,7 +1092,7 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
               {/* Espacio para escribir directamente en este grupo */}
               <div className="bg-gradient-to-br from-brand-sage-50 to-emerald-50 rounded-2xl p-4 border border-brand-sage-200 space-y-2">
                 <h5 className="text-xs font-bold text-brand-sage-900 flex items-center gap-1.5">
-                  <Send className="w-3.5 h-3.5 text-brand-sage-700" />
+                  <img src="/assets/icons/send.png" alt="Escribir" className="w-3.5 h-3.5 object-contain" />
                   <span>¿Quieres escribir algo en {activeGroupModal.name}?</span>
                 </h5>
                 <p className="text-[11px] text-stone-600">

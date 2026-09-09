@@ -662,61 +662,65 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
   const completionPercentage = Math.round((completedGuidesCount / totalCatalogGuides) * 100) || 0;
 
   return (
-    <div className="w-full bg-[#fbf9f5] min-h-screen pb-20 pt-4 px-4 sm:px-6 lg:px-8">
+    <div className="w-full bg-flux-brand-bath min-h-screen pb-20 pt-4 px-4 sm:px-6 lg:px-8">
       <div className="max-w-[1360px] mx-auto">
         
         {/* Top Header Row with Pill Buttons & Center Logo */}
-        <div className="flex items-center justify-between py-2 border-b border-brand-sand-300 mb-4">
+        <div className="flex items-center justify-between py-2 border-b border-[#5F927B]/20 mb-4">
           
           {/* Left Pill: Filtros */}
           <button
             id="filters-btn"
             onClick={() => setShowFiltersModal(true)}
-            className={`px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-semibold tracking-wide shadow-2xs transition-all flex items-center gap-2 cursor-pointer ${
+            className={`px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-2xs transition-all flex items-center gap-2 cursor-pointer ${
               selectedFormat !== 'todos' 
-                ? 'bg-brand-sage-600 ring-2 ring-brand-sage-400/40 text-white' 
-                : 'bg-brand-sage-500 hover:bg-brand-sage-600 text-white'
+                ? 'bg-[#3E6855] ring-2 ring-[#5F927B]/50 text-white' 
+                : 'bg-[#5F927B] hover:bg-[#4E7D68] text-white'
             }`}
           >
-            <SlidersHorizontal className="w-4 h-4" />
+            <img src="/assets/icons/filter.png" alt="Filtros" className="w-4 h-4 object-contain brightness-0 invert" />
             <span>Filtros</span>
             {selectedFormat !== 'todos' && (
-              <span className="w-2 h-2 rounded-full bg-brand-gold-300"></span>
+              <span className="w-2 h-2 rounded-full bg-[#E87A52]"></span>
             )}
           </button>
 
           {/* Center Brand Logo */}
           <div className="flex items-center gap-2">
-            <FluxGlowLogo size="sm" showText={true} />
+            <FluxGlowLogo size="xs" showText={true} />
           </div>
 
           {/* Right Pill: Categorías */}
           <button
             id="categories-btn"
             onClick={() => setShowCategoriesModal(true)}
-            className={`px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-semibold tracking-wide shadow-2xs transition-all flex items-center gap-2 cursor-pointer ${
+            className={`px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-2xs transition-all flex items-center gap-2 cursor-pointer ${
               selectedCategory !== 'todos' 
-                ? 'bg-brand-terracotta-600 ring-2 ring-brand-terracotta-400/40 text-white' 
-                : 'bg-brand-terracotta-500 hover:bg-brand-terracotta-600 text-white'
+                ? 'bg-[#B54F2C] ring-2 ring-[#E87A52]/50 text-white' 
+                : 'bg-[#E87A52] hover:bg-[#D4653E] text-white'
             }`}
           >
-            <FolderOpen className="w-4 h-4" />
+            <img src="/assets/icons/nav-info.png" alt="Categorías" className="w-4 h-4 object-contain brightness-0 invert" />
             <span className="hidden sm:inline">Todas las Categorías</span>
             <span className="sm:hidden">Categorías</span>
             {selectedCategory !== 'todos' && (
-              <span className="w-2 h-2 rounded-full bg-brand-gold-200"></span>
+              <span className="w-2 h-2 rounded-full bg-[#FAF7F2]"></span>
             )}
           </button>
         </div>
 
         {/* Big Display Title: Explora y Aprende */}
         <div className="text-center my-6 px-2 overflow-visible">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#EBF1EA] border border-[#C5DDD0] text-xs font-bold text-[#3E6855] mb-2 shadow-2xs">
+            <img src="/assets/icons/nav-info.png" alt="Explora" className="w-3.5 h-3.5 object-contain" />
+            <span>Biblioteca Científica & Práctica</span>
+          </div>
           <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-normal leading-normal overflow-visible">
-            <span className="title-gradient">
+            <span className="bg-gradient-to-r from-[#3E6855] via-[#5F927B] to-[#E87A52] bg-clip-text text-transparent">
               Explora y Aprende
             </span>
           </h1>
-          <p className="text-xs sm:text-sm text-stone-500 mt-2 max-w-xl mx-auto">
+          <p className="text-xs sm:text-sm text-stone-600 mt-2 max-w-xl mx-auto">
             Guías prácticas, aprendizaje emocional y contenido respaldado por psicología científica.
           </p>
         </div>
@@ -724,13 +728,13 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
         {/* PROGRESS & LEARNING STREAK OVERVIEW BAR */}
         <div className="max-w-4xl mx-auto mb-6 grid grid-cols-1 md:grid-cols-3 gap-3.5">
           {/* Progress Card */}
-          <div className="md:col-span-2 p-4 rounded-2xl bg-white border border-brand-sand-300 shadow-2xs flex flex-col justify-between">
+          <div className="md:col-span-2 p-4 rounded-3xl bg-gradient-to-br from-white to-[#F2F7F4] border-2 border-[#5F927B]/30 shadow-2xs flex flex-col justify-between">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold text-stone-700 uppercase tracking-wider flex items-center gap-1.5">
-                <BookOpen className="w-4 h-4 text-[#548c71]" />
+                <img src="/assets/icons/trophy.png" alt="Progreso" className="w-4 h-4 object-contain" />
                 <span>Progreso de Aprendizaje</span>
               </span>
-              <span className="text-xs font-bold text-[#548c71] bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+              <span className="text-xs font-bold text-[#3E6855] bg-[#EBF1EA] border border-[#C5DDD0] px-2.5 py-0.5 rounded-full">
                 {completedGuidesCount} de {totalCatalogGuides} guías ({completionPercentage}%)
               </span>
             </div>
@@ -738,7 +742,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
             {/* Visual Progress Bar */}
             <div className="w-full bg-stone-100 rounded-full h-2.5 overflow-hidden border border-stone-200 mb-1">
               <div 
-                className="bg-gradient-to-r from-emerald-500 to-[#548c71] h-full rounded-full transition-all duration-500"
+                className="bg-gradient-to-r from-[#5F927B] to-[#E87A52] h-full rounded-full transition-all duration-500"
                 style={{ width: `${Math.max(completionPercentage, 8)}%` }}
               />
             </div>
@@ -749,38 +753,38 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
           </div>
 
           {/* Streak Habit Card */}
-          <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-500/10 via-orange-500/10 to-amber-600/15 border border-amber-300/80 shadow-2xs flex items-center justify-between">
+          <div className="p-4 rounded-3xl bg-gradient-to-br from-[#FDF4F0] via-white to-[#FDF1EC] border-2 border-[#E87A52]/40 shadow-2xs flex items-center justify-between">
             <div>
-              <span className="text-[11px] font-bold text-amber-900 uppercase tracking-wider block">
+              <span className="text-[11px] font-bold text-[#B54F2C] uppercase tracking-wider block">
                 Racha de Aprendizaje
               </span>
               <div className="flex items-baseline gap-1.5 mt-0.5">
-                <span className="text-2xl font-bold font-serif text-amber-950">
+                <span className="text-2xl font-bold font-serif text-[#873418]">
                   {learningStreak.streak} días
                 </span>
-                <span className="text-xs font-medium text-amber-800">seguidos</span>
+                <span className="text-xs font-medium text-[#B54F2C]">seguidos</span>
               </div>
-              <p className="text-[11px] text-amber-800/80 mt-0.5">
+              <p className="text-[11px] text-stone-500 mt-0.5">
                 ¡Explora una guía hoy para mantenerla!
               </p>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-amber-400 text-amber-950 flex items-center justify-center shadow-xs">
-              <Flame className="w-6 h-6 fill-amber-500 text-amber-900 animate-pulse" />
+            <div className="w-12 h-12 rounded-2xl bg-[#FDF4F0] border border-[#F7D3C3] flex items-center justify-center p-2 shadow-xs shrink-0">
+              <img src="/assets/badges/badge-streak.png" alt="Racha" className="w-8 h-8 object-contain" />
             </div>
           </div>
         </div>
 
         {/* CROSSED RECOMMENDATION FROM JOURNAL */}
         {journalRecommendation && journalRecommendation.guide && (
-          <div className="max-w-4xl mx-auto mb-6 p-4 rounded-3xl bg-gradient-to-r from-emerald-50 via-teal-50/70 to-brand-sand-100 border-2 border-[#548c71]/40 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-in fade-in duration-300">
+          <div className="max-w-4xl mx-auto mb-6 p-4 rounded-3xl bg-gradient-to-r from-[#EBF1EA] via-white to-[#FDF4F0] border-2 border-[#5F927B]/40 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-in fade-in duration-300">
             <div className="flex items-start gap-3.5">
-              <div className="w-11 h-11 rounded-2xl bg-[#548c71] text-white flex items-center justify-center shrink-0 shadow-xs">
-                <Lightbulb className="w-5 h-5" />
+              <div className="w-11 h-11 rounded-2xl bg-[#5F927B] text-white flex items-center justify-center shrink-0 shadow-xs">
+                <img src="/assets/icons/nav-journal.png" alt="Diario" className="w-5 h-5 object-contain brightness-0 invert" />
               </div>
               <div>
                 <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#548c71] bg-white px-2.5 py-0.5 rounded-full border border-[#548c71]/20">
-                    💡 Recomendación según tu Diario ({journalRecommendation.tag})
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#3E6855] bg-white px-2.5 py-0.5 rounded-full border border-[#C5DDD0]">
+                    Recomendación según tu Diario ({journalRecommendation.tag})
                   </span>
                 </div>
                 <h4 className="text-sm font-bold text-stone-900 leading-snug">
@@ -794,7 +798,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
 
             <button
               onClick={() => handleOpenGuide(journalRecommendation.guide)}
-              className="bg-[#548c71] hover:bg-[#43705a] text-white px-5 py-2.5 rounded-full text-xs font-bold shadow-xs transition-all flex items-center gap-2 cursor-pointer shrink-0 whitespace-nowrap self-end sm:self-center"
+              className="bg-[#5F927B] hover:bg-[#4E7D68] text-white px-5 py-2.5 rounded-full text-xs font-bold shadow-xs transition-all flex items-center gap-2 cursor-pointer shrink-0 whitespace-nowrap self-end sm:self-center"
             >
               <span>Leer Guía Sugerida</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -804,8 +808,8 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
 
         {/* Centered Search Pill with Deep Search capability */}
         <div className="max-w-xl mx-auto mb-4">
-          <div className="relative flex items-center bg-white rounded-full border border-brand-sand-300 shadow-xs px-4 py-2.5 hover:border-brand-sand-400 focus-within:border-brand-sage-500 focus-within:ring-2 focus-within:ring-brand-sage-500/20 transition-all">
-            <Search className="w-4 h-4 text-stone-400 shrink-0 mr-3" />
+          <div className="relative flex items-center bg-white rounded-full border-2 border-[#5F927B]/30 shadow-xs px-4 py-2.5 hover:border-[#5F927B] focus-within:border-[#5F927B] focus-within:ring-2 focus-within:ring-[#5F927B]/20 transition-all">
+            <img src="/assets/icons/search.png" alt="Buscar" className="w-4 h-4 shrink-0 mr-3 object-contain" />
             <input
               id="search-guides-input"
               type="text"
@@ -829,7 +833,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                 const randomTerm = terms[Math.floor(Math.random() * terms.length)];
                 setSearchQuery(randomTerm);
               }}
-              className="text-stone-400 hover:text-brand-sage-600 p-1 shrink-0 transition-colors cursor-pointer"
+              className="text-stone-400 hover:text-[#5F927B] p-1 shrink-0 transition-colors cursor-pointer"
               title="💡 Sugerir término o concepto"
               aria-label="Sugerir término"
             >
@@ -844,8 +848,8 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
             onClick={() => setSelectedCategory('todos')}
             className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
               selectedCategory === 'todos'
-                ? 'bg-brand-sage-600 text-white shadow-2xs'
-                : 'bg-white border border-brand-sand-300 text-stone-700 hover:bg-brand-sand-100'
+                ? 'bg-[#5F927B] text-white shadow-2xs font-bold'
+                : 'bg-white border border-[#C5DDD0] text-stone-700 hover:bg-[#EBF1EA]'
             }`}
           >
             Todos
@@ -858,8 +862,8 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                 onClick={() => handleCategorySelect(cat)}
                 className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                   isSelected
-                    ? 'bg-brand-sage-500 text-white shadow-2xs font-bold'
-                    : 'bg-white border border-brand-sand-300 text-stone-700 hover:border-brand-sand-400 hover:bg-brand-sand-100'
+                    ? 'bg-[#5F927B] text-white shadow-2xs font-bold'
+                    : 'bg-white border border-stone-200 text-stone-700 hover:border-[#5F927B]/40 hover:bg-[#EBF1EA]'
                 }`}
               >
                 {cat}

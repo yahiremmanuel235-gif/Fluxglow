@@ -112,13 +112,13 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
   const [submittedEntry, setSubmittedEntry] = useState<JournalEntry | null>(null);
 
-  // Available Emotions matching uploaded custom assets: Enojado, Triste, Inquieto, Tranquilo, Feliz
+  // Available Emotions matching uploaded custom assets: Muy Mal / Enojado, Triste, Neutral, Alegre, Muy Feliz
   const emojiMoods: { id: MoodType; image: string; label: string; color: string; bg: string }[] = [
-    { id: 'enojado', image: '/Registro%20Emocional/Enojado.png', label: 'Enojado', color: '#b91c1c', bg: '#fee2e2' },
-    { id: 'triste', image: '/Registro%20Emocional/Triste.png', label: 'Triste', color: '#dc2626', bg: '#fef2f2' },
-    { id: 'ansioso', image: '/Registro%20Emocional/Inquieto.png', label: 'Inquieto', color: '#d97706', bg: '#fef3c7' },
-    { id: 'tranquilo', image: '/Registro%20Emocional/Tranquilo.png', label: 'Tranquilo', color: '#65a30d', bg: '#ecfccb' },
-    { id: 'feliz', image: '/Registro%20Emocional/Feliz.png', label: 'Feliz', color: '#16a34a', bg: '#dcfce7' },
+    { id: 'enojado', image: '/assets/moods/mood-1-angry.png', label: 'Muy Mal / Enojado', color: '#b91c1c', bg: '#fee2e2' },
+    { id: 'triste', image: '/assets/moods/mood-2-sad.png', label: 'Triste', color: '#dc2626', bg: '#fef2f2' },
+    { id: 'ansioso', image: '/assets/moods/mood-3-neutral.png', label: 'Neutral', color: '#d97706', bg: '#fef3c7' },
+    { id: 'tranquilo', image: '/assets/moods/mood-4-happy.png', label: 'Alegre', color: '#65a30d', bg: '#ecfccb' },
+    { id: 'feliz', image: '/assets/moods/mood-5-veryhappy.png', label: 'Muy Feliz', color: '#16a34a', bg: '#dcfce7' },
   ];
 
   const availableTriggers = [
@@ -238,33 +238,33 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
   const activeEmojiItem = emojiMoods.find(m => m.id === selectedMood) || emojiMoods[4];
 
   return (
-    <div className="w-full bg-[#fbf9f5] min-h-screen pb-24 pt-4 px-4 sm:px-6 lg:px-8">
+    <div className="w-full bg-flux-brand-bath min-h-screen pb-24 pt-4 px-4 sm:px-6 lg:px-8">
       <div className="max-w-[1280px] mx-auto">
 
         {/* Top Header Row with Brand Logo */}
-        <div className="flex items-center justify-between py-2 border-b border-[#ece4d9] mb-4">
+        <div className="flex items-center justify-between py-2 border-b border-[#5F927B]/20 mb-4">
           <div className="flex items-center gap-2">
-            <FluxGlowLogo imgSrc="/logo2.png" size="sm" showText={true} />
-            <span className="text-[11px] font-bold text-[#548c71] bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full ml-2 hidden sm:inline-flex items-center gap-1">
-              <BookOpen className="w-3 h-3 text-[#548c71]" />
+            <FluxGlowLogo size="xs" showText={true} />
+            <span className="text-[11px] font-bold text-[#3E6855] bg-[#EBF1EA] border border-[#C5DDD0] px-2.5 py-0.5 rounded-full ml-2 hidden sm:inline-flex items-center gap-1.5 shadow-2xs">
+              <span className="w-2 h-2 rounded-full bg-[#5F927B]" />
               <span>Diario de Bienestar</span>
             </span>
           </div>
 
           <div className="flex items-center gap-2">
             {isJournalLoading ? (
-              <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-medium text-stone-600 bg-stone-100 border border-stone-200 px-2.5 py-1 rounded-full">
-                <Loader2 className="w-3 h-3 animate-spin text-[#548c71]" />
+              <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-medium text-stone-600 bg-white border border-stone-200 px-2.5 py-1 rounded-full shadow-2xs">
+                <Loader2 className="w-3 h-3 animate-spin text-[#5F927B]" />
                 <span>Cargando diario...</span>
               </div>
             ) : user ? (
-              <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-medium text-[#3E6855] bg-[#EBF1EA] border border-[#C5DDD0] px-2.5 py-1 rounded-full shadow-2xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#5F927B] animate-pulse"></span>
                 <span>Supabase Conectado</span>
               </div>
             ) : (
-              <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-medium text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full" title="Tus registros se guardan en este dispositivo. Inicia sesión para guardarlos en tu nube privada de Supabase.">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+              <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-medium text-[#B54F2C] bg-[#FDF4F0] border border-[#F7D3C3] px-2.5 py-1 rounded-full shadow-2xs" title="Tus registros se guardan en este dispositivo. Inicia sesión para guardarlos en tu nube privada de Supabase.">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#E87A52]"></span>
                 <span>Modo Exploración (Local)</span>
               </div>
             )}
@@ -272,18 +272,19 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
             {onNavigate && (
               <button
                 onClick={() => onNavigate('missions')}
-                className="text-xs font-semibold text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-3.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                className="text-xs font-semibold text-[#B54F2C] bg-[#FDF4F0] hover:bg-[#FDF1EC] border border-[#F7D3C3] px-3.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
               >
+                <img src="/assets/icons/medal.png" alt="Misiones" className="w-3.5 h-3.5 object-contain" />
                 <span>Misiones Diarias</span>
-                <ArrowRight className="w-3 h-3 text-amber-600" />
+                <ArrowRight className="w-3 h-3 text-[#E87A52]" />
               </button>
             )}
 
             <button
               onClick={() => setShowHistory(!showHistory)}
-              className="text-xs font-semibold text-stone-600 hover:text-stone-900 bg-white border border-stone-300 px-3.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-2xs cursor-pointer hover:bg-stone-50"
+              className="text-xs font-semibold text-stone-700 hover:text-[#3E6855] bg-white border border-[#C5DDD0] hover:border-[#5F927B] px-3.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-2xs cursor-pointer transition-colors"
             >
-              <Clock className="w-3.5 h-3.5 text-[#548c71]" />
+              <img src="/assets/icons/nav-analytics.png" alt="Historial" className="w-3.5 h-3.5 object-contain" />
               <span>{showHistory ? 'Ocultar Historial' : `Historial (${entries.length})`}</span>
             </button>
           </div>
@@ -291,14 +292,14 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
 
         {/* Sync notification if errors occur */}
         {journalError && (
-          <div className="mb-4 bg-amber-50 border border-amber-200 text-amber-900 px-4 py-2.5 rounded-2xl text-xs flex items-center justify-between gap-2 shadow-2xs">
+          <div className="mb-4 bg-[#FDF4F0] border border-[#F7D3C3] text-[#B54F2C] px-4 py-2.5 rounded-2xl text-xs flex items-center justify-between gap-2 shadow-2xs">
             <span className="flex items-center gap-1.5">
-              <Cloud className="w-3.5 h-3.5 text-amber-700" />
+              <Cloud className="w-3.5 h-3.5 text-[#E87A52]" />
               <span>Aviso de sincronización: {journalError}</span>
             </span>
             <button
               onClick={() => refreshEntries()}
-              className="text-amber-950 font-bold underline flex items-center gap-1 cursor-pointer hover:text-amber-700"
+              className="text-[#873418] font-bold underline flex items-center gap-1 cursor-pointer hover:text-[#B54F2C]"
             >
               <RefreshCw className="w-3 h-3" />
               <span>Reintentar</span>
@@ -308,26 +309,30 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
 
         {/* Big Display Title: Registro Emocional */}
         <div className="text-center my-6 px-2 overflow-visible">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#EBF1EA] border border-[#C5DDD0] text-xs font-bold text-[#3E6855] mb-2 shadow-2xs">
+            <img src="/assets/icons/nav-journal.png" alt="Diario" className="w-3.5 h-3.5 object-contain" />
+            <span>Escucha Emocional Activa</span>
+          </div>
           <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-normal leading-normal overflow-visible">
-            <span className="title-gradient">
+            <span className="bg-gradient-to-r from-[#3E6855] via-[#5F927B] to-[#E87A52] bg-clip-text text-transparent">
               Registro Emocional
             </span>
           </h1>
-          <p className="text-stone-500 text-xs sm:text-sm mt-2 max-w-md mx-auto">
+          <p className="text-stone-600 text-xs sm:text-sm mt-2 max-w-md mx-auto">
             Tu espacio íntimo de autoconocimiento, desahogo consciente y acompañamiento reflexivo
           </p>
         </div>
 
-        {/* RECENT 7-DAYS STREAK ROW (Always Visible) */}
-        <div className="bg-white rounded-3xl border border-stone-200 p-4 sm:p-5 mb-8 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
+        {/* RECENT 7-DAYS STREAK ROW (Always Visible - Bathed in Brand Warmth) */}
+        <div className="bg-gradient-to-r from-white via-[#FBF9F5] to-white rounded-3xl border-2 border-[#E87A52]/30 p-4 sm:p-5 mb-8 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center p-2 shadow-2xs">
-              <RachaIcon className="w-7 h-7" />
+            <div className="w-12 h-12 rounded-2xl bg-[#FDF4F0] border border-[#F7D3C3] flex items-center justify-center p-2 shadow-2xs shrink-0">
+              <img src="/assets/badges/badge-streak.png" alt="Racha" className="w-8 h-8 object-contain" />
             </div>
             <div>
               <h4 className="text-xs sm:text-sm font-bold text-stone-900 flex items-center gap-1.5">
                 <span>Racha de Registro Consciente: 7 días</span>
-                <RachaIcon className="w-4 h-4" />
+                <span className="text-[10px] font-bold bg-[#E87A52] text-white px-2 py-0.5 rounded-full shadow-2xs">¡Activa!</span>
               </h4>
               <p className="text-xs text-stone-500">Constancia y hábitos emocionales de la semana</p>
             </div>
@@ -339,8 +344,8 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
                 key={idx} 
                 className={`flex flex-col items-center justify-center p-2 sm:px-3 rounded-2xl transition-all ${
                   item.isToday 
-                    ? 'bg-[#EBF1EA] border border-[#5B8F76]/40 ring-2 ring-[#5B8F76]/20' 
-                    : 'bg-[#faf8f4] border border-stone-200/60'
+                    ? 'bg-[#EBF1EA] border-2 border-[#5F927B] ring-2 ring-[#5F927B]/20 shadow-2xs' 
+                    : 'bg-[#faf8f4] border border-stone-200/80'
                 }`}
               >
                 <span className="text-[10px] font-bold text-stone-500 uppercase">{item.day}</span>
@@ -362,15 +367,15 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
               {/* Left Pill: Diario personal */}
               <div
                 id="personal-journal-btn"
-                className="bg-[#5B8F76] text-white px-7 py-2.5 rounded-full text-sm sm:text-base font-semibold tracking-wide shadow-xs flex items-center gap-2 whitespace-nowrap"
+                className="bg-[#5F927B] text-white px-7 py-2.5 rounded-full text-sm sm:text-base font-bold tracking-wide shadow-xs flex items-center gap-2.5 whitespace-nowrap"
               >
-                <BookOpen className="w-4 h-4" />
+                <img src="/assets/icons/nav-journal.png" alt="Diario" className="w-4 h-4 object-contain brightness-0 invert" />
                 <span>Diario personal</span>
               </div>
 
               {/* Center Capsule: ¿Cómo te sientes hoy? + 5 Emotions */}
-              <div className="w-full md:w-auto flex-1 max-w-2xl bg-white border border-stone-300 rounded-full py-2 px-5 sm:px-6 shadow-xs flex items-center justify-between gap-3">
-                <span className="text-xs sm:text-sm font-semibold text-stone-800 whitespace-nowrap">
+              <div className="w-full md:w-auto flex-1 max-w-2xl bg-white border-2 border-[#5F927B]/30 rounded-full py-2 px-5 sm:px-6 shadow-xs flex items-center justify-between gap-3">
+                <span className="text-xs sm:text-sm font-bold text-stone-800 whitespace-nowrap">
                   ¿Cómo te sientes hoy?
                 </span>
 
@@ -385,8 +390,8 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
                         onClick={() => setSelectedMood(m.id)}
                         className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center p-1 transition-all cursor-pointer ${
                           isSelected
-                            ? 'scale-115 ring-2 ring-[#5B8F76] shadow-md bg-stone-100'
-                            : 'opacity-70 hover:opacity-100 hover:scale-110'
+                            ? 'scale-115 ring-2 ring-[#5F927B] shadow-md bg-[#EBF1EA]'
+                            : 'opacity-75 hover:opacity-100 hover:scale-110'
                         }`}
                         title={m.label}
                         aria-label={m.label}
@@ -402,12 +407,12 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
                 </div>
               </div>
 
-              {/* Right Pill: Enviar */}
+              {/* Right Pill: Enviar (Terracotta Action Button) */}
               <button
                 id="submit-journal-btn"
                 onClick={() => handleSubmit()}
                 disabled={isSubmitting}
-                className={`bg-[#DE7347] hover:bg-[#C9643B] active:scale-95 text-white px-8 py-2.5 rounded-full text-sm sm:text-base font-semibold tracking-wide shadow-xs hover:shadow-md transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                className={`bg-[#E87A52] hover:bg-[#D4653E] active:scale-95 text-white px-8 py-2.5 rounded-full text-sm sm:text-base font-bold tracking-wide shadow-xs hover:shadow-md transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
                   isSubmitting ? 'opacity-80 cursor-not-allowed' : ''
                 }`}
               >
@@ -418,7 +423,7 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
                   </>
                 ) : (
                   <>
-                    <Send className="w-4 h-4" />
+                    <img src="/assets/icons/send.png" alt="Enviar" className="w-4 h-4 object-contain brightness-0 invert" />
                     <span>Enviar</span>
                   </>
                 )}
@@ -426,16 +431,16 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
             </div>
 
             {/* Big White Card Box with Textarea and Tools */}
-            <div className="bg-white rounded-[26px] border-2 border-stone-800 shadow-xs p-6 sm:p-8 mb-10 transition-all">
-              <div className="flex items-center justify-between pb-3 border-b border-stone-100 mb-4">
-                <span className="text-xs font-bold text-stone-500 uppercase tracking-wider flex items-center gap-1.5">
-                  <Lock className="w-3.5 h-3.5 text-[#5B8F76]" />
+            <div className="bg-gradient-to-b from-white to-[#FAF7F2] rounded-[26px] border-2 border-[#5F927B]/40 hover:border-[#5F927B] shadow-xs p-6 sm:p-8 mb-10 transition-all">
+              <div className="flex items-center justify-between pb-3 border-b border-stone-200/80 mb-4">
+                <span className="text-xs font-bold text-[#3E6855] uppercase tracking-wider flex items-center gap-1.5">
+                  <Lock className="w-3.5 h-3.5 text-[#5F927B]" />
                   Espacio privado y seguro de desahogo
                 </span>
 
                 <div className="flex items-center gap-3">
-                  <span className="text-xs text-stone-500 font-medium">
-                    Intensidad emocional: <strong className="text-stone-800">{intensity}/10</strong>
+                  <span className="text-xs text-stone-600 font-medium">
+                    Intensidad emocional: <strong className="text-[#3E6855] font-bold">{intensity}/10</strong>
                   </span>
                   <input
                     type="range"
@@ -443,7 +448,7 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
                     max="10"
                     value={intensity}
                     onChange={(e) => setIntensity(Number(e.target.value))}
-                    className="w-24 accent-[#5B8F76] cursor-pointer"
+                    className="w-24 accent-[#5F927B] cursor-pointer"
                     aria-label="Selector de intensidad emocional del 1 al 10"
                   />
                 </div>
@@ -504,7 +509,7 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
                         : 'bg-stone-100 hover:bg-stone-200 text-stone-700'
                     }`}
                   >
-                    {isRecording ? <Square className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5 text-[#de6943]" />}
+                    {isRecording ? <Square className="w-3.5 h-3.5" /> : <img src="/assets/icons/mic.png" alt="Micrófono" className="w-3.5 h-3.5 object-contain" />}
                     <span>{isRecording ? `Grabando (${recordingSeconds}s)...` : 'Nota de voz'}</span>
                   </button>
                 </div>

@@ -54,8 +54,11 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, variant = 'full' }) 
   }
 
   return (
-    <footer className="bg-[#242e28] text-stone-300 pt-14 pb-8 border-t border-stone-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <footer className="bg-[#1C2822] text-stone-300 relative border-t-2 border-[#5F927B]/40">
+      {/* Top Brand Color Bath Accent Line */}
+      <div className="h-1 w-full bg-gradient-to-r from-[#5F927B] via-[#E87A52] to-[#5F927B]" />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 pb-12 border-b border-stone-800">
           
           {/* Col 1: Brand & Slogan */}
@@ -68,7 +71,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, variant = 'full' }) 
               <FluxGlowLogo size="md" variant="light" showText={true} />
             </div>
             
-            <p className="text-stone-400 text-sm leading-relaxed italic">
+            <p className="text-stone-300 text-sm leading-relaxed italic font-serif">
               "Iluminando tu bienestar, comprendiendo tus emociones"
             </p>
 
@@ -76,15 +79,16 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, variant = 'full' }) 
               Plataforma digital inteligente diseñada para acompañar a los jóvenes en el conocimiento, gestión y fortalecimiento de su salud emocional.
             </p>
 
-            <div className="flex items-center gap-2 text-xs text-emerald-400 font-medium">
-              <ShieldCheck className="w-4 h-4" />
+            <div className="flex items-center gap-2 text-xs text-[#8DB596] font-medium bg-[#5F927B]/10 p-2.5 rounded-xl border border-[#5F927B]/20">
+              <img src="/assets/icons/alert-shield.png" alt="Seguridad" className="w-4 h-4 object-contain shrink-0" />
               <span>Privacidad y Confidencialidad Garantizada</span>
             </div>
           </div>
 
           {/* Col 2: Los 7 Apartados */}
           <div className="space-y-3">
-            <h4 className="text-white font-bold text-sm uppercase tracking-wider">
+            <h4 className="text-[#E87A52] font-bold text-sm uppercase tracking-wider flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#E87A52]" />
               7 Apartados Interactivos
             </h4>
             <ul className="space-y-2 text-sm">
@@ -92,63 +96,70 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, variant = 'full' }) 
                 <button 
                   id="footer-nav-learn"
                   onClick={() => onNavigate('learn')} 
-                  className="hover:text-emerald-400 transition-colors text-left"
+                  className="hover:text-[#8DB596] transition-colors text-left flex items-center gap-2 cursor-pointer"
                 >
-                  #1 Centro de Aprendizaje Emocional
+                  <img src="/assets/icons/nav-info.png" alt="Aprende" className="w-4 h-4 object-contain shrink-0" />
+                  <span>#1 Centro de Aprendizaje Emocional</span>
                 </button>
               </li>
               <li>
                 <button 
                   id="footer-nav-journal"
                   onClick={() => onNavigate('journal')} 
-                  className="hover:text-emerald-400 transition-colors text-left"
+                  className="hover:text-[#8DB596] transition-colors text-left flex items-center gap-2 cursor-pointer"
                 >
-                  #2 Diario Emocional Inteligente
+                  <img src="/assets/icons/nav-journal.png" alt="Diario" className="w-4 h-4 object-contain shrink-0" />
+                  <span>#2 Diario Emocional Inteligente</span>
                 </button>
               </li>
               <li>
                 <button 
                   id="footer-nav-analytics"
                   onClick={() => onNavigate('analytics')} 
-                  className="hover:text-emerald-400 transition-colors text-left"
+                  className="hover:text-[#8DB596] transition-colors text-left flex items-center gap-2 cursor-pointer"
                 >
-                  #3 Análisis Predictivo Avanzado
+                  <img src="/assets/icons/nav-analytics.png" alt="Análisis" className="w-4 h-4 object-contain shrink-0" />
+                  <span>#3 Análisis Predictivo Avanzado</span>
                 </button>
               </li>
               <li>
                 <button 
                   id="footer-nav-ai"
                   onClick={() => onNavigate('ai')} 
-                  className="hover:text-emerald-400 transition-colors text-left"
+                  className="hover:text-[#8DB596] transition-colors text-left flex items-center gap-2 cursor-pointer"
                 >
-                  #4 Asistente Virtual Flux AI
+                  <img src="/assets/icons/nav-ai.png" alt="Flux AI" className="w-4 h-4 object-contain shrink-0" />
+                  <span>#4 Asistente Virtual Flux AI</span>
                 </button>
               </li>
               <li>
                 <button 
                   id="footer-nav-alert"
                   onClick={() => onNavigate('alert')} 
-                  className="hover:text-emerald-400 transition-colors text-left"
+                  className="hover:text-[#8DB596] transition-colors text-left flex items-center gap-2 cursor-pointer"
                 >
-                  #5 Alerta Emocional Inteligente & SOS
+                  <img src="/assets/icons/alert-shield.png" alt="SOS" className="w-4 h-4 object-contain shrink-0" />
+                  <span>#5 Alerta Emocional Inteligente & SOS</span>
                 </button>
               </li>
               <li>
                 <button 
                   id="footer-nav-profile"
                   onClick={() => onNavigate('profile')} 
-                  className="hover:text-emerald-400 transition-colors text-left"
+                  className="hover:text-[#8DB596] transition-colors text-left flex items-center gap-2 cursor-pointer"
                 >
-                  #6 Perfil y Personalización
+                  <img src="/assets/icons/nav-profile.png" alt="Perfil" className="w-4 h-4 object-contain shrink-0" />
+                  <span>#6 Perfil y Personalización</span>
                 </button>
               </li>
               <li>
                 <button 
                   id="footer-nav-community"
                   onClick={() => onNavigate('community')} 
-                  className="hover:text-emerald-400 transition-colors text-left"
+                  className="hover:text-[#8DB596] transition-colors text-left flex items-center gap-2 cursor-pointer"
                 >
-                  #7 Comunidad FluxGlow
+                  <img src="/assets/icons/nav-community.png" alt="Comunidad" className="w-4 h-4 object-contain shrink-0" />
+                  <span>#7 Comunidad FluxGlow</span>
                 </button>
               </li>
             </ul>
@@ -156,21 +167,22 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, variant = 'full' }) 
 
           {/* Col 3: Valores y Equipo */}
           <div className="space-y-3">
-            <h4 className="text-white font-bold text-sm uppercase tracking-wider">
+            <h4 className="text-[#8DB596] font-bold text-sm uppercase tracking-wider flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#8DB596]" />
               Nuestros Valores
             </h4>
             <div className="flex flex-wrap gap-2">
               {['Empatía', 'Innovación', 'Compromiso', 'Confidencialidad', 'Inclusión', 'Responsabilidad', 'Bienestar'].map((val) => (
-                <span key={val} className="px-2.5 py-1 rounded-md bg-stone-800 text-stone-300 text-xs border border-stone-700">
+                <span key={val} className="px-2.5 py-1 rounded-md bg-[#24352D] text-[#C5DDD0] text-xs border border-[#5F927B]/30">
                   {val}
                 </span>
               ))}
             </div>
 
-            <h4 className="text-white font-bold text-sm uppercase tracking-wider pt-3">
+            <h4 className="text-[#E87A52] font-bold text-sm uppercase tracking-wider pt-3">
               Equipo Fundador
             </h4>
-            <p className="text-xs text-stone-400">
+            <p className="text-xs text-stone-300 font-medium">
               Gabriela (CEO) • Moisés (CTO) • Yahir (UX/UI) • Génesis (Marketing)
             </p>
           </div>
@@ -188,7 +200,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, variant = 'full' }) 
                 </a>
               </li>
               <li className="flex items-center gap-2">
-                <Phone className="w-4 h-4 text-emerald-400 shrink-0" />
+                <Phone className="w-4 h-4 text-[#8DB596] shrink-0" />
                 <a href="tel:+50378014680" className="hover:text-white transition-colors">
                   +503 7801-4680
                 </a>
@@ -207,7 +219,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, variant = 'full' }) 
               <button 
                 id="footer-open-update-notes-btn"
                 onClick={() => window.dispatchEvent(new CustomEvent('fluxglow_open_update_notes'))}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-950/60 hover:bg-emerald-900/80 text-emerald-300 text-xs border border-emerald-800/60 transition-colors text-left"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#5F927B]/20 hover:bg-[#5F927B]/30 text-[#C5DDD0] text-xs border border-[#5F927B]/40 transition-colors text-left cursor-pointer"
               >
                 <span>🎉 Novedades de la actualización</span>
               </button>
@@ -215,7 +227,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, variant = 'full' }) 
               <button 
                 id="scroll-to-top-btn"
                 onClick={scrollToTop}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs transition-colors"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-300 text-xs transition-colors cursor-pointer"
               >
                 <ArrowUp className="w-3.5 h-3.5" />
                 <span>Volver arriba</span>
@@ -226,11 +238,11 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, variant = 'full' }) 
         </div>
 
         {/* Bottom copyright */}
-        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-stone-500 gap-3">
+        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-stone-400 gap-3">
           <p>© {new Date().getFullYear()} FluxGlow. Todos los derechos reservados. Desarrollado con vocación por el bienestar juvenil.</p>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             <span>Hecho con</span>
-            <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
+            <img src="/assets/icons/heart.png" alt="Amor" className="w-4 h-4 object-contain" />
             <span>para iluminar el flujo de tus emociones</span>
           </div>
         </div>

@@ -65,8 +65,8 @@ interface ProfileModuleProps {
 }
 
 const PRESET_AVATARS = [
-  { id: 'default', label: 'Estándar', url: '/user.png' },
-  { id: 'logo', label: 'FluxGlow', url: '/logo2.png' },
+  { id: 'default', label: 'Estándar', url: '/assets/icons/nav-profile.png' },
+  { id: 'logo', label: 'FluxGlow', url: '/assets/brand/logo-fluxglow.png' },
   { id: 'calm', label: 'Serenidad', url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80' },
   { id: 'mindful', label: 'Mindful', url: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200&auto=format&fit=crop&q=80' },
   { id: 'nature', label: 'Armonía', url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80' },
@@ -248,77 +248,43 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
     intensidad: e.intensity
   }));
 
-  // Dynamic Badges Hub with realistic milestones and progress tracking
+  // Dynamic Badges Hub with the 4 official achievement badges
   const achievements = [
     { 
-      id: 'streak-1', 
-      title: 'Hábito Inicial (Racha 1d)', 
-      desc: 'Comienza tu viaje de bienestar registrando 1 día activo', 
-      icon: '🌱', 
-      vectorIcon: Sprout,
+      id: 'streak', 
+      title: 'Racha de días', 
+      desc: 'Mantén una racha activa continua de bienestar y autorregulación emocional', 
+      badgeImage: '/assets/badges/badge-streak.png',
       current: activeStreak,
-      target: 1,
+      target: 3,
       unlocked: activeStreak >= 1 
     },
     { 
-      id: 'streak-7', 
-      title: 'Guardián Semanal (Racha 7d)', 
-      desc: 'Mantén 7 días continuos de cuidado emocional', 
-      icon: '🔥', 
-      vectorIcon: Flame,
-      current: activeStreak,
-      target: 7,
-      unlocked: activeStreak >= 7 
-    },
-    { 
-      id: 'streak-30', 
-      title: 'Maestro de la Constancia (30d)', 
-      desc: 'Completa un mes de autorregulación y constancia', 
-      icon: '👑', 
-      vectorIcon: Crown,
-      current: activeStreak,
-      target: 30,
-      unlocked: activeStreak >= 30 
-    },
-    { 
-      id: 'missions-3', 
-      title: 'Explorador de Retos (3 misiones)', 
-      desc: 'Supera 3 retos prácticos en tus guías de aprendizaje', 
-      icon: '🎯', 
-      vectorIcon: Target,
-      current: completedMissionsCount,
-      target: 3,
-      unlocked: completedMissionsCount >= 3 
-    },
-    { 
-      id: 'missions-10', 
-      title: 'Imparable (10 misiones)', 
-      desc: 'Supera 10 misiones prácticas en tus guías de aprendizaje', 
-      icon: '🚀', 
-      vectorIcon: Rocket,
-      current: completedMissionsCount,
-      target: 10,
-      unlocked: completedMissionsCount >= 10 
-    },
-    { 
-      id: 'journal-5', 
-      title: 'Diario Consciente (5 entradas)', 
-      desc: 'Reflexiona y asienta al menos 5 registros emocionales', 
-      icon: '✍️', 
-      vectorIcon: Feather,
+      id: 'mastery', 
+      title: 'Dominio Emocional', 
+      desc: 'Registra reflexiones en tu diario y adquiere autoconocimiento sobre tus emociones', 
+      badgeImage: '/assets/badges/badge-mastery.png',
       current: journalEntries.length,
       target: 5,
-      unlocked: journalEntries.length >= 5 
+      unlocked: journalEntries.length >= 1 
     },
     { 
       id: 'community', 
-      title: 'Comunidad Solidaria', 
-      desc: 'Participa activamente en foros seguros o grupos de apoyo', 
-      icon: '🤝', 
-      vectorIcon: Users,
+      title: 'Colaborador de Comunidad', 
+      desc: 'Participa activamente en foros empáticos y grupos de apoyo mutuo', 
+      badgeImage: '/assets/badges/badge-community.png',
       current: communityInteractionsCount,
       target: 1,
       unlocked: communityInteractionsCount >= 1 
+    },
+    { 
+      id: 'explorer', 
+      title: 'Explorador Mindfulness', 
+      desc: 'Supera misiones prácticas y explora guías interactivas de crecimiento', 
+      badgeImage: '/assets/badges/badge-explorer.png',
+      current: completedMissionsCount,
+      target: 3,
+      unlocked: completedMissionsCount >= 1 
     },
   ];
 
@@ -359,16 +325,20 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
     success('¡Progreso copiado!', 'Listo para compartir o guardar tu resumen de bienestar.');
   };
 
-  const currentAvatar = userProfile?.avatarUrl || '/user.png';
+  const currentAvatar = userProfile?.avatarUrl || '/assets/icons/nav-profile.png';
 
   return (
-    <div className="w-full bg-brand-sand-50 min-h-screen pb-20 pt-4 px-4 sm:px-6 lg:px-8">
+    <div className="w-full bg-flux-brand-bath min-h-screen pb-20 pt-4 px-4 sm:px-6 lg:px-8">
       <div className="max-w-[1360px] mx-auto">
 
         {/* Top Header with Brand Logo & Account Settings Button */}
-        <div className="flex items-center justify-between py-2 border-b border-brand-sand-300 mb-4">
+        <div className="flex items-center justify-between py-2 border-b border-[#5F927B]/20 mb-4">
           <div className="flex items-center gap-2">
-            <FluxGlowLogo size="sm" showText={true} />
+            <FluxGlowLogo size="xs" showText={true} />
+            <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold text-[#3E6855] bg-[#EBF1EA] px-3 py-1 rounded-full border border-[#C5DDD0] shadow-2xs">
+              <img src="/assets/icons/nav-profile.png" alt="Perfil" className="w-3.5 h-3.5 object-contain" />
+              <span>Mi Cuenta & Progreso</span>
+            </span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -377,7 +347,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
                 onClick={() => onNavigate('learn')}
                 variant="sand"
                 size="sm"
-                leftIcon={<BookOpen className="w-3.5 h-3.5 text-brand-sage-600" />}
+                leftIcon={<BookOpen className="w-3.5 h-3.5 text-[#5F927B]" />}
               >
                 <span className="hidden sm:inline">Explorar Guías</span>
               </Button>
@@ -388,7 +358,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
               onClick={() => setShowSettingsModal(true)}
               variant="outline"
               size="sm"
-              leftIcon={<Settings className="w-3.5 h-3.5 text-brand-sage-600" />}
+              leftIcon={<Settings className="w-3.5 h-3.5 text-[#5F927B]" />}
             >
               <span>Configuración</span>
             </Button>
@@ -411,7 +381,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
         {/* Big Display Title: Perfil y Personalización */}
         <div className="text-center my-6 px-2 overflow-visible">
           <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-normal leading-normal overflow-visible">
-            <span className="title-gradient">
+            <span className="bg-gradient-to-r from-[#3E6855] via-[#5F927B] to-[#E87A52] bg-clip-text text-transparent">
               Perfil y Personalización
             </span>
           </h1>
@@ -421,15 +391,15 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
         </div>
 
         {/* Consolidated Gamification Header Banner */}
-        <div className="max-w-4xl mx-auto mb-8 bg-white rounded-3xl border border-brand-sand-300 p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="max-w-4xl mx-auto mb-8 bg-gradient-to-r from-[#EBF1EA] via-white to-[#FDF4F0] rounded-3xl border-2 border-[#5F927B]/30 p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-brand-terracotta-100 text-brand-terracotta-600 flex items-center justify-center font-black text-xl shadow-2xs">
-              <Flame className="w-6 h-6 fill-brand-terracotta-500 text-brand-terracotta-600" />
+            <div className="w-12 h-12 rounded-2xl bg-[#FDF4F0] text-[#E87A52] border border-[#F7D3C3] flex items-center justify-center font-black text-xl shadow-2xs">
+              <Flame className="w-6 h-6 fill-[#E87A52] text-[#E87A52]" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold text-stone-500 uppercase tracking-wider">Racha Activa</span>
-                <span className="text-[10px] font-bold text-brand-sage-800 bg-brand-sage-100 px-2 py-0.5 rounded-full">Nivel {currentLevel}</span>
+                <span className="text-[10px] font-bold text-[#3E6855] bg-[#EBF1EA] px-2 py-0.5 rounded-full border border-[#C5DDD0]">Nivel {currentLevel}</span>
               </div>
               <p className="text-base sm:text-lg font-bold text-stone-900">
                 {activeStreak} {activeStreak === 1 ? 'día consecutivo' : 'días consecutivos'}
@@ -437,17 +407,17 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-4 sm:gap-6 border-t sm:border-t-0 sm:border-l border-brand-sand-300 pt-3 sm:pt-0 sm:pl-6 w-full sm:w-auto justify-around sm:justify-end">
+          <div className="flex items-center gap-4 sm:gap-6 border-t sm:border-t-0 sm:border-l border-[#5F927B]/20 pt-3 sm:pt-0 sm:pl-6 w-full sm:w-auto justify-around sm:justify-end">
             <div className="text-center sm:text-left">
               <span className="text-xs text-stone-500 block font-medium">Experiencia Total</span>
-              <span className="text-base sm:text-lg font-bold text-brand-terracotta-600 flex items-center gap-1 justify-center sm:justify-start">
-                <Sparkles className="w-4 h-4 text-brand-terracotta-500" />
+              <span className="text-base sm:text-lg font-bold text-[#E87A52] flex items-center gap-1 justify-center sm:justify-start">
+                <img src="/assets/icons/trophy.png" alt="XP" className="w-4 h-4 object-contain" />
                 {totalXP} XP
               </span>
             </div>
             <div className="text-center sm:text-left">
               <span className="text-xs text-stone-500 block font-medium">Estado de Cuenta</span>
-              <span className="text-xs font-bold text-brand-sage-800 bg-brand-sage-100 border border-brand-sage-300 px-2.5 py-1 rounded-full inline-block mt-0.5">
+              <span className="text-xs font-bold text-[#3E6855] bg-[#EBF1EA] border border-[#C5DDD0] px-2.5 py-1 rounded-full inline-block mt-0.5 shadow-2xs">
                 🌱 Miembro Activo
               </span>
             </div>
@@ -765,34 +735,33 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
               <div className="space-y-3 max-h-[460px] overflow-y-auto pr-1">
                 {filteredAchievements.map((ach) => {
                   const percent = Math.min(100, Math.round((ach.current / ach.target) * 100));
-                  const VectorIconComponent = ach.vectorIcon;
                   return (
                     <div 
                       key={ach.id}
                       className={`flex flex-col p-3.5 rounded-2xl border transition-all ${
                         ach.unlocked 
                           ? 'bg-brand-sage-50/85 border-brand-sage-300/80 shadow-2xs' 
-                          : 'bg-brand-sand-50/70 border-brand-sand-200/90 opacity-60'
+                          : 'bg-brand-sand-50/70 border-brand-sand-200/90 opacity-70'
                       }`}
                     >
                       <div className="flex items-start gap-3">
-                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border transition-colors ${
+                        <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 border transition-all p-1.5 ${
                           ach.unlocked 
-                            ? 'bg-white border-brand-sage-200 text-brand-sage-700 shadow-2xs' 
-                            : 'bg-stone-100 border-stone-200 text-stone-400'
+                            ? 'bg-white border-brand-sage-200 shadow-2xs' 
+                            : 'bg-stone-100 border-stone-200 grayscale opacity-50'
                         }`}>
-                          {VectorIconComponent ? (
-                            <VectorIconComponent className="w-4.5 h-4.5" />
-                          ) : (
-                            <span className="text-base">{ach.icon}</span>
-                          )}
+                          <img
+                            src={ach.badgeImage}
+                            alt={ach.title}
+                            className="w-full h-full object-contain select-none"
+                          />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-1.5">
                             <p className="text-xs font-bold text-stone-900 truncate">{ach.title}</p>
                             {ach.unlocked ? (
                               <span className="text-[10px] font-bold text-brand-sage-700 bg-brand-sage-100/90 border border-brand-sage-200 px-2 py-0.5 rounded-full shrink-0">
-                                Obtenido
+                                Desbloqueada
                               </span>
                             ) : (
                               <span className="text-[10px] font-semibold text-stone-500 shrink-0">
@@ -1044,15 +1013,24 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
 
               <div className="grid grid-cols-3 gap-2 text-center bg-white/80 backdrop-blur-xs p-3 rounded-2xl border border-brand-sand-300 mb-4">
                 <div>
-                  <p className="text-base font-bold text-brand-terracotta-600">🔥 {activeStreak}</p>
+                  <p className="text-base font-bold text-brand-terracotta-600 flex items-center justify-center gap-1">
+                    <img src="/assets/badges/badge-streak.png" alt="Racha" className="w-4 h-4 object-contain" />
+                    <span>{activeStreak}</span>
+                  </p>
                   <p className="text-[10px] text-stone-600 font-medium">Días racha</p>
                 </div>
                 <div>
-                  <p className="text-base font-bold text-brand-sage-700">🎯 {completedMissionsCount}</p>
+                  <p className="text-base font-bold text-brand-sage-700 flex items-center justify-center gap-1">
+                    <img src="/assets/badges/badge-explorer.png" alt="Misiones" className="w-4 h-4 object-contain" />
+                    <span>{completedMissionsCount}</span>
+                  </p>
                   <p className="text-[10px] text-stone-600 font-medium">Misiones</p>
                 </div>
                 <div>
-                  <p className="text-base font-bold text-amber-600">🏆 {unlockedCount}</p>
+                  <p className="text-base font-bold text-amber-600 flex items-center justify-center gap-1">
+                    <img src="/assets/icons/trophy.png" alt="Insignias" className="w-4 h-4 object-contain" />
+                    <span>{unlockedCount}</span>
+                  </p>
                   <p className="text-[10px] text-stone-600 font-medium">Insignias</p>
                 </div>
               </div>

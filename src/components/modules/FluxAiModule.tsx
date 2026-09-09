@@ -330,23 +330,21 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
   };
 
   return (
-    <div className="w-full bg-[#fbf9f5] min-h-screen pb-20 pt-4 px-4 sm:px-6 lg:px-8">
+    <div className="w-full bg-flux-brand-bath min-h-screen pb-20 pt-4 px-4 sm:px-6 lg:px-8">
       <div className="max-w-[1280px] mx-auto">
 
         {/* Top Header with Brand Logo, New Conversation & History Button */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between py-3 border-b border-[#ece4d9] mb-5 gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between py-3 border-b border-[#5F927B]/20 mb-5 gap-3">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#5a8c72] via-[#D8C97B] to-[#e07a52] p-0.5 flex items-center justify-center shadow-xs">
-              <div className="w-full h-full bg-[#faf7f2] rounded-[9px] flex items-center justify-center">
-                <Sparkles className="w-4 h-4 text-[#e07a52]" />
-              </div>
+            <div className="w-10 h-10 rounded-2xl bg-[#EBF1EA] border border-[#C5DDD0] p-1.5 flex items-center justify-center shadow-xs">
+              <img src="/assets/icons/nav-ai.png" alt="Flux AI" className="w-6 h-6 object-contain" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-extrabold text-lg tracking-tight text-stone-800">
-                  Flux <span className="text-[#e07a52]">AI</span>
+                  Flux <span className="text-[#E87A52]">AI</span>
                 </span>
-                <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">
+                <span className="text-[10px] font-bold bg-[#EBF1EA] text-[#3E6855] border border-[#C5DDD0] px-2 py-0.5 rounded-full">
                   Asistente Empático
                 </span>
               </div>
@@ -358,17 +356,17 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
             <button
               id="start-new-chat-btn"
               onClick={handleStartNewConversation}
-              className="bg-stone-900 hover:bg-stone-800 text-white px-4 py-2 rounded-full text-xs sm:text-sm font-semibold tracking-wide shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
+              className="bg-[#5F927B] hover:bg-[#4E7D68] text-white px-4 py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
               title="Comenzar una conversación desde cero"
             >
-              <PlusCircle className="w-4 h-4 text-[#D8C97B]" />
+              <PlusCircle className="w-4 h-4 text-white" />
               <span>Nueva conversación</span>
             </button>
 
             <button
               id="chat-history-btn"
               onClick={() => setShowHistoryModal(true)}
-              className="bg-[#e07a52] hover:bg-[#c8633c] text-white px-4 py-2 rounded-full text-xs sm:text-sm font-semibold tracking-wide shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
+              className="bg-[#E87A52] hover:bg-[#D4653E] text-white px-4 py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <History className="w-4 h-4" />
               <span>Historial</span>
@@ -377,10 +375,10 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
         </div>
 
         {/* AI Modes Selector Bar with clear descriptive micro-labels */}
-        <div className="bg-white/80 rounded-2xl border border-brand-sand-300 p-2.5 mb-4 shadow-2xs">
+        <div className="bg-white/90 rounded-3xl border-2 border-[#5F927B]/30 p-3 mb-4 shadow-2xs">
           <div className="flex items-center justify-between gap-2 mb-2 px-1">
-            <div className="flex items-center gap-1.5 text-xs font-bold text-stone-700">
-              <Compass className="w-3.5 h-3.5 text-brand-sage-600" />
+            <div className="flex items-center gap-1.5 text-xs font-bold text-stone-800">
+              <Compass className="w-3.5 h-3.5 text-[#5F927B]" />
               <span>Modalidad de Acompañamiento</span>
             </div>
             <span className="text-[11px] text-stone-500 hidden sm:inline">Elige el estilo de respuesta de Flux AI</span>
@@ -393,10 +391,10 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
                 <button
                   key={mode.id}
                   onClick={() => setSelectedMode(mode.id)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
                     isSelected
-                      ? 'bg-brand-sage-500 text-white font-bold shadow-xs'
-                      : 'bg-brand-sand-100 hover:bg-brand-sand-200 text-stone-700 border border-brand-sand-300'
+                      ? 'bg-[#5F927B] text-white font-bold shadow-xs'
+                      : 'bg-[#FAF7F2] hover:bg-[#EBF1EA] text-stone-700 border border-[#C5DDD0]'
                   }`}
                   title={mode.desc}
                 >
@@ -413,16 +411,16 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
             
             {/* Center Logo Icon & Brand */}
             <div className="flex items-center gap-3 mb-3 group cursor-pointer">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-sage-500 to-brand-terracotta-500 p-[2px] shadow-sm flex items-center justify-center transition-all duration-300 group-hover:scale-105">
-                <div className="w-full h-full bg-brand-sand-50 rounded-[14px] flex items-center justify-center">
-                  <Sparkles className="w-6 h-6 text-brand-terracotta-500" />
+              <div className="w-14 h-14 rounded-3xl bg-gradient-to-tr from-[#5F927B] to-[#E87A52] p-[2px] shadow-sm flex items-center justify-center transition-all duration-300 group-hover:scale-105">
+                <div className="w-full h-full bg-[#FAF7F2] rounded-[22px] flex items-center justify-center p-2.5">
+                  <img src="/assets/icons/nav-ai.png" alt="Flux AI" className="w-8 h-8 object-contain" />
                 </div>
               </div>
               <div className="text-left">
                 <span className="font-black text-2xl sm:text-3xl text-stone-900 tracking-tight block leading-none">
-                  Flux <span className="text-brand-terracotta-600">AI</span>
+                  Flux <span className="text-[#E87A52]">AI</span>
                 </span>
-                <span className="text-[10px] font-semibold text-brand-sage-700 uppercase tracking-widest block mt-0.5">
+                <span className="text-[10px] font-bold text-[#3E6855] bg-[#EBF1EA] px-2 py-0.5 rounded-full uppercase tracking-wider block mt-1 border border-[#C5DDD0]">
                   Acompañamiento Empático
                 </span>
               </div>
@@ -430,7 +428,7 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
 
             {/* Display Subtitle: ¿Cómo puedo ayudarte? */}
             <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-bold tracking-normal leading-normal overflow-visible mb-3">
-              <span className="title-gradient">
+              <span className="bg-gradient-to-r from-[#3E6855] via-[#5F927B] to-[#E87A52] bg-clip-text text-transparent">
                 ¿Cómo puedo ayudarte?
               </span>
             </h2>
@@ -446,10 +444,10 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
                       setSelectedMoodContext(mood);
                       setInputText(`Hola Flux AI, ${mood.toLowerCase()}, ¿qué me recomiendas hacer?`);
                     }}
-                    className={`text-xs px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
+                    className={`text-xs px-3.5 py-1.5 rounded-full border transition-all cursor-pointer ${
                       selectedMoodContext === mood
-                        ? 'bg-brand-sage-100 border-brand-sage-400 text-brand-sage-900 font-bold'
-                        : 'bg-white border-brand-sand-300 text-stone-700 hover:bg-brand-sand-100'
+                        ? 'bg-[#EBF1EA] border-[#5F927B] text-[#3E6855] font-bold shadow-2xs'
+                        : 'bg-white border-[#C5DDD0] text-stone-700 hover:bg-[#EBF1EA]'
                     }`}
                   >
                     {mood}
@@ -462,8 +460,9 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
             <div className="w-full max-w-2xl mb-6">
               <form 
                 onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }}
-                className="relative flex items-center bg-white rounded-full border border-brand-sand-300 shadow-xs px-4 py-2.5 hover:border-brand-sand-400 focus-within:border-brand-sage-500 focus-within:ring-2 focus-within:ring-brand-sage-500/20 transition-all"
+                className="relative flex items-center bg-white rounded-full border-2 border-[#5F927B]/30 shadow-xs px-4 py-2.5 hover:border-[#5F927B] focus-within:border-[#5F927B] focus-within:ring-2 focus-within:ring-[#5F927B]/20 transition-all"
               >
+                <img src="/assets/icons/search.png" alt="Buscar" className="w-4 h-4 shrink-0 mr-3 object-contain" />
                 <input
                   id="flux-ai-main-input"
                   type="text"
@@ -479,7 +478,7 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
                     onClick={() => {
                       setInputText('Hola Flux AI, me siento un poco abrumado hoy y necesito orientación para calmarme.');
                     }}
-                    className="p-1.5 text-stone-400 hover:text-brand-sage-600 rounded-full transition-colors cursor-pointer"
+                    className="p-1.5 text-stone-400 hover:text-[#5F927B] rounded-full transition-colors cursor-pointer"
                     title="💡 Usar sugerencia rápida con IA"
                     aria-label="Sugerencia rápida"
                   >
@@ -490,10 +489,10 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
                     type="submit"
                     id="flux-ai-send-btn"
                     disabled={!inputText.trim()}
-                    className="w-8 h-8 rounded-full bg-brand-terracotta-500 hover:bg-brand-terracotta-600 disabled:opacity-40 text-white flex items-center justify-center shadow-xs transition-transform hover:scale-105 cursor-pointer"
+                    className="w-9 h-9 rounded-full bg-[#E87A52] hover:bg-[#D4653E] disabled:opacity-40 text-white flex items-center justify-center shadow-xs transition-transform hover:scale-105 cursor-pointer"
                     aria-label="Enviar mensaje a Flux AI"
                   >
-                    <Send className="w-3.5 h-3.5 ml-0.5" />
+                    <img src="/assets/icons/send.png" alt="Enviar" className="w-4 h-4 object-contain brightness-0 invert" />
                   </button>
                 </div>
               </form>
@@ -512,10 +511,10 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
                     key={idx}
                     id={`suggestion-btn-${idx}`}
                     onClick={() => handleSendMessage(sug)}
-                    className="w-full text-left bg-brand-sand-100 hover:bg-brand-sand-200 text-stone-900 font-medium text-xs sm:text-sm px-4 py-3 rounded-2xl border border-brand-sand-300 shadow-2xs transition-all hover:scale-[1.005] cursor-pointer flex items-center justify-between group"
+                    className="w-full text-left bg-white hover:bg-[#EBF1EA] text-stone-900 font-medium text-xs sm:text-sm px-4 py-3 rounded-2xl border border-[#C5DDD0] shadow-2xs transition-all hover:scale-[1.005] cursor-pointer flex items-center justify-between group"
                   >
                     <span>{sug}</span>
-                    <Send className="w-3.5 h-3.5 text-brand-sage-600 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-2" />
+                    <img src="/assets/icons/send.png" alt="Enviar" className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-2" />
                   </button>
                 ))}
               </div>
@@ -523,20 +522,20 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
 
             {/* Bottom Disclaimer */}
             <div className="max-w-2xl text-center">
-              <p className="text-[11px] text-stone-500 leading-relaxed bg-brand-sand-100 p-3 rounded-2xl border border-brand-sand-300">
+              <p className="text-[11px] text-stone-600 leading-relaxed bg-[#EBF1EA] p-3 rounded-2xl border border-[#C5DDD0]">
                 Las respuestas de Flux AI son orientativas y prácticas. Si experimentas una crisis o necesitas atención clínica, consulta siempre con un profesional de la salud mental.
               </p>
             </div>
           </div>
         ) : (
           /* Active Chat Screen */
-          <div className="max-w-4xl mx-auto bg-white rounded-3xl border-2 border-stone-300 shadow-sm p-4 sm:p-6 mb-8 flex flex-col h-[650px]">
+          <div className="max-w-4xl mx-auto bg-white rounded-3xl border-2 border-[#5F927B]/30 shadow-sm p-4 sm:p-6 mb-8 flex flex-col h-[650px]">
             
             {/* Active Chat Top Bar */}
-            <div className="flex items-center justify-between pb-3 border-b border-stone-200 mb-3 gap-2">
+            <div className="flex items-center justify-between pb-3 border-b border-[#5F927B]/20 mb-3 gap-2">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-[#5a8c72] text-white flex items-center justify-center shadow-xs">
-                  <Bot className="w-4 h-4" />
+                <div className="w-9 h-9 rounded-2xl bg-[#EBF1EA] border border-[#C5DDD0] p-1.5 flex items-center justify-center shadow-xs">
+                  <img src="/assets/icons/nav-ai.png" alt="Flux AI" className="w-5 h-5 object-contain" />
                 </div>
                 <div>
                   <h3 className="font-bold text-stone-900 text-sm flex items-center gap-2">
@@ -545,8 +544,8 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
                       • Modo: {AI_MODES.find(m => m.id === selectedMode)?.label}
                     </span>
                   </h3>
-                  <span className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span className="text-[10px] text-[#3E6855] font-semibold flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#5F927B] animate-pulse"></span>
                     En línea y escuchando
                   </span>
                 </div>
@@ -555,7 +554,7 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={handleStartNewConversation}
-                  className="px-3 py-1.5 rounded-full text-xs font-semibold bg-stone-100 hover:bg-stone-200 text-stone-700 flex items-center gap-1 cursor-pointer transition-colors"
+                  className="px-3 py-1.5 rounded-full text-xs font-semibold bg-[#FAF7F2] hover:bg-[#EBF1EA] text-stone-700 border border-[#C5DDD0] flex items-center gap-1 cursor-pointer transition-colors"
                   title="Reiniciar chat"
                 >
                   <PlusCircle className="w-3.5 h-3.5 text-stone-600" />
@@ -564,7 +563,7 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
 
                 <button
                   onClick={handleExportChat}
-                  className="p-1.5 rounded-full text-stone-500 hover:bg-stone-100 cursor-pointer transition-colors"
+                  className="p-1.5 rounded-full text-stone-500 hover:bg-[#FAF7F2] cursor-pointer transition-colors"
                   title="Descargar conversación"
                 >
                   <Download className="w-4 h-4" />
@@ -572,10 +571,10 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
 
                 <button
                   onClick={() => setIsVoiceActive(!isVoiceActive)}
-                  className={`p-1.5 rounded-full text-xs cursor-pointer transition-colors ${isVoiceActive ? 'bg-amber-100 text-amber-900' : 'text-stone-400 hover:bg-stone-100'}`}
+                  className={`p-1.5 rounded-full text-xs cursor-pointer transition-colors ${isVoiceActive ? 'bg-[#FDF4F0] text-[#E87A52]' : 'text-stone-400 hover:bg-[#FAF7F2]'}`}
                   title={isVoiceActive ? 'Voz activada' : 'Activar lectura por voz'}
                 >
-                  {isVoiceActive ? <Volume2 className="w-4 h-4 text-amber-700" /> : <VolumeX className="w-4 h-4" />}
+                  {isVoiceActive ? <Volume2 className="w-4 h-4 text-[#E87A52]" /> : <VolumeX className="w-4 h-4" />}
                 </button>
               </div>
             </div>
@@ -588,38 +587,38 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
                   className={`flex gap-2.5 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   {msg.sender === 'bot' && (
-                    <div className="w-7 h-7 rounded-full bg-[#5a8c72] text-white flex items-center justify-center shrink-0 mt-1 shadow-2xs">
-                      <Sparkles className="w-3.5 h-3.5" />
+                    <div className="w-8 h-8 rounded-full bg-[#EBF1EA] border border-[#C5DDD0] p-1 flex items-center justify-center shrink-0 mt-1 shadow-2xs">
+                      <img src="/assets/icons/nav-ai.png" alt="Flux AI" className="w-4.5 h-4.5 object-contain" />
                     </div>
                   )}
 
                   <div
                     className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-2xs group relative ${
                       msg.sender === 'user'
-                        ? 'bg-[#e07a52] text-white rounded-br-none'
-                        : 'bg-[#f8f5f0] text-stone-900 border border-stone-200 rounded-bl-none'
+                        ? 'bg-[#E87A52] text-white rounded-br-none font-medium'
+                        : 'bg-[#FAF7F2] text-stone-900 border border-[#C5DDD0] rounded-bl-none'
                     }`}
                   >
                     <p className="whitespace-pre-line text-xs sm:text-sm font-normal">{msg.text}</p>
                     
                     {/* Bot Message Quick Followup Actions */}
                     {msg.sender === 'bot' && (
-                      <div className="mt-2.5 pt-2 border-t border-stone-200/80 flex items-center justify-between gap-2 flex-wrap">
+                      <div className="mt-2.5 pt-2 border-t border-[#C5DDD0]/80 flex items-center justify-between gap-2 flex-wrap">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <button
                             onClick={() => {
                               const practice = INSTANT_PRACTICES_CATALOG[0]; // Quick breathing
                               setActivePractice(practice);
                             }}
-                            className="text-[11px] font-bold text-emerald-800 bg-emerald-100/90 hover:bg-emerald-200 px-2.5 py-0.5 rounded-full flex items-center gap-1 cursor-pointer transition-colors"
+                            className="text-[11px] font-bold text-[#3E6855] bg-[#EBF1EA] hover:bg-[#D5E6DC] px-2.5 py-0.5 rounded-full flex items-center gap-1 cursor-pointer transition-colors border border-[#C5DDD0]"
                           >
-                            <Wind className="w-3 h-3 text-emerald-700" />
+                            <Wind className="w-3 h-3 text-[#5F927B]" />
                             <span>Respirar ahora</span>
                           </button>
                           
                           <button
                             onClick={() => handleSendMessage('¿Podrías darme un paso todavía más simple y pequeño para empezar?')}
-                            className="text-[11px] font-semibold text-stone-600 bg-stone-200/70 hover:bg-stone-300 px-2 py-0.5 rounded-full cursor-pointer transition-colors"
+                            className="text-[11px] font-semibold text-stone-700 bg-white hover:bg-stone-100 border border-stone-200 px-2 py-0.5 rounded-full cursor-pointer transition-colors"
                           >
                             ⚡ Paso más simple
                           </button>
@@ -631,11 +630,11 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
                             className="text-stone-400 hover:text-stone-700 p-1 rounded hover:bg-stone-200/50 cursor-pointer"
                             title="Copiar texto"
                           >
-                            {copiedId === msg.id ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                            {copiedId === msg.id ? <Check className="w-3.5 h-3.5 text-[#5F927B]" /> : <Copy className="w-3.5 h-3.5" />}
                           </button>
                           <button
                             onClick={() => handleSpeakMessage(msg.id, msg.text)}
-                            className={`p-1 rounded cursor-pointer ${speakingMsgId === msg.id ? 'text-emerald-700 bg-emerald-100' : 'text-stone-400 hover:text-stone-700 hover:bg-stone-200/50'}`}
+                            className={`p-1 rounded cursor-pointer ${speakingMsgId === msg.id ? 'text-[#3E6855] bg-[#EBF1EA]' : 'text-stone-400 hover:text-stone-700 hover:bg-stone-200/50'}`}
                             title="Escuchar"
                           >
                             <Volume2 className="w-3.5 h-3.5" />
@@ -646,22 +645,22 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
 
                     {msg.sender === 'user' && (
                       <div className="text-right mt-1">
-                        <span className="text-[10px] text-white/75">{msg.timestamp}</span>
+                        <span className="text-[10px] text-white/80">{msg.timestamp}</span>
                       </div>
                     )}
                   </div>
 
                   {msg.sender === 'user' && (
-                    <div className="w-7 h-7 rounded-full bg-[#e07a52] text-white flex items-center justify-center shrink-0 mt-1 shadow-2xs">
-                      <User className="w-3.5 h-3.5" />
+                    <div className="w-8 h-8 rounded-full bg-[#E87A52] p-1 text-white flex items-center justify-center shrink-0 mt-1 shadow-2xs">
+                      <img src="/assets/icons/nav-profile.png" alt="Usuario" className="w-5 h-5 object-contain brightness-0 invert" />
                     </div>
                   )}
                 </div>
               ))}
 
               {isLoading && (
-                <div className="flex gap-2.5 items-center text-xs text-stone-600 bg-stone-100/90 border border-stone-200 p-3 rounded-2xl max-w-xs shadow-2xs">
-                  <Sparkles className="w-4 h-4 text-[#5a8c72] animate-spin" />
+                <div className="flex gap-2.5 items-center text-xs text-[#3E6855] bg-[#EBF1EA] border border-[#C5DDD0] p-3 rounded-2xl max-w-xs shadow-2xs">
+                  <img src="/assets/icons/nav-ai.png" alt="Pensando" className="w-4 h-4 object-contain animate-spin" />
                   <span>Flux AI está pensando en una respuesta empática y clara...</span>
                 </div>
               )}
@@ -670,21 +669,21 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
             {/* Chat Input Bar */}
             <form 
               onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }}
-              className="mt-3 pt-3 border-t border-stone-200 flex items-center gap-2"
+              className="mt-3 pt-3 border-t border-[#C5DDD0] flex items-center gap-2"
             >
               <input
                 type="text"
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 placeholder="Escribe lo que sientes o lo que necesitas estructurar..."
-                className="flex-1 bg-stone-50 border border-stone-300 rounded-full px-4 py-2.5 text-sm text-stone-800 focus:outline-hidden focus:border-[#5a8c72] focus:ring-2 focus:ring-[#5a8c72]/20"
+                className="flex-1 bg-[#FAF7F2] border-2 border-[#5F927B]/30 rounded-full px-4 py-2.5 text-sm text-stone-800 focus:outline-hidden focus:border-[#5F927B] focus:ring-2 focus:ring-[#5F927B]/20"
               />
               <button
                 type="submit"
                 disabled={isLoading || !inputText.trim()}
-                className="bg-[#e07a52] hover:bg-[#c8633c] disabled:opacity-50 text-white px-5 py-2.5 rounded-full text-xs font-bold shadow-xs flex items-center gap-1 cursor-pointer transition-transform hover:scale-105"
+                className="bg-[#E87A52] hover:bg-[#D4653E] disabled:opacity-50 text-white px-5 py-2.5 rounded-full text-xs font-bold shadow-xs flex items-center gap-1.5 cursor-pointer transition-transform hover:scale-105"
               >
-                <Send className="w-3.5 h-3.5" />
+                <img src="/assets/icons/send.png" alt="Enviar" className="w-4 h-4 object-contain brightness-0 invert" />
                 <span>Enviar</span>
               </button>
             </form>
