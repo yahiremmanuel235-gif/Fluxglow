@@ -4,7 +4,7 @@ import { Award, CheckCircle2, Sparkles, User } from 'lucide-react';
 
 export const TeamSection: React.FC = () => {
   return (
-    <section className="py-20 bg-[#f5f0e8]/70 relative overflow-hidden" id="nosotros">
+    <section className="py-20 bg-[#f5f0e8]/70 relative overflow-hidden" id="equipo">
       {/* Decorative background glow */}
       <div className="absolute top-1/2 left-0 -translate-y-1/2 w-96 h-96 bg-[#8DB596]/15 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#E89A6B]/15 rounded-full blur-3xl pointer-events-none"></div>

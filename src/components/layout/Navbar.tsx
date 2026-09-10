@@ -119,17 +119,12 @@ export const Navbar: React.FC<NavbarProps> = ({
   ];
 
   // Secondary tabs under "Más Opciones":
-  // Análisis Predictivo, Perfil, y Alerta Emocional
+  // Análisis Predictivo, y Alerta Emocional
   const moreOptionsTabs: { id: ViewMode; label: string; icon: React.ReactNode; badge?: string }[] = [
     { 
       id: 'analytics', 
       label: 'Análisis Predictivo', 
       icon: <img src="/assets/icons/nav-analytics.png" alt="Análisis" className="w-4 h-4 shrink-0 object-contain" /> 
-    },
-    { 
-      id: 'profile', 
-      label: 'Perfil', 
-      icon: <img src="/assets/icons/nav-profile.png" alt="Perfil" className="w-4 h-4 shrink-0 object-contain" /> 
     },
     { 
       id: 'alert', 
@@ -142,7 +137,12 @@ export const Navbar: React.FC<NavbarProps> = ({
   // For the mobile hamburger drawer: list all 9 modules without "Página de Inicio"
   const allDrawerLinks: { id: ViewMode; label: string; icon: React.ReactNode; badge?: string }[] = [
     ...primaryTabs,
-    ...moreOptionsTabs
+    ...moreOptionsTabs,
+    { 
+      id: 'profile', 
+      label: 'Perfil', 
+      icon: <img src="/assets/icons/nav-profile.png" alt="Perfil" className="w-4 h-4 shrink-0 object-contain" /> 
+    }
   ];
 
   const handleNavClick = (id: ViewMode) => {
@@ -277,8 +277,19 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           </nav>
 
-          {/* Right helper tools: SignOut button + Mobile Menu Toggle */}
+          {/* Right helper tools: Profile + SignOut button + Mobile Menu Toggle */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 pl-1">
+            <button
+              onClick={() => handleNavClick('profile')}
+              title="Mi Perfil"
+              className={`hidden sm:flex items-center justify-center w-8 h-8 rounded-full border transition-colors cursor-pointer shadow-2xs ${
+                currentView === 'profile'
+                  ? 'border-[#5F927B] bg-[#5F927B]/10'
+                  : 'border-stone-300 hover:border-[#5F927B] hover:bg-[#FBF9F5] bg-white'
+              }`}
+            >
+              <img src="/assets/icons/nav-profile.png" alt="Perfil" className={`w-4 h-4 object-contain ${currentView === 'profile' ? 'scale-110' : 'opacity-80'}`} />
+            </button>
             {isLoggedIn && onSignOut && (
               <button
                 id="nav-signout-btn"
@@ -335,22 +346,25 @@ export const Navbar: React.FC<NavbarProps> = ({
                   id={`mobile-nav-${link.id}`}
                   onClick={() => handleNavClick(link.id)}
                   aria-current={isActive ? 'page' : undefined}
-                  className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+                  className={`relative flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
                     isActive
-                      ? 'bg-[#5F927B] text-white shadow-xs'
+                      ? 'text-[#1A1A1A] bg-gradient-to-b from-transparent via-[#5F927B]/5 to-[#5F927B]/10'
                       : 'text-stone-800 hover:bg-[#F2ECE1]'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <span className={isActive ? 'text-white' : 'text-stone-500'}>{link.icon}</span>
+                    <span className={isActive ? 'scale-110 drop-shadow-xs transition-transform' : 'opacity-80'}>{link.icon}</span>
                     <span>{link.label}</span>
                   </div>
                   {'badge' in link && link.badge && (
                     <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
-                      isActive ? 'bg-white text-[#5F927B]' : 'bg-[#E87A52] text-white'
+                      link.badge === 'SOS' ? 'bg-red-600 text-white animate-bounce' : 'bg-[#E87A52] text-white'
                     }`}>
                       {link.badge}
                     </span>
+                  )}
+                  {isActive && (
+                    <span className="absolute bottom-0 left-2 right-2 h-[3px] bg-gradient-to-r from-[#5F927B] to-[#E87A52] rounded-full shadow-xs" />
                   )}
                 </button>
               );

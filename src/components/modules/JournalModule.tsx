@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Sparkles, 
   Mic, 
@@ -32,6 +32,7 @@ import { formatFluxDate } from '../../utils/dateUtils';
 import { MoodType, JournalEntry, ViewMode } from '../../types';
 import { useToast } from '../common/Toast';
 import { useJournal } from '../../hooks/useJournal';
+import { useMissions } from '../../hooks/useMissions';
 
 interface JournalModuleProps {
   onEntryCreated?: (entry: JournalEntry) => void;
@@ -99,6 +100,8 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
     isGuest,
     user
   } = useJournal();
+
+  const { streakDays } = useMissions();
 
   const [selectedMood, setSelectedMood] = useState<MoodType>('feliz');
   const [intensity, setIntensity] = useState<number>(8);
@@ -219,21 +222,30 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
     }
   };
 
-  // Recent 7 days streak preview calculation
-  const recentDays = [
-    { day: 'Lun', mood: 'tranquilo', intensity: 7 },
-    { day: 'Mar', mood: 'feliz', intensity: 9 },
-    { day: 'Mié', mood: 'ansioso', intensity: 5 },
-    { day: 'Jue', mood: 'tranquilo', intensity: 8 },
-    { day: 'Vie', mood: 'feliz', intensity: 8 },
-    { day: 'Sáb', mood: 'tranquilo', intensity: 7 },
-    { 
-      day: 'Hoy', 
-      mood: selectedMood, 
-      intensity, 
-      isToday: true 
-    },
-  ];
+  // Recent 7 days streak calculation
+  const recentDays = useMemo(() => {
+    const days = [];
+    const today = new Date();
+    // Normalize today to start of day for accurate comparison
+    today.setHours(0, 0, 0, 0);
+
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0];
+      
+      const entryForDay = entries.find(e => e.date === dateStr);
+      
+      const dayName = i === 0 ? 'Hoy' : d.toLocaleDateString('es-ES', { weekday: 'short' });
+      days.push({
+        day: dayName.charAt(0).toUpperCase() + dayName.slice(1,3),
+        mood: i === 0 && !entryForDay ? selectedMood : (entryForDay?.mood || null),
+        intensity: i === 0 && !entryForDay ? intensity : (entryForDay?.intensity || null),
+        isToday: i === 0
+      });
+    }
+    return days;
+  }, [entries, selectedMood, intensity]);
 
   const activeQuoteData = INSPIRATIONAL_QUOTES[selectedMood] || INSPIRATIONAL_QUOTES['feliz'];
   const activeEmojiItem = emojiMoods.find(m => m.id === selectedMood) || emojiMoods[4];
@@ -327,8 +339,8 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
             </div>
             <div>
               <h4 className="text-xs sm:text-sm font-bold text-stone-900 flex items-center gap-1.5">
-                <span>Racha de Registro Consciente: 7 días</span>
-                <span className="text-[10px] font-bold bg-[#E87A52] text-white px-2 py-0.5 rounded-full shadow-2xs">¡Activa!</span>
+                <span>Racha de Registro Consciente: {streakDays} {streakDays === 1 ? 'día' : 'días'}</span>
+                {streakDays > 0 && <span className="text-[10px] font-bold bg-[#E87A52] text-white px-2 py-0.5 rounded-full shadow-2xs">¡Activa!</span>}
               </h4>
               <p className="text-xs text-stone-500">Constancia y hábitos emocionales de la semana</p>
             </div>
@@ -346,9 +358,17 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
               >
                 <span className="text-[10px] font-bold text-stone-500 uppercase">{item.day}</span>
                 <div className="my-1 flex items-center justify-center w-7 h-7">
-                  <MoodIcon mood={item.mood} className="w-6 h-6 sm:w-7 sm:h-7" />
+                  {item.mood ? (
+                    <MoodIcon mood={item.mood} className="w-6 h-6 sm:w-7 sm:h-7" />
+                  ) : (
+                    <div className="w-2 h-2 rounded-full bg-stone-300"></div>
+                  )}
                 </div>
-                <span className="text-[10px] font-semibold text-stone-600">{item.intensity}/10</span>
+                {item.mood ? (
+                  <span className="text-[10px] font-semibold text-stone-600">{item.intensity}/10</span>
+                ) : (
+                  <span className="text-[10px] font-semibold text-stone-400">-</span>
+                )}
               </div>
             ))}
           </div>
@@ -357,17 +377,18 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
         {/* STATE A: ACTIVE FORM (Visible before sending) */}
         {!isSubmitted ? (
           <>
-            {/* Main Controls Row: [Diario personal] [¿Cómo te sientes hoy? Enojado, Triste, Inquieto, Tranquilo, Feliz] */}
+            {/* Main Controls Row: [Ver mi historial] [¿Cómo te sientes hoy? Enojado, Triste, Inquieto, Tranquilo, Feliz] */}
             <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-5">
               
-              {/* Left Pill: Diario personal */}
-              <div
+              {/* Left Pill: Ver mi historial */}
+              <button
                 id="personal-journal-btn"
-                className="bg-[#5F927B] text-white px-7 py-2.5 rounded-full text-sm font-bold tracking-wide shadow-xs flex items-center gap-2.5 whitespace-nowrap self-start md:self-auto"
+                onClick={() => setShowHistory(!showHistory)}
+                className="bg-[#5F927B] hover:bg-[#3E6855] transition-colors cursor-pointer text-white px-7 py-2.5 rounded-full text-sm font-bold tracking-wide shadow-xs flex items-center gap-2.5 whitespace-nowrap self-start md:self-auto"
               >
                 <img src="/assets/icons/nav-journal.png" alt="Diario" className="w-4 h-4 object-contain brightness-0 invert" />
-                <span>Diario personal</span>
-              </div>
+                <span>Ver mi historial</span>
+              </button>
 
               {/* Center Capsule: ¿Cómo te sientes hoy? + 5 Emotions */}
               <div className="w-full md:w-auto flex-1 max-w-2xl bg-white border-2 border-[#5F927B]/30 rounded-full py-2 px-5 sm:px-6 shadow-xs flex items-center justify-between gap-3">

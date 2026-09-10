@@ -396,17 +396,19 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
 
     const recentScores = monthlyMoodPath.map(d => d.val);
     const avgScore = recentScores.length > 0 ? (recentScores.reduce((a, b) => a + b, 0) / recentScores.length) : 4;
-    const isHighWellbeing = avgScore >= 3.8;
+    
+    // Dynamic risk percentage (0 to 100%) based on inverted average score (1 to 5)
+    const baseRiskPercent = Math.max(0, Math.min(100, Math.round(((5 - avgScore) / 4) * 100)));
 
     if (forecastPeriod === '7d') {
-      const riskPercent = isHighWellbeing ? 8 : 16;
+      const riskPercent = baseRiskPercent;
       const batteryPercent = Math.min(95, 60 + streakDays * 5 + completedMissionsCount * 4);
       return {
         title: 'Horizonte Inmediato (Próximos 7 Días)',
-        riskLevel: riskPercent <= 10 ? 'Riesgo Muy Bajo' : 'Riesgo Bajo',
+        riskLevel: riskPercent <= 25 ? 'Riesgo Bajo (Estable)' : riskPercent <= 50 ? 'Riesgo Medio (Atención)' : riskPercent <= 75 ? 'Riesgo Moderado' : 'Riesgo Elevado',
         riskPercent,
-        riskDescription: 'Tu consistencia en micro-prácticas y pausas conscientes mitiga la fatiga a corto plazo.',
-        riskBarColor: 'bg-brand-sage-600',
+        riskDescription: riskPercent <= 25 ? 'Tu consistencia en micro-prácticas y pausas conscientes mitiga la fatiga a corto plazo.' : 'Se detectan algunas fluctuaciones, mantén la atención en tus rutinas de bienestar.',
+        riskBarColor: riskPercent <= 25 ? 'bg-[#5F927B]' : riskPercent <= 50 ? 'bg-[#E5B25D]' : riskPercent <= 75 ? 'bg-[#E87A52]' : 'bg-[#DC2626]',
         batteryPercent,
         batteryState: `${batteryPercent}% Energía`,
         batteryDescription: 'Claridad mental y reservas óptimas para tus prioridades de la semana en curso.',
@@ -416,14 +418,14 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
         actionType: 'Acción semanal preventiva'
       };
     } else if (forecastPeriod === '14d') {
-      const riskPercent = isHighWellbeing ? 14 : 22;
+      const riskPercent = Math.min(100, baseRiskPercent + 5); // Add slight margin for longer forecast
       const batteryPercent = Math.min(90, 55 + streakDays * 4 + completedMissionsCount * 3);
       return {
         title: 'Proyección Quincenal (14 Días)',
-        riskLevel: 'Riesgo Estable',
+        riskLevel: riskPercent <= 25 ? 'Riesgo Bajo (Estable)' : riskPercent <= 50 ? 'Riesgo Medio (Atención)' : riskPercent <= 75 ? 'Riesgo Moderado' : 'Riesgo Elevado',
         riskPercent,
         riskDescription: 'Rendimiento equilibrado. Conviene cuidar el descanso en fines de semana para evitar desgaste.',
-        riskBarColor: 'bg-brand-sage-600',
+        riskBarColor: riskPercent <= 25 ? 'bg-[#5F927B]' : riskPercent <= 50 ? 'bg-[#E5B25D]' : riskPercent <= 75 ? 'bg-[#E87A52]' : 'bg-[#DC2626]',
         batteryPercent,
         batteryState: `${batteryPercent}% Energía`,
         batteryDescription: 'Estabilidad proyectada suficiente para proyectos exigentes con buena tolerancia al estrés.',
@@ -433,14 +435,14 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
         actionType: 'Recomendación de mediano plazo'
       };
     } else {
-      const riskPercent = isHighWellbeing ? 12 : 25;
+      const riskPercent = Math.min(100, baseRiskPercent + 10);
       const batteryPercent = Math.min(88, 50 + streakDays * 5 + completedMissionsCount * 3);
       return {
         title: 'Tendencia Mensual Global (30 Días)',
-        riskLevel: 'Riesgo Controlado',
+        riskLevel: riskPercent <= 25 ? 'Riesgo Bajo (Estable)' : riskPercent <= 50 ? 'Riesgo Medio (Atención)' : riskPercent <= 75 ? 'Riesgo Moderado' : 'Riesgo Elevado',
         riskPercent,
         riskDescription: 'Modelo predictivo de alta adaptabilidad. Tus factores protectores consolidan una racha sostenible.',
-        riskBarColor: 'bg-brand-sage-600',
+        riskBarColor: riskPercent <= 25 ? 'bg-[#5F927B]' : riskPercent <= 50 ? 'bg-[#E5B25D]' : riskPercent <= 75 ? 'bg-[#E87A52]' : 'bg-[#DC2626]',
         batteryPercent,
         batteryState: `${batteryPercent}% Energía`,
         batteryDescription: 'Capacidad acumulada para autorregular emociones intensas y superar fluctuaciones.',
@@ -821,15 +823,23 @@ Generado con FluxGlow • Cuidado emocional consciente`;
             </div>
 
             {/* Bottom Insight Footer */}
-            <div className="mt-6 pt-3 border-t border-brand-sand-200 flex items-center justify-between text-xs text-stone-600">
-              <span className="flex items-center gap-1">
-                <Brain className="w-3.5 h-3.5 text-brand-sage-600" />
-                Enfoque cognitivo fortalecido
-              </span>
-              <span className="font-bold text-stone-900">
-                Índice: {Math.min(100, completedMissionsCount * 25 + streakDays * 15 + journalEntries.length * 10)}/100
-              </span>
-            </div>
+            {journalEntries.length < 5 ? (
+              <div className="mt-6 pt-3 border-t border-brand-sand-200">
+                <EmptyStat 
+                  inlineMessage={`Calibrando datos de aprendizaje... Registra tus emociones durante al menos 5 días para generar pronósticos precisos. (${journalEntries.length}/5)`} 
+                />
+              </div>
+            ) : (
+              <div className="mt-6 pt-3 border-t border-brand-sand-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-stone-600">
+                <span className="flex items-center gap-1">
+                  <Brain className="w-3.5 h-3.5 text-brand-sage-600 shrink-0" />
+                  <span className="truncate">Enfoque cognitivo fortalecido</span>
+                </span>
+                <span className="font-bold text-stone-900 whitespace-nowrap bg-brand-sage-100 px-3 py-1.5 rounded-full border border-brand-sage-200">
+                  Índice de progreso: {Math.min(100, completedMissionsCount * 25 + streakDays * 15 + journalEntries.length * 10)}/100
+                </span>
+              </div>
+            )}
           </div>
 
           {/* CARD 2 (RIGHT): Evolución Emocional across 5 colored bands */}

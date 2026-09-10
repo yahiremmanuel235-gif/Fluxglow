@@ -99,12 +99,26 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
             {/* Quick in-page nav (Desktop) */}
             <div className="hidden md:flex items-center gap-6 text-xs font-semibold text-stone-600">
-              <a href="#que-es" className="hover:text-[#4a7c59] transition-colors">¿Qué es?</a>
-              <a href="#origen" className="hover:text-[#4a7c59] transition-colors">Origen</a>
-              <a href="#objetivos" className="hover:text-[#4a7c59] transition-colors">Objetivos</a>
-              <a href="#mision-vision" className="hover:text-[#4a7c59] transition-colors">Misión</a>
-              <a href="#funciones-y-ventajas" className="hover:text-[#4a7c59] transition-colors">Funciones y Ventajas</a>
-              <a href="#equipo" className="hover:text-[#4a7c59] transition-colors">Equipo</a>
+              {[
+                { id: 'que-es', label: '¿Qué es?' },
+                { id: 'origen', label: 'Origen' },
+                { id: 'objetivos', label: 'Objetivos' },
+                { id: 'mision-vision', label: 'Misión' },
+                { id: 'funciones-y-ventajas', label: 'Funciones y Ventajas' },
+                { id: 'equipo', label: 'Equipo' }
+              ].map((item) => (
+                <a 
+                  key={item.id}
+                  href={`#${item.id}`} 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document.getElementById(item.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }}
+                  className="hover:text-[#4a7c59] transition-colors cursor-pointer"
+                >
+                  {item.label}
+                </a>
+              ))}
             </div>
 
             {/* Right actions matching user request: Only Regístrate and Iniciar sesión (or User badge & Cerrar sesión if logged in) */}

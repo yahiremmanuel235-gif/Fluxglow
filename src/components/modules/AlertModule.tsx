@@ -74,14 +74,43 @@ const EL_SALVADOR_RESOURCES = [
 
 export const AlertModule: React.FC = () => {
   const { success, info } = useToast();
-  const [selectedRiskLevel, setSelectedRiskLevel] = useState<'estable' | 'atencion' | 'moderado' | 'elevado'>(() => {
+  const [journalEntries, setJournalEntries] = useState<any[]>(() => {
     try {
-      const saved = localStorage.getItem('fluxglow_risk_level');
-      return (saved as any) || 'moderado';
+      const saved = localStorage.getItem('fluxglow_journal_entries');
+      if (saved) {
+        return JSON.parse(saved);
+      }
     } catch {
-      return 'moderado';
+      return [];
     }
+    return [];
   });
+
+  const riskPercent = React.useMemo(() => {
+    if (!Array.isArray(journalEntries) || journalEntries.length === 0) {
+      return 20; // Default to 20% (Estable)
+    }
+    const MOOD_TO_VAL: Record<string, number> = {
+      feliz: 5, Feliz: 5, Motivado: 5,
+      tranquilo: 4, Tranquilo: 4,
+      ansioso: 3, Ansioso: 3,
+      estresado: 2, Estresado: 2, Abrumado: 2, triste: 2, Triste: 2,
+      enojado: 1, Enojado: 1
+    };
+    const recentScores = journalEntries.map(e => {
+      const moodKey = e.mood || 'tranquilo';
+      return MOOD_TO_VAL[moodKey] || 4;
+    });
+    const avgScore = recentScores.length > 0 ? (recentScores.reduce((a, b) => a + b, 0) / recentScores.length) : 4;
+    return Math.max(0, Math.min(100, Math.round(((5 - avgScore) / 4) * 100)));
+  }, [journalEntries]);
+
+  const selectedRiskLevel = React.useMemo(() => {
+    if (riskPercent <= 25) return 'estable';
+    if (riskPercent <= 50) return 'atencion';
+    if (riskPercent <= 75) return 'moderado';
+    return 'elevado';
+  }, [riskPercent]);
 
   const [showBreathingExercise, setShowBreathingExercise] = useState(false);
   const [breathingPhase, setBreathingPhase] = useState<'Inhala' | 'Retén' | 'Exhala'>('Inhala');
@@ -90,13 +119,23 @@ export const AlertModule: React.FC = () => {
   const [showDirectoryModal, setShowDirectoryModal] = useState(false);
   const [isMusicActive, setIsMusicActive] = useState(false);
 
-  // Sync risk level changes to localStorage & dispatch event for Navbar
-  const handleSelectRiskLevel = (lvl: 'estable' | 'atencion' | 'moderado' | 'elevado') => {
-    setSelectedRiskLevel(lvl);
-    localStorage.setItem('fluxglow_risk_level', lvl);
-    window.dispatchEvent(new CustomEvent('fluxglow_risk_level_updated', { detail: lvl }));
-    info('Nivel de bienestar actualizado', `Semáforo configurado en: ${lvl.toUpperCase()}`);
-  };
+  // Listen for journal updates to recalculate risk
+  useEffect(() => {
+    const handleJournalUpdate = () => {
+      try {
+        const saved = localStorage.getItem('fluxglow_journal_entries');
+        if (saved) {
+          setJournalEntries(JSON.parse(saved));
+        }
+      } catch (err) {
+        console.error('Error parsing journal entries in AlertModule:', err);
+      }
+    };
+    window.addEventListener('fluxglow_journal_updated', handleJournalUpdate);
+    return () => {
+      window.removeEventListener('fluxglow_journal_updated', handleJournalUpdate);
+    };
+  }, []);
 
   // Escape key handler
   useEffect(() => {
@@ -271,24 +310,20 @@ export const AlertModule: React.FC = () => {
         {/* Section: Semáforo Emocional */}
         <div className="mb-8">
           <h2 className="text-center text-sm font-bold text-stone-800 mb-3 font-serif uppercase tracking-wider">
-            Semáforo Emocional Interactivo
+            Semáforo de Diagnóstico Emocional
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 max-w-5xl mx-auto">
             {trafficLightLevels.map((lvl) => {
               const isSelected = selectedRiskLevel === lvl.id;
               return (
-                <button
+                <div
                   key={lvl.id}
                   id={`semaforo-${lvl.id}`}
-                  onClick={() => {
-                    setSelectedRiskLevel(lvl.id as any);
-                    info('Nivel seleccionado', `Mostrando recomendaciones para estado: ${lvl.title}`);
-                  }}
-                  className={`p-4 rounded-2xl border text-left transition-all flex items-start gap-3.5 cursor-pointer shadow-2xs ${
+                  className={`p-4 rounded-2xl border text-left transition-all flex items-start gap-3.5 shadow-2xs ${
                     isSelected
-                      ? `${lvl.selectedBg} ${lvl.selectedBorder} shadow-sm`
-                      : 'bg-white/85 hover:bg-white border-stone-200/80 hover:border-stone-300'
+                      ? `${lvl.selectedBg} ${lvl.selectedBorder} shadow-sm ring-2 ring-[#5F927B]/20`
+                      : 'bg-white/85 border-stone-200/80 opacity-60'
                   }`}
                 >
                   <span 
@@ -308,7 +343,7 @@ export const AlertModule: React.FC = () => {
                       {lvl.desc}
                     </p>
                   </div>
-                </button>
+                </div>
               );
             })}
           </div>

@@ -831,7 +831,7 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
                     <div className="flex items-center justify-between text-[11px] text-stone-400 pt-3 border-t border-stone-100">
                       <div className="flex items-center gap-3">
                         <span className="flex items-center gap-1">
-                          👍 <strong className="text-stone-700">{post.likes}</strong> identificaciones
+                          👍 <strong className="text-stone-700">{post.likes}</strong> {post.likes === 1 ? 'identificación' : 'identificaciones'}
                         </span>
                         <span className="flex items-center gap-1">
                           🫂 <strong className="text-stone-700">{post.hugs}</strong> abrazos
@@ -981,7 +981,7 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
                     <span className="text-[10px] bg-amber-200/60 px-2 py-0.5 rounded-full">Activo</span>
                   </div>
                   <p className="text-stone-600 text-[11px]">
-                    260 personas unidas para mejorar su calidad de sueño esta semana.
+                    Únete a este reto para mejorar tu calidad de sueño esta semana.
                   </p>
                 </div>
                 <div className="p-3 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 text-xs space-y-1">
@@ -990,7 +990,7 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
                     <span className="text-[10px] bg-emerald-200/60 px-2 py-0.5 rounded-full">Activo</span>
                   </div>
                   <p className="text-stone-600 text-[11px]">
-                    382 personas registrando 3 motivos de gratitud al atardecer.
+                    Únete a este reto registrando 3 motivos de gratitud al atardecer.
                   </p>
                 </div>
               </div>
