@@ -279,6 +279,6 @@ export function mapSupabaseJournalEntry(row: any): JournalEntry {
       ? row.triggers 
       : ['Productividad', 'Bienestar'],
     habits: row.habits || { sleepHours: 8, waterGlasses: 6, exercised: true, energyLevel: typeof row.intensity === 'number' ? row.intensity : 4 },
-    aiFeedback: row.ai_feedback || row.aiFeedback || 'Registro guardado y sincronizado con tu base de datos de Supabase.'
+    aiFeedback: row.ai_feedback || row.aiFeedback || 'Registro guardado y sincronizado en tiempo real.'
   };
 }

@@ -64,8 +64,8 @@ export function useJournal() {
           .order('created_at', { ascending: false });
 
         if (dbError) {
-          console.warn('Aviso al consultar journal_entries en Supabase:', dbError.message);
-          setError(`Conexión con Supabase no disponible (${dbError.message}). Mostrando datos de respaldo.`);
+          console.warn('Aviso al consultar journal_entries:', dbError.message);
+          setError(`Conexión con el servidor no disponible (${dbError.message}). Mostrando datos de respaldo.`);
           setIsUsingLocalFallback(true);
           // Fallback a almacenamiento local de respaldo para este usuario si existiera
           try {
@@ -84,7 +84,7 @@ export function useJournal() {
         }
       } catch (err: any) {
         console.error('Fallo de conexión en fetchEntries:', err);
-        setError(err?.message || 'Error de conexión con Supabase');
+        setError(err?.message || 'Error de conexión con el servidor');
         setIsUsingLocalFallback(true);
       } finally {
         setLoading(false);
@@ -162,7 +162,7 @@ export function useJournal() {
               intensity: params.intensity ?? 7,
               triggers: params.triggers ?? ['Productividad', 'Bienestar'],
               habits: params.habits ?? { sleepHours: 8, waterGlasses: 6, exercised: true, energyLevel: params.intensity ?? 7 },
-              aiFeedback: params.aiFeedback ?? 'Registro guardado y sincronizado con tu base de datos de Supabase.'
+              aiFeedback: params.aiFeedback ?? 'Registro guardado y sincronizado en tiempo real.'
             }
           : {
               id: 'entry-' + Date.now(),

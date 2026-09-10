@@ -62,6 +62,8 @@ import {
   completeDailyMission, 
   getStoredMissions 
 } from '../../utils/missionsManager';
+import { EmptyStat } from '../common/EmptyStat';
+import { formatFluxDate } from '../../utils/dateUtils';
 import { 
   GuideItem, 
   VideoPodcastItem, 
@@ -96,6 +98,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('todos');
   const [selectedFormat, setSelectedFormat] = useState<string>('todos');
+  const [activeTab, setActiveTab] = useState<'todas' | 'guias' | 'practicas' | 'videos' | 'tests'>('todas');
   const [showFiltersModal, setShowFiltersModal] = useState(false);
   const [showCategoriesModal, setShowCategoriesModal] = useState(false);
   
@@ -578,6 +581,17 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
     return INSTANT_PRACTICES_CATALOG.filter(matchesSearchAndCategory);
   }, [searchQuery, selectedCategory, selectedFormat]);
 
+  const mergedGuides = useMemo(() => {
+    const all = [...DEMO_GUIDES_CATALOG, ...POPULAR_GUIDES_CATALOG];
+    const seen = new Set<string>();
+    const unique = all.filter(g => {
+      if (seen.has(g.id)) return false;
+      seen.add(g.id);
+      return true;
+    });
+    return unique.filter(matchesSearchAndCategory);
+  }, [searchQuery, selectedCategory]);
+
   const filteredRecommended = useMemo(() => {
     if (selectedFormat === 'videos' || selectedFormat === 'podcasts' || selectedFormat === 'practicas' || selectedFormat === 'tests') {
       return [];
@@ -603,13 +617,14 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
     });
   }, [searchQuery, selectedCategory, selectedFormat]);
 
-  const totalResultsCount = filteredRecommended.length + filteredPopular.length + filteredMedia.length + filteredPractices.length;
-  const isAnyFilterActive = searchQuery.trim() !== '' || selectedCategory !== 'todos' || selectedFormat !== 'todos';
+  const totalResultsCount = mergedGuides.length + filteredMedia.length + filteredPractices.length + COMPLETE_COURSES_CATALOG.length;
+  const isAnyFilterActive = searchQuery.trim() !== '' || selectedCategory !== 'todos' || selectedFormat !== 'todos' || activeTab !== 'todas';
 
   const handleResetFilters = () => {
     setSearchQuery('');
     setSelectedCategory('todos');
     setSelectedFormat('todos');
+    setActiveTab('todas');
   };
 
   const handleCategorySelect = (cat: string) => {
@@ -672,13 +687,9 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
           <button
             id="filters-btn"
             onClick={() => setShowFiltersModal(true)}
-            className={`px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-2xs transition-all flex items-center gap-2 cursor-pointer ${
-              selectedFormat !== 'todos' 
-                ? 'bg-[#3E6855] ring-2 ring-[#5F927B]/50 text-white' 
-                : 'bg-[#5F927B] hover:bg-[#4E7D68] text-white'
-            }`}
+            className="px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold text-stone-700 bg-white/80 hover:bg-[#EBF1EA] border border-[#C5DDD0] shadow-2xs transition-all flex items-center gap-2 cursor-pointer"
           >
-            <img src="/assets/icons/filter.png" alt="Filtros" className="w-4 h-4 object-contain brightness-0 invert" />
+            <SlidersHorizontal className="w-3.5 h-3.5 text-[#5F927B]" />
             <span>Filtros</span>
             {selectedFormat !== 'todos' && (
               <span className="w-2 h-2 rounded-full bg-[#E87A52]"></span>
@@ -694,17 +705,13 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
           <button
             id="categories-btn"
             onClick={() => setShowCategoriesModal(true)}
-            className={`px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-2xs transition-all flex items-center gap-2 cursor-pointer ${
-              selectedCategory !== 'todos' 
-                ? 'bg-[#B54F2C] ring-2 ring-[#E87A52]/50 text-white' 
-                : 'bg-[#E87A52] hover:bg-[#D4653E] text-white'
-            }`}
+            className="px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold text-stone-700 bg-white/80 hover:bg-[#FDF4F0] border border-[#F7D3C3] shadow-2xs transition-all flex items-center gap-2 cursor-pointer"
           >
-            <img src="/assets/icons/nav-info.png" alt="Categorías" className="w-4 h-4 object-contain brightness-0 invert" />
-            <span className="hidden sm:inline">Todas las Categorías</span>
-            <span className="sm:hidden">Categorías</span>
+            <FolderOpen className="w-3.5 h-3.5 text-[#E87A52]" />
+            <span className="hidden sm:inline">Categorías</span>
+            <span className="sm:hidden">Cat.</span>
             {selectedCategory !== 'todos' && (
-              <span className="w-2 h-2 rounded-full bg-[#FAF7F2]"></span>
+              <span className="w-2 h-2 rounded-full bg-[#E87A52]"></span>
             )}
           </button>
         </div>
@@ -872,6 +879,34 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
           })}
         </div>
 
+        {/* Main Format Tabs: [Todas | Guías | Prácticas en Vivo | Videos | Tests] */}
+        <div className="flex items-center justify-center gap-1.5 sm:gap-2 max-w-3xl mx-auto mb-6 p-1.5 bg-[#FAF7F2] rounded-2xl border border-[#C5DDD0]/70 overflow-x-auto shadow-2xs">
+          {[
+            { id: 'todas', label: 'Todas', count: totalResultsCount },
+            { id: 'guias', label: 'Guías', count: mergedGuides.length + COMPLETE_COURSES_CATALOG.length },
+            { id: 'practicas', label: 'Prácticas en Vivo', count: filteredPractices.length },
+            { id: 'videos', label: 'Videos & Podcasts', count: filteredMedia.length },
+            { id: 'tests', label: 'Tests', count: PSYCHOLOGICAL_TESTS.length },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+                activeTab === tab.id
+                  ? 'bg-[#5F927B] text-white shadow-2xs'
+                  : 'text-stone-600 hover:text-stone-900 hover:bg-white/80'
+              }`}
+            >
+              <span>{tab.label}</span>
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${
+                activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-stone-200/60 text-stone-600'
+              }`}>
+                {tab.count}
+              </span>
+            </button>
+          ))}
+        </div>
+
         {/* Active Filter Indicators Bar */}
         {isAnyFilterActive && (
           <div className="flex items-center justify-between bg-stone-100/90 border border-stone-200/80 rounded-2xl px-4 py-2.5 mb-8 max-w-4xl mx-auto">
@@ -906,7 +941,8 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
         )}
 
         {/* SECTION 0: Guías Completas de 1 Semana */}
-        <div className="mb-12">
+        {(activeTab === 'todas' || activeTab === 'guias') && COMPLETE_COURSES_CATALOG.length > 0 && (
+          <div className="mb-12">
           <div className="flex items-center justify-between mb-5">
             <div>
               <div className="flex items-center gap-2">
@@ -1033,36 +1069,42 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
             })}
           </div>
         </div>
+        )}
 
-        {/* SECTION 1: Guías Rápidas Recomendadas (Lecturas de 5 min) */}
-        {filteredRecommended.length > 0 && (
+        {/* SECTION 1: Guías y Artículos Prácticos (Merged Catalog) */}
+        {(activeTab === 'todas' || activeTab === 'guias') && mergedGuides.length > 0 && (
           <div className="mb-12">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-xl sm:text-2xl font-bold font-serif text-stone-900 flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-brand-terracotta-500" />
-                <span>Guías Rápidas Recomendadas (Lecturas de 5 min):</span>
-                <span className="text-xs font-medium text-stone-400 bg-stone-100 px-2.5 py-0.5 rounded-full">
-                  {filteredRecommended.length}
+                <span>Guías y Artículos Prácticos (Lecturas de 5 min):</span>
+                <span className="text-xs font-semibold text-[#3E6855] bg-[#EBF1EA] border border-[#C5DDD0] px-2.5 py-0.5 rounded-full">
+                  {mergedGuides.length} guías
                 </span>
               </h2>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {filteredRecommended.map((guide) => {
+              {mergedGuides.map((guide, idx) => {
                 const isFav = favorites[guide.id];
                 const isRead = readGuides.includes(guide.id);
                 const hasProgress = readingProgress[guide.id];
+                const cardStyle = idx % 2 === 0 ? 'flux-card-sage' : 'flux-card-terracotta';
+                const tagStyle = idx % 2 === 0 
+                  ? 'bg-[#EBF1EA] text-[#3E6855] border-[#C5DDD0]' 
+                  : 'bg-[#FDF4F0] text-[#B54F2C] border-[#F7D3C3]';
+                const accentColor = idx % 2 === 0 ? 'text-[#3E6855]' : 'text-[#B54F2C]';
 
                 return (
                   <div
                     key={guide.id}
-                    id={`guide-rec-${guide.id}`}
+                    id={`guide-${guide.id}`}
                     onClick={() => handleOpenGuide(guide)}
-                    className="group cursor-pointer flex flex-col flux-card-sage p-4 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 justify-between"
+                    className={`group cursor-pointer flex flex-col ${cardStyle} p-4 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 justify-between`}
                   >
                     <div>
                       {/* Card Box with Rounded Border */}
-                      <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-stone-100 mb-3 border border-[#C5DDD0]/50 shadow-2xs">
+                      <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-stone-100 mb-3 border border-stone-200/60 shadow-2xs">
                         <img
                           src={guide.image}
                           alt={guide.badge}
@@ -1124,14 +1166,14 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
 
                       {/* Subtitle / Description text below card */}
                       <div>
-                        <div className="flex items-center justify-between text-[11px] font-bold text-[#3E6855] uppercase tracking-wider mb-1">
-                          <span className="bg-[#EBF1EA] px-2 py-0.5 rounded-md border border-[#C5DDD0]">{guide.category}</span>
+                        <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider mb-1">
+                          <span className={`px-2 py-0.5 rounded-md border ${tagStyle}`}>{guide.category}</span>
                           <span className="text-stone-500 font-medium lowercase flex items-center gap-1">
                             <Clock className="w-3 h-3 text-stone-400" />
                             {guide.readTime}
                           </span>
                         </div>
-                        <h3 className="text-sm font-bold text-stone-900 leading-snug line-clamp-2 group-hover:text-[#3E6855] transition-colors mt-1.5">
+                        <h3 className={`text-sm font-bold text-stone-900 leading-snug line-clamp-2 group-hover:${accentColor} transition-colors mt-1.5`}>
                           {guide.title}
                         </h3>
                         <p className="text-xs text-stone-600 mt-1 line-clamp-2 leading-relaxed">
@@ -1141,126 +1183,9 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                     </div>
 
                     {/* Bottom Status Footnote */}
-                    <div className="mt-3 pt-2.5 border-t border-[#C5DDD0]/60 flex items-center justify-between text-[11px]">
+                    <div className="mt-3 pt-2.5 border-t border-stone-200/60 flex items-center justify-between text-[11px]">
                       <span className="text-stone-500 font-medium">{guide.author.split('•')[0]}</span>
-                      <span className="text-[#3E6855] font-bold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
-                        {isRead ? 'Repasar →' : 'Explorar →'}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* SECTION 2: Guías Rápidas Populares */}
-        {filteredPopular.length > 0 && (
-          <div className="mb-12">
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight flex items-center gap-2">
-                <span>Guías Rápidas Populares:</span>
-                <span className="text-xs font-bold text-[#B54F2C] bg-[#FDF4F0] border border-[#F7D3C3] px-2.5 py-0.5 rounded-full">
-                  {filteredPopular.length}
-                </span>
-              </h2>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {filteredPopular.map((guide) => {
-                const isFav = favorites[guide.id];
-                const isRead = readGuides.includes(guide.id);
-                const hasProgress = readingProgress[guide.id];
-
-                return (
-                  <div 
-                    key={guide.id}
-                    id={`guide-pop-${guide.id}`}
-                    onClick={() => handleOpenGuide(guide)}
-                    className="group cursor-pointer flex flex-col flux-card-terracotta p-4 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 justify-between"
-                  >
-                    <div>
-                      {/* Card Box with Rounded Border */}
-                      <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden bg-stone-100 mb-3 border border-[#F7D3C3]/50 shadow-2xs">
-                        <img
-                          src={guide.image}
-                          alt={guide.badge}
-                          referrerPolicy="no-referrer"
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                        
-                        {/* Top Floating Badges */}
-                        <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 flex-wrap">
-                          {isRead && (
-                            <span className="bg-[#3E6855]/95 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-md border border-[#C5DDD0]/50 shadow-xs flex items-center gap-1">
-                              <Check className="w-2.5 h-2.5 stroke-[3]" />
-                              <span>Leída</span>
-                            </span>
-                          )}
-                          {guide.isDemoContent && (
-                            <span className="bg-[#E87A52]/95 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-md border border-[#F7D3C3]/40 shadow-xs flex items-center gap-1">
-                              <Sparkles className="w-2.5 h-2.5" />
-                              <span>Ejemplo IA</span>
-                            </span>
-                          )}
-                          <span className="bg-white/95 backdrop-blur-xs text-stone-900 text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-stone-200 shadow-xs whitespace-nowrap">
-                            {guide.badge}
-                          </span>
-                        </div>
-
-                        {/* Top Right Action Buttons */}
-                        <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5">
-                          <button
-                            onClick={(e) => handleShareGuide(guide, e)}
-                            className="w-8 h-8 rounded-full bg-white/95 shadow-sm flex items-center justify-center hover:scale-110 text-stone-600 hover:text-stone-900 transition-transform cursor-pointer border border-stone-200/80"
-                            title="Compartir guía"
-                            aria-label="Compartir"
-                          >
-                            <Share2 className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={(e) => toggleFavorite(guide.id, e)}
-                            className="w-8 h-8 rounded-full bg-white/95 shadow-sm flex items-center justify-center hover:scale-110 transition-transform cursor-pointer border border-stone-200/80"
-                            title="Guardar favorito"
-                            aria-label="Guardar favorito"
-                          >
-                            <Heart 
-                              className={`w-4 h-4 transition-colors ${
-                                isFav ? 'text-red-500 fill-red-500' : 'text-stone-400'
-                              }`} 
-                            />
-                          </button>
-                        </div>
-
-                        {hasProgress && !isRead && (
-                          <div className="absolute bottom-2.5 left-2.5 bg-stone-900/80 backdrop-blur-xs text-[#F7D3C3] text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 border border-[#E87A52]/40">
-                            <BookmarkCheck className="w-3 h-3 text-[#E87A52]" />
-                            <span>En progreso</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Subtitle / Description text below card */}
-                      <div>
-                        <div className="flex items-center justify-between text-[11px] font-bold text-[#B54F2C] uppercase tracking-wider mb-1">
-                          <span className="bg-[#FDF4F0] px-2 py-0.5 rounded-md border border-[#F7D3C3]">{guide.category}</span>
-                          <span className="text-stone-500 font-medium lowercase flex items-center gap-1">
-                            <Clock className="w-3 h-3 text-stone-400" />
-                            {guide.readTime}
-                          </span>
-                        </div>
-                        <h3 className="text-sm font-bold text-stone-900 leading-snug line-clamp-2 group-hover:text-[#B54F2C] transition-colors mt-1.5">
-                          {guide.title}
-                        </h3>
-                        <p className="text-xs text-stone-600 mt-1 line-clamp-2 leading-relaxed">
-                          {guide.simpleSummary}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="mt-3 pt-2.5 border-t border-[#F7D3C3]/60 flex items-center justify-between text-[11px]">
-                      <span className="text-stone-500 font-medium">{guide.author.split('•')[0]}</span>
-                      <span className="text-[#B54F2C] font-bold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+                      <span className={`${accentColor} font-bold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform`}>
                         {isRead ? 'Repasar →' : 'Explorar →'}
                       </span>
                     </div>
@@ -1272,7 +1197,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
         )}
 
         {/* SECTION 3: Prácticas al Instante (Micro-ejercicios interactivos en vivo) */}
-        {filteredPractices.length > 0 && (
+        {(activeTab === 'todas' || activeTab === 'practicas') && filteredPractices.length > 0 && (
           <div className="mb-12">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-5 gap-2">
               <div>
@@ -1381,7 +1306,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
         )}
 
         {/* SECTION 4: Videos y podcasts de psicólogos verificados */}
-        {filteredMedia.length > 0 && (
+        {(activeTab === 'todas' || activeTab === 'videos') && filteredMedia.length > 0 && (
           <div className="mb-12">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-5 gap-2">
               <div>
@@ -1478,51 +1403,67 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
         )}
 
         {/* SECTION 5: Tests Psicológicos Orientativos */}
-        <div className="mb-12">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight flex items-center gap-2">
-              <span>Tests y escalas de autoevaluación orientativa:</span>
-            </h2>
-          </div>
+        {(activeTab === 'todas' || activeTab === 'tests') && (
+          <div className="mb-12">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight flex items-center gap-2">
+                <span>Tests y escalas de autoevaluación orientativa:</span>
+              </h2>
+            </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {PSYCHOLOGICAL_TESTS.map((test) => (
-              <div
-                key={test.id}
-                id={`test-card-${test.id}`}
-                className="bg-white rounded-3xl p-5 sm:p-6 border border-stone-200 shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-[10px] font-bold text-[#548c71] bg-emerald-50 px-2.5 py-1 rounded-full uppercase tracking-wider">
-                      {test.category}
-                    </span>
-                    <span className="text-xs font-mono text-stone-500 flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5" />
-                      {test.duration}
-                    </span>
-                  </div>
-                  <h3 className="font-serif text-lg font-bold text-stone-900 mb-1">
-                    {test.title}
-                  </h3>
-                  <p className="text-xs text-stone-600 leading-relaxed mb-4">
-                    {test.shortDesc}
-                  </p>
-                </div>
-
-                <button
-                  onClick={() => {
-                    handleStartTest(test);
-                    recordLearningActivity();
-                  }}
-                  className="w-full bg-[#548c71] hover:bg-[#43705a] text-white py-2.5 rounded-2xl text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {PSYCHOLOGICAL_TESTS.map((test) => (
+                <div
+                  key={test.id}
+                  id={`test-card-${test.id}`}
+                  className="bg-white rounded-3xl p-5 sm:p-6 border border-stone-200 shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
                 >
-                  <span>Iniciar Test ({test.questionsCount} preguntas)</span>
-                </button>
-              </div>
-            ))}
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-[10px] font-bold text-[#548c71] bg-emerald-50 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                        {test.category}
+                      </span>
+                      <span className="text-xs font-mono text-stone-500 flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5" />
+                        {test.duration}
+                      </span>
+                    </div>
+                    <h3 className="font-serif text-lg font-bold text-stone-900 mb-1">
+                      {test.title}
+                    </h3>
+                    <p className="text-xs text-stone-600 leading-relaxed mb-4">
+                      {test.shortDesc}
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      handleStartTest(test);
+                      recordLearningActivity();
+                    }}
+                    className="w-full bg-[#548c71] hover:bg-[#43705a] text-white py-2.5 rounded-2xl text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <span>Iniciar Test ({test.questionsCount} preguntas)</span>
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Fallback Empty State when filters yield 0 */}
+        {totalResultsCount === 0 && (
+          <div className="py-12 max-w-xl mx-auto">
+            <EmptyStat
+              variant="card"
+              icon={BookOpen}
+              title="No se encontraron recursos"
+              description="No hay guías, prácticas ni pruebas que coincidan con tu búsqueda o filtros actuales."
+              actionText="Restablecer filtros"
+              onAction={handleResetFilters}
+            />
+          </div>
+        )}
 
       </div>
 

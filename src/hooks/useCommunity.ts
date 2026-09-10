@@ -75,8 +75,8 @@ export function useCommunity() {
         await syncUserLikes(user.id);
       }
     } catch (err: any) {
-      console.warn('Fallo al conectar con community_posts en Supabase:', err?.message || err);
-      setError('No se pudo conectar en vivo con la comunidad de Supabase. Mostrando publicaciones almacenadas localmente.');
+      console.warn('Fallo al conectar con community_posts remoto:', err?.message || err);
+      setError('No se pudo conectar en tiempo real con la comunidad. Mostrando publicaciones almacenadas localmente.');
       setIsUsingLocalFallback(true);
       // El estado ya contiene el fallback de localStorage o los iniciales
     } finally {

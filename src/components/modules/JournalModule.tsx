@@ -28,6 +28,8 @@ import confetti from 'canvas-confetti';
 import { FluxGlowLogo } from '../common/FluxGlowLogo';
 import { RachaIcon } from '../common/RachaIcon';
 import { MoodIcon } from '../common/MoodIcon';
+import { EmptyStat } from '../common/EmptyStat';
+import { formatFluxDate } from '../../utils/dateUtils';
 import { MoodType, JournalEntry, ViewMode } from '../../types';
 import { useToast } from '../common/Toast';
 import { useJournal } from '../../hooks/useJournal';
@@ -192,9 +194,9 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
         setNoteText('');
 
         if (user) {
-          success('¡Registro sincronizado en Supabase!', 'Tu estado emocional ha sido guardado en tu cuenta privada.');
+          success('¡Registro sincronizado en vivo!', 'Tu estado emocional ha sido guardado en tu cuenta privada.');
         } else {
-          success('¡Registro guardado!', 'Tu estado emocional se guardó en tu navegador (modo exploración).');
+          success('¡Registro guardado!', 'Tu estado emocional se guardó en tu navegador.');
         }
       }
     } catch (err: any) {
@@ -260,29 +262,24 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
             ) : user ? (
               <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-medium text-[#3E6855] bg-[#EBF1EA] border border-[#C5DDD0] px-2.5 py-1 rounded-full shadow-2xs">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#5F927B] animate-pulse"></span>
-                <span>Supabase Conectado</span>
+                <span>🟢 En vivo</span>
               </div>
-            ) : (
-              <div className="hidden sm:flex items-center gap-1.5 text-[11px] font-medium text-[#B54F2C] bg-[#FDF4F0] border border-[#F7D3C3] px-2.5 py-1 rounded-full shadow-2xs" title="Tus registros se guardan en este dispositivo. Inicia sesión para guardarlos en tu nube privada de Supabase.">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#E87A52]"></span>
-                <span>Modo Exploración (Local)</span>
-              </div>
-            )}
+            ) : null}
 
             {onNavigate && (
               <button
                 onClick={() => onNavigate('missions')}
-                className="text-xs font-semibold text-[#B54F2C] bg-[#FDF4F0] hover:bg-[#FDF1EC] border border-[#F7D3C3] px-3.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                className="text-xs font-semibold text-stone-700 hover:text-[#B54F2C] bg-white border border-stone-200 hover:border-[#F7D3C3] px-3.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
               >
                 <img src="/assets/icons/medal.png" alt="Misiones" className="w-3.5 h-3.5 object-contain" />
                 <span>Misiones Diarias</span>
-                <ArrowRight className="w-3 h-3 text-[#E87A52]" />
+                <ArrowRight className="w-3 h-3 text-stone-400 group-hover:text-[#E87A52]" />
               </button>
             )}
 
             <button
               onClick={() => setShowHistory(!showHistory)}
-              className="text-xs font-semibold text-stone-700 hover:text-[#3E6855] bg-white border border-[#C5DDD0] hover:border-[#5F927B] px-3.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-2xs cursor-pointer transition-colors"
+              className="text-xs font-semibold text-stone-700 hover:text-[#3E6855] bg-white border border-stone-200 hover:border-[#5F927B] px-3.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-2xs cursor-pointer transition-colors"
             >
               <img src="/assets/icons/nav-analytics.png" alt="Historial" className="w-3.5 h-3.5 object-contain" />
               <span>{showHistory ? 'Ocultar Historial' : `Historial (${entries.length})`}</span>
@@ -361,13 +358,13 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
         {/* STATE A: ACTIVE FORM (Visible before sending) */}
         {!isSubmitted ? (
           <>
-            {/* Main Controls Row: [Diario personal] [¿Cómo te sientes hoy? Enojado, Triste, Inquieto, Tranquilo, Feliz] [Enviar] */}
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
+            {/* Main Controls Row: [Diario personal] [¿Cómo te sientes hoy? Enojado, Triste, Inquieto, Tranquilo, Feliz] */}
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-5">
               
               {/* Left Pill: Diario personal */}
               <div
                 id="personal-journal-btn"
-                className="bg-[#5F927B] text-white px-7 py-2.5 rounded-full text-sm sm:text-base font-bold tracking-wide shadow-xs flex items-center gap-2.5 whitespace-nowrap"
+                className="bg-[#5F927B] text-white px-7 py-2.5 rounded-full text-sm font-bold tracking-wide shadow-xs flex items-center gap-2.5 whitespace-nowrap self-start md:self-auto"
               >
                 <img src="/assets/icons/nav-journal.png" alt="Diario" className="w-4 h-4 object-contain brightness-0 invert" />
                 <span>Diario personal</span>
@@ -406,52 +403,61 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
                   })}
                 </div>
               </div>
+            </div>
 
-              {/* Right Pill: Enviar (Terracotta Action Button) */}
-              <button
-                id="submit-journal-btn"
-                onClick={() => handleSubmit()}
-                disabled={isSubmitting}
-                className={`bg-[#E87A52] hover:bg-[#D4653E] active:scale-95 text-white px-8 py-2.5 rounded-full text-sm sm:text-base font-bold tracking-wide shadow-xs hover:shadow-md transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
-                  isSubmitting ? 'opacity-80 cursor-not-allowed' : ''
-                }`}
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Guardando...</span>
-                  </>
-                ) : (
-                  <>
-                    <img src="/assets/icons/send.png" alt="Enviar" className="w-4 h-4 object-contain brightness-0 invert" />
-                    <span>Enviar</span>
-                  </>
-                )}
-              </button>
+            {/* Dedicated Block: Selector de Intensidad Emocional */}
+            <div className="bg-white rounded-2xl border border-stone-200/90 p-4 sm:p-5 mb-5 shadow-2xs">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                <div className="flex items-center gap-2">
+                  <Sliders className="w-4 h-4 text-[#5F927B]" />
+                  <h4 className="text-xs sm:text-sm font-bold text-stone-800">
+                    Nivel de Intensidad Emocional
+                  </h4>
+                  <span className="text-[10px] text-stone-500 font-medium hidden sm:inline">
+                    (¿Con qué fuerza experimentas esta emoción hoy?)
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full border ${
+                    intensity <= 3
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : intensity <= 7
+                      ? 'bg-amber-50 text-amber-700 border-amber-200'
+                      : 'bg-rose-50 text-rose-700 border-rose-200'
+                  }`}>
+                    {intensity <= 3 ? 'Leve' : intensity <= 7 ? 'Moderado' : 'Intenso'} • {intensity}/10
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={intensity}
+                  onChange={(e) => setIntensity(Number(e.target.value))}
+                  className="w-full accent-[#5F927B] cursor-pointer h-2 bg-stone-100 rounded-lg"
+                  aria-label="Selector de intensidad emocional del 1 al 10"
+                />
+                <div className="flex justify-between text-[11px] font-medium text-stone-400 px-1">
+                  <span>1 - Suave</span>
+                  <span>5 - Notorio</span>
+                  <span>10 - Desbordante</span>
+                </div>
+              </div>
             </div>
 
             {/* Big White Card Box with Textarea and Tools */}
-            <div className="flux-card-sage p-6 sm:p-8 mb-10">
+            <div className="flux-card-sage p-6 sm:p-8 mb-6">
               <div className="flex items-center justify-between pb-3.5 border-b border-[#C5DDD0]/70 mb-4">
                 <span className="text-xs font-bold text-[#3E6855] uppercase tracking-wider flex items-center gap-1.5">
                   <Lock className="w-3.5 h-3.5 text-[#5F927B]" />
                   Espacio privado y seguro de desahogo
                 </span>
-
-                <div className="flex items-center gap-3">
-                  <span className="text-xs text-stone-600 font-medium">
-                    Intensidad emocional: <strong className="text-[#3E6855] font-bold">{intensity}/10</strong>
-                  </span>
-                  <input
-                    type="range"
-                    min="1"
-                    max="10"
-                    value={intensity}
-                    onChange={(e) => setIntensity(Number(e.target.value))}
-                    className="w-24 accent-[#5F927B] cursor-pointer"
-                    aria-label="Selector de intensidad emocional del 1 al 10"
-                  />
-                </div>
+                <span className="text-xs text-stone-400">
+                  {noteText.length} caracteres
+                </span>
               </div>
 
               <textarea
@@ -514,6 +520,46 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
                   </button>
                 </div>
 
+              </div>
+            </div>
+
+            {/* Primary Action Button at End of Form */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-10 pt-2">
+              <p className="text-xs text-stone-500 text-center sm:text-left">
+                Tu registro quedará guardado de manera privada e impulsará tu racha de bienestar.
+              </p>
+
+              <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+                {noteText.trim().length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setNoteText('')}
+                    className="text-xs font-medium text-stone-500 hover:text-stone-700 px-3 py-2 rounded-xl transition-colors cursor-pointer"
+                  >
+                    Limpiar
+                  </button>
+                )}
+
+                <button
+                  id="submit-journal-btn"
+                  onClick={() => handleSubmit()}
+                  disabled={isSubmitting}
+                  className={`w-full sm:w-auto bg-[#E87A52] hover:bg-[#D4653E] active:scale-98 text-white px-8 py-3 rounded-full text-sm font-bold tracking-wide shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer ${
+                    isSubmitting ? 'opacity-80 cursor-not-allowed' : ''
+                  }`}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Guardando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <img src="/assets/icons/send.png" alt="Enviar" className="w-4 h-4 object-contain brightness-0 invert" />
+                      <span>Guardar en mi Diario</span>
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           </>
@@ -614,20 +660,17 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
             {isJournalLoading ? (
               <div className="bg-white rounded-3xl p-10 border border-stone-200 text-center space-y-3">
                 <Loader2 className="w-8 h-8 text-[#548c71] animate-spin mx-auto" />
-                <h3 className="text-sm font-bold text-stone-800">Sincronizando tus reflexiones con Supabase...</h3>
+                <h3 className="text-sm font-bold text-stone-800">Sincronizando tus reflexiones en tiempo real...</h3>
                 <p className="text-xs text-stone-500">Recuperando tu historial emocional privado y seguro</p>
               </div>
             ) : entries.length === 0 ? (
-              <div className="bg-white rounded-3xl p-8 border border-stone-200 text-center space-y-2">
-                <div className="w-12 h-12 rounded-2xl bg-brand-sand-100 text-stone-400 mx-auto flex items-center justify-center">
-                  <BookOpen className="w-6 h-6" />
-                </div>
-                <h3 className="text-sm font-bold text-stone-800">Aún no tienes reflexiones guardadas</h3>
-                <p className="text-xs text-stone-500 max-w-sm mx-auto">
-                  {user
-                    ? 'No encontramos registros anteriores en tu cuenta de Supabase. ¡Escribe tu primer registro arriba!'
-                    : 'Utiliza el formulario de arriba para registrar tu primera emoción o reflexión del día.'}
-                </p>
+              <div className="py-6 max-w-lg mx-auto">
+                <EmptyStat
+                  variant="card"
+                  icon={BookOpen}
+                  title="Aún no tienes reflexiones guardadas"
+                  description="Utiliza el formulario superior para registrar tu primera emoción o reflexión consciente del día."
+                />
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -652,7 +695,7 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
                         </div>
 
                         <div className="flex items-center gap-2 text-xs text-stone-400">
-                          <span className="text-[11px] font-medium text-stone-500">{entry.date}</span>
+                          <span className="text-[11px] font-medium text-stone-500">{formatFluxDate(entry.date)}</span>
                           <button 
                             onClick={() => handleDeleteEntry(entry.id)}
                             className="text-stone-300 hover:text-red-500 transition-colors cursor-pointer p-1"

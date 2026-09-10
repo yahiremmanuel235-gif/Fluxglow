@@ -38,6 +38,8 @@ import { RachaIcon } from '../common/RachaIcon';
 import { MoodIcon } from '../common/MoodIcon';
 import { useToast } from '../common/Toast';
 import { Button } from '../common/Button';
+import { EmptyStat } from '../common/EmptyStat';
+import { formatFluxDate } from '../../utils/dateUtils';
 import { 
   getStoredMissions, 
   completeDailyMission, 
@@ -481,9 +483,16 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
 
   const activeTriggerData = triggerCorrelations.find(t => t.rawTag === selectedTrigger) || triggerCorrelations[0];
 
+  const currentPeriodText = useMemo(() => {
+    const now = new Date();
+    const month = now.toLocaleDateString('es-ES', { month: 'long' });
+    const capitalized = month.charAt(0).toUpperCase() + month.slice(1);
+    return `${capitalized} ${now.getFullYear()}`;
+  }, []);
+
   const handleCopyReport = () => {
     const report = `📊 INFORME DE BIENESTAR FLUXGLOW
-Periodo: Junio 2026
+Periodo: ${currentPeriodText}
 ---------------------------------
 🌱 Racha de Hábitos: ${streakDays} días continuos
 🎯 Misiones Completadas: ${completedMissionsCount}
@@ -520,7 +529,7 @@ Generado con FluxGlow • Cuidado emocional consciente`;
           <div className="flex items-center gap-2">
             <div className="text-xs font-semibold text-stone-700 bg-white border border-[#C5DDD0] px-3.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-2xs">
               <Calendar className="w-3.5 h-3.5 text-[#5F927B]" />
-              <span>Periodo: Junio 2026</span>
+              <span>Periodo: {currentPeriodText}</span>
             </div>
 
             <Button
@@ -613,7 +622,17 @@ Generado con FluxGlow • Cuidado emocional consciente`;
           </div>
 
           {/* Interactive Tag Chips or Empty State */}
-          {triggerCorrelations.length === 0 ? (
+          {journalEntries.length < 5 ? (
+            <div className="my-4">
+              <EmptyStat 
+                variant="card"
+                title="Correlaciones en calibración"
+                description={`Se requieren al menos 5 registros en tu Diario para calcular correlaciones estadísticas entre factores detonantes y tu estado de ánimo (${journalEntries.length} de 5 registrados actualmente).`}
+                actionText={onNavigate ? "Escribir en el Diario" : undefined}
+                onAction={onNavigate ? () => onNavigate('journal') : undefined}
+              />
+            </div>
+          ) : triggerCorrelations.length === 0 ? (
             <div className="p-8 text-center bg-brand-sand-50 rounded-2xl border border-brand-sand-300 my-4 space-y-2">
               <div className="w-10 h-10 rounded-xl bg-brand-sand-100 text-stone-400 mx-auto flex items-center justify-center">
                 <Tag className="w-5 h-5" />
@@ -815,13 +834,13 @@ Generado con FluxGlow • Cuidado emocional consciente`;
           </div>
 
           {/* CARD 2 (RIGHT): Evolución Emocional across 5 colored bands */}
-          <div className="bg-white rounded-3xl border border-brand-sand-300 shadow-2xs p-6 sm:p-8 flex flex-col justify-between">
+          <div className="flux-card-terracotta p-6 sm:p-8 flex flex-col justify-between">
             <div>
-              <div className="flex items-center justify-between pb-4 border-b border-brand-sand-200 mb-3">
+              <div className="flex items-center justify-between pb-4 border-b border-[#F7D3C3]/70 mb-3">
                 <h2 className="text-xl sm:text-2xl font-bold text-stone-900 tracking-tight font-serif">
                   Evolución Emocional
                 </h2>
-                <span className="text-xs text-stone-600 font-semibold bg-brand-sand-100 px-2.5 py-1 rounded-full border border-brand-sand-300">
+                <span className="text-xs text-stone-600 font-semibold bg-white px-2.5 py-1 rounded-full border border-[#F7D3C3] shadow-2xs">
                   Mes en curso
                 </span>
               </div>
@@ -891,7 +910,7 @@ Generado con FluxGlow • Cuidado emocional consciente`;
                               const data = payload[0].payload;
                               return (
                                 <div className="bg-stone-900 text-white p-2.5 rounded-xl shadow-lg text-xs space-y-1">
-                                  <p className="font-bold text-amber-400">Día {data.day} ({data.date})</p>
+                                  <p className="font-bold text-amber-400">Día {data.day} ({formatFluxDate(data.date)})</p>
                                   <p className="text-white">Estado: <strong>{data.mood}</strong></p>
                                   <p className="text-stone-300 text-[11px]">"{data.note}"</p>
                                 </div>
@@ -931,8 +950,8 @@ Generado con FluxGlow • Cuidado emocional consciente`;
         </div>
 
         {/* SECTION 3: Tarjeta de Pronóstico Emocional Inteligente (Connected to Period State) */}
-        <div className="bg-white rounded-3xl border border-brand-sand-300 shadow-2xs p-6 sm:p-8">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-brand-sand-200">
+        <div className="flux-card-dual p-6 sm:p-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#C5DDD0]/70">
             <div>
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-brand-sage-500"></span>
@@ -1023,151 +1042,31 @@ Generado con FluxGlow • Cuidado emocional consciente`;
           </div>
         </div>
 
-        {/* SECTION 4: Mis Misiones Diarias */}
-        <div className="mt-8 bg-brand-sand-100/70 rounded-3xl border border-brand-sand-300 shadow-2xs p-6 sm:p-8">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-brand-sand-300">
+        {/* SECTION 4: Mis Misiones Diarias (Enlace Compacto) */}
+        <div className="mt-8 flux-card-terracotta p-6 sm:p-7 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-2xl bg-white border border-[#F7D3C3] flex items-center justify-center shrink-0 shadow-2xs">
+              <RachaIcon className="w-6 h-6" />
+            </div>
             <div>
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-brand-terracotta-50 border border-brand-terracotta-200/70 flex items-center justify-center p-1 shadow-2xs">
-                  <RachaIcon className="w-5 h-5" />
-                </div>
-                <div>
-                  <h2 className="text-xl sm:text-2xl font-bold text-stone-900 font-serif">
-                    Mis Misiones Diarias
-                  </h2>
-                  <p className="text-xs sm:text-sm text-stone-600 mt-0.5">
-                    Retos prácticos completados a partir de tus guías de Explora y Aprende.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Streak & Achievements Counter */}
-            <div className="flex items-center gap-3 flex-wrap">
-              <div className="bg-white px-4 py-2 rounded-2xl border border-brand-sand-300 shadow-2xs flex items-center gap-2.5">
-                <RachaIcon className="w-6 h-6 shrink-0" />
-                <div>
-                  <div className="text-xs font-extrabold text-stone-900 flex items-center gap-1">
-                    <RachaIcon className="w-3.5 h-3.5" />
-                    <span>{streakDays} {streakDays === 1 ? 'día seguido' : 'días seguidos'}</span>
-                  </div>
-                  <span className="text-[10px] text-stone-500 font-medium">
-                    Racha activa de hábitos
-                  </span>
-                </div>
-              </div>
-
-              <div className="bg-white px-4 py-2 rounded-2xl border border-brand-sand-300 shadow-2xs flex items-center gap-2">
-                <Award className="w-5 h-5 text-brand-sage-600" />
-                <div>
-                  <div className="text-xs font-extrabold text-stone-900">
-                    {completedMissionsCount} completadas
-                  </div>
-                  <span className="text-[10px] text-stone-500 font-medium">
-                    +{completedMissionsCount * 30} XP acumulados
-                  </span>
-                </div>
-              </div>
+              <h2 className="text-lg sm:text-xl font-bold text-stone-900 font-serif">
+                Mis Misiones y Hábitos Diarios
+              </h2>
+              <p className="text-xs text-stone-600 mt-0.5">
+                {completedMissionsCount} retos completados • Racha activa: {streakDays} {streakDays === 1 ? 'día consecutivo' : 'días consecutivos'} • +{completedMissionsCount * 30} XP acumulados
+              </p>
             </div>
           </div>
 
-          {/* Filter Tabs & CTA */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-5 pb-4">
-            <div className="flex items-center gap-2">
-              {(['all', 'pending', 'completed'] as const).map((filter) => {
-                const label = filter === 'all' 
-                  ? `Todas (${missions.length})` 
-                  : filter === 'pending' 
-                    ? `Pendientes (${missions.filter(m => m.status === 'pending').length})` 
-                    : `Completadas (${missions.filter(m => m.status === 'completed').length})`;
-                const isActive = missionFilter === filter;
-                return (
-                  <button
-                    key={filter}
-                    onClick={() => setMissionFilter(filter)}
-                    className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                      isActive 
-                        ? 'bg-brand-sage-600 text-white shadow-2xs' 
-                        : 'bg-white text-stone-600 hover:bg-brand-sand-200 border border-brand-sand-300'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
-
-            {onNavigate && (
-              <Button
-                onClick={() => onNavigate('missions')}
-                variant="primary"
-                size="sm"
-                rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
-              >
-                Ver Panel de Misiones
-              </Button>
-            )}
-          </div>
-
-          {/* Missions List Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-2">
-            {filteredMissions.map((item) => {
-              const isDone = item.status === 'completed';
-              const guideTitle = item.guideTitle || (item as any).mission?.guideTitle || 'Misión Práctica';
-              const xpVal = item.xp || (item as any).mission?.xp || 30;
-              const missionTitle = item.title || (item as any).mission?.title || 'Misión diaria';
-              const missionDesc = item.description || (item as any).mission?.description || '';
-              const timeEst = item.timeEstimate || ((item as any).mission?.durationMinutes ? `${(item as any).mission.durationMinutes} min` : '5 min');
-
-              return (
-                <div
-                  key={item.id}
-                  className={`p-4 rounded-2xl border transition-all ${
-                    isDone 
-                      ? 'bg-white/90 border-brand-sage-300 shadow-2xs opacity-90' 
-                      : 'bg-white border-brand-sand-300 shadow-xs hover:border-brand-sage-400'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-brand-sage-700 bg-brand-sage-50 px-2 py-0.5 rounded-full border border-brand-sage-200">
-                      {guideTitle}
-                    </span>
-                    <span className="text-xs font-black text-brand-terracotta-600">
-                      +{xpVal} XP
-                    </span>
-                  </div>
-
-                  <h3 className="text-sm font-bold text-stone-900 mb-1">
-                    {missionTitle}
-                  </h3>
-                  <p className="text-xs text-stone-600 mb-3 leading-relaxed">
-                    {missionDesc}
-                  </p>
-
-                  <div className="flex items-center justify-between pt-2 border-t border-brand-sand-200">
-                    <span className="text-[11px] text-stone-500 font-medium">
-                      ⏱️ {timeEst}
-                    </span>
-
-                    {isDone ? (
-                      <span className="text-xs font-bold text-brand-sage-700 flex items-center gap-1">
-                        <CheckCircle2 className="w-4 h-4 text-brand-sage-600" />
-                        Completada
-                      </span>
-                    ) : (
-                      <Button
-                        onClick={() => handleCompleteMission(item.id)}
-                        variant="sage"
-                        size="xs"
-                      >
-                        Completar
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          {onNavigate && (
+            <button
+              onClick={() => onNavigate('missions')}
+              className="w-full sm:w-auto px-5 py-2.5 rounded-2xl bg-[#E87A52] hover:bg-[#D4653E] text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-2 shrink-0 cursor-pointer"
+            >
+              <span>Ver y gestionar misiones</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          )}
         </div>
 
       </div>

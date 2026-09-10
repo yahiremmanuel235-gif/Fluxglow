@@ -34,6 +34,8 @@ import { useJournal } from '../../hooks/useJournal';
 import { useMissions } from '../../hooks/useMissions';
 import { useToast } from '../common/Toast';
 import { AuthModals } from '../common/AuthModals';
+import { EmptyStat } from '../common/EmptyStat';
+import { formatFluxDate } from '../../utils/dateUtils';
 
 interface DashboardModuleProps {
   onNavigate: (view: ViewMode) => void;
@@ -223,13 +225,14 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
     return 'Buenas noches';
   }, []);
 
+  const [isModulesCollapsed, setIsModulesCollapsed] = useState<boolean>(false);
   const userName = userProfile?.name || user?.user_metadata?.name || 'Explorador';
 
   return (
     <div className="w-full bg-flux-brand-bath min-h-screen pb-24 pt-4 px-4 sm:px-6 lg:px-8 text-stone-800">
       <div className="max-w-[1280px] mx-auto space-y-6">
 
-        {/* 1. TOP BAR HEADER: Marca, Estado de Conexión y Accesos directos */}
+        {/* 1. TOP BAR HEADER: Marca y Accesos directos */}
         <div className="flex flex-wrap items-center justify-between gap-3 py-2 border-b border-[#5F927B]/20">
           <div className="flex items-center gap-2">
             <FluxGlowLogo size="xs" showText={true} />
@@ -240,28 +243,13 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Estado de sincronización en tiempo real */}
+            {/* Indicador sutil de sincronización solo si está cargando */}
             {authLoading || isJournalLoading || isMissionsLoading ? (
               <div className="flex items-center gap-1.5 text-[11px] font-medium text-stone-600 bg-white border border-stone-200 px-2.5 py-1 rounded-full shadow-2xs">
                 <Loader2 className="w-3 h-3 animate-spin text-[#5F927B]" />
                 <span className="hidden sm:inline">Sincronizando...</span>
               </div>
-            ) : user && (isJournalFallback || isMissionsFallback) ? (
-              <div className="flex items-center gap-1.5 text-[11px] font-medium text-amber-900 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full shadow-2xs" title="Mostrando copia local por interrupción de conexión">
-                <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
-                <span>Respaldo Local (Offline)</span>
-              </div>
-            ) : user ? (
-              <div className="flex items-center gap-1.5 text-[11px] font-medium text-[#3E6855] bg-[#EBF1EA] border border-[#C5DDD0] px-2.5 py-1 rounded-full shadow-2xs">
-                <span className="w-2 h-2 rounded-full bg-[#5F927B] animate-pulse"></span>
-                <span>Supabase Conectado</span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-1.5 text-[11px] font-medium text-[#B54F2C] bg-[#FDF4F0] border border-[#F7D3C3] px-2.5 py-1 rounded-full shadow-2xs">
-                <span className="w-2 h-2 rounded-full bg-[#E87A52]"></span>
-                <span>Modo Exploración (Local)</span>
-              </div>
-            )}
+            ) : null}
 
             {/* Recargar datos */}
             <button
@@ -284,13 +272,13 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
               </div>
               <div>
                 <h4 className="text-xs sm:text-sm font-bold text-stone-900 flex items-center gap-1.5">
-                  <span>Modo Exploración Activo</span>
+                  <span>Guardado en este navegador</span>
                   <span className="text-[10px] bg-[#E87A52] text-white px-2 py-0.5 rounded-full font-extrabold uppercase shadow-2xs">
-                    Sin Cuenta
+                    Local
                   </span>
                 </h4>
                 <p className="text-xs text-stone-600 mt-0.5 max-w-2xl leading-relaxed">
-                  Tus misiones y reflexiones se están guardando localmente en este navegador. Crea una cuenta gratuita para sincronizar tus logros en Supabase y acceder desde cualquier dispositivo.
+                  Guardado en este navegador — Crea una cuenta para sincronizar en la nube y acceder desde cualquier dispositivo.
                 </p>
               </div>
             </div>
@@ -335,7 +323,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
                 </span>
                 {latestEntry && (
                   <span className="text-xs text-stone-500 font-medium">
-                    • Último registro: {latestEntry.date}
+                    • Último registro: {formatFluxDate(latestEntry.date)}
                   </span>
                 )}
               </div>
@@ -423,14 +411,18 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
               </div>
             </div>
             <div>
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-3xl sm:text-4xl font-bold text-[#253D33] font-serif">
-                  {completedMissions.length}
-                </span>
-                <span className="text-xs font-semibold text-stone-600">
-                  de {missions.length} retos
-                </span>
-              </div>
+              {completedMissions.length === 0 ? (
+                <EmptyStat inlineMessage="0 de 8 retos — ¡Empieza el primero!" className="mb-2" />
+              ) : (
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-3xl sm:text-4xl font-bold text-[#253D33] font-serif">
+                    {completedMissions.length}
+                  </span>
+                  <span className="text-xs font-semibold text-stone-600">
+                    de {missions.length} retos
+                  </span>
+                </div>
+              )}
               {/* Progress bar */}
               <div className="w-full bg-[#EBF1EA] rounded-full h-2.5 mt-2.5 overflow-hidden border border-[#C5DDD0]/70">
                 <div 
@@ -479,28 +471,32 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
             </div>
           </div>
 
-          {/* Tarjeta 4: Racha Activa (Terracotta Orange Theme) */}
+          {/* Tarjeta 4: Racha General de Bienestar (Terracotta Orange Theme) */}
           <div 
             onClick={() => onNavigate('missions')}
             className="flux-card-terracotta p-4 sm:p-5 cursor-pointer group flex flex-col justify-between"
           >
             <div className="flex items-center justify-between mb-3">
               <span className="text-[11px] font-bold uppercase tracking-wider text-[#B54F2C] truncate">
-                Racha Activa
+                Racha General de Bienestar
               </span>
               <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-2xl bg-white border border-[#F7D3C3] flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform shadow-2xs">
                 <img src="/assets/badges/badge-streak.png" alt="Racha" className="w-5 h-5 object-contain" />
               </div>
             </div>
             <div>
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-3xl sm:text-4xl font-bold text-[#873418] font-serif">
-                  {streakDays}
-                </span>
-                <span className="text-xs font-semibold text-[#B54F2C]">
-                  {streakDays === 1 ? 'día consecutivo' : 'días consecutivos'}
-                </span>
-              </div>
+              {streakDays === 0 ? (
+                <EmptyStat inlineMessage="Aún sin racha — ¡Tu primer día cuenta!" className="mb-2" />
+              ) : (
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-3xl sm:text-4xl font-bold text-[#873418] font-serif">
+                    {streakDays}
+                  </span>
+                  <span className="text-xs font-semibold text-[#B54F2C]">
+                    {streakDays === 1 ? 'día consecutivo' : 'días consecutivos'}
+                  </span>
+                </div>
+              )}
               <div className="mt-2.5 pt-2 border-t border-[#F7D3C3]/50 flex items-center justify-between text-[11px] font-semibold text-[#B54F2C]">
                 <span>Constancia Diaria</span>
                 <ChevronRight className="w-3.5 h-3.5 text-[#E87A52] group-hover:translate-x-1 transition-transform" />
@@ -675,7 +671,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
 
             <div className="mt-5 pt-3.5 border-t border-[#F7D3C3]/50 flex items-center justify-between text-xs">
               <span className="text-stone-500 text-[11px]">
-                Sincronización activa con {user ? 'Supabase' : 'almacenamiento local'}
+                {user ? 'Sincronizado en tu cuenta privada en la nube' : 'Guardado en este navegador — Crea una cuenta para sincronizar en la nube'}
               </span>
               <button
                 onClick={() => onNavigate('missions')}
@@ -728,7 +724,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
                     </div>
                     <span className="text-[11px] text-stone-500 font-medium flex items-center gap-1">
                       <Clock className="w-3 h-3 text-stone-400" />
-                      <span>{latestEntry.date} {latestEntry.time || ''}</span>
+                      <span>{formatFluxDate(latestEntry.date)} {latestEntry.time || ''}</span>
                     </span>
                   </div>
 
@@ -792,12 +788,24 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
               <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-[#5F927B] to-[#E87A52]" />
               <span>Explora los 8 Módulos de FluxGlow</span>
             </h3>
-            <span className="text-[11px] font-bold text-[#3E6855] bg-[#EBF1EA] px-2.5 py-0.5 rounded-full border border-[#C5DDD0]">
-              Ecosistema Integral
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-bold text-[#3E6855] bg-[#EBF1EA] px-2.5 py-0.5 rounded-full border border-[#C5DDD0] hidden sm:inline-block">
+                Ecosistema Integral
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsModulesCollapsed(!isModulesCollapsed)}
+                title={isModulesCollapsed ? "Mostrar módulos" : "Ocultar módulos"}
+                className="px-2.5 py-1 text-xs font-semibold text-stone-600 hover:text-stone-900 bg-white hover:bg-stone-50 border border-stone-200 rounded-lg transition-colors cursor-pointer flex items-center gap-1 shadow-2xs"
+              >
+                <span>{isModulesCollapsed ? 'Mostrar' : 'Ocultar'}</span>
+                <ChevronRight className={`w-3.5 h-3.5 transition-transform ${isModulesCollapsed ? '' : 'rotate-90'}`} />
+              </button>
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+          {!isModulesCollapsed && (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
             <button
               onClick={() => onNavigate('learn')}
               className="p-4 rounded-2xl bg-white hover:bg-[#F2F7F4] border-2 border-[#5F927B]/25 hover:border-[#5F927B] transition-all text-left group cursor-pointer shadow-2xs hover:shadow-xs hover:-translate-y-0.5"
@@ -886,6 +894,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
               <p className="text-[10px] text-stone-500 mt-0.5">Métricas personales</p>
             </button>
           </div>
+          )}
         </div>
 
       </div>

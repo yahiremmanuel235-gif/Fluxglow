@@ -54,6 +54,8 @@ import confetti from 'canvas-confetti';
 import { UserProfileData, ViewMode, JournalEntry } from '../../types';
 import { useToast } from '../common/Toast';
 import { Button } from '../common/Button';
+import { EmptyStat } from '../common/EmptyStat';
+import { formatFluxDate } from '../../utils/dateUtils';
 import { getStoredMissions, calculateMissionStreak, getTotalMissionsXP } from '../../utils/missionsManager';
 import { MOCK_JOURNAL_ENTRIES } from '../../data/mockData';
 
@@ -238,7 +240,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
 
   // Recent entries dynamically derived from journal
   const recentTableEntries = journalEntries.slice(0, 4).map(e => ({
-    date: e.date,
+    date: formatFluxDate(e.date),
     mood: e.mood.charAt(0).toUpperCase() + e.mood.slice(1),
     intensity: `${e.intensity}/10`
   }));
@@ -303,7 +305,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
       type: 'journal',
       title: `Registro en Diario: ${e.mood.toUpperCase()} (${e.intensity}/10)`,
       desc: e.notes ? (e.notes.length > 70 ? e.notes.slice(0, 70) + '...' : e.notes) : 'Reflexión registrada',
-      date: `${e.date} • ${e.time || 'Registro reciente'}`,
+      date: `${formatFluxDate(e.date)} • ${e.time || 'Registro reciente'}`,
       icon: '✍️',
       color: 'bg-brand-sage-100 text-brand-sage-700 border-brand-sage-300'
     })),
@@ -312,7 +314,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
       type: 'mission',
       title: `Misión completada: ${m.title}`,
       desc: `+${m.xp || 30} XP sumados a tu progreso`,
-      date: m.completedAt ? new Date(m.completedAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : 'Completado',
+      date: m.completedAt ? formatFluxDate(m.completedAt) : 'Completado',
       icon: '🎯',
       color: 'bg-brand-terracotta-100 text-brand-terracotta-700 border-brand-terracotta-300'
     }))
@@ -345,7 +347,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
             {onNavigate && (
               <Button
                 onClick={() => onNavigate('learn')}
-                variant="sand"
+                variant="outline"
                 size="sm"
                 leftIcon={<BookOpen className="w-3.5 h-3.5 text-[#5F927B]" />}
               >
@@ -367,7 +369,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
               <Button
                 id="profile-signout-btn"
                 onClick={onSignOut}
-                variant="sand"
+                variant="outline"
                 size="sm"
                 leftIcon={<LogOut className="w-3.5 h-3.5 text-stone-500" />}
                 className="hover:text-red-700 hover:border-red-300"
@@ -568,26 +570,25 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
                 </button>
               </div>
 
-              {/* Checkbox items */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Interactive Chips for Objectives */}
+              <div className="flex flex-wrap gap-2.5">
                 {objectives.map((obj) => (
                   <button
                     key={obj.id}
+                    type="button"
                     onClick={() => toggleObjective(obj.id)}
-                    className={`flex items-center gap-3 p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                    className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-xs sm:text-sm font-medium transition-all cursor-pointer border ${
                       obj.checked 
-                        ? 'bg-brand-sage-100 border-brand-sage-400 shadow-2xs' 
-                        : 'bg-brand-sand-50 border-brand-sand-200 hover:bg-brand-sand-100'
+                        ? 'bg-[#EBF1EA] text-[#3E6855] border-[#5F927B] shadow-2xs font-semibold' 
+                        : 'bg-white text-stone-600 border-stone-200 hover:border-stone-300 hover:bg-[#FBF9F5]'
                     }`}
                   >
-                    {obj.checked ? (
-                      <CheckSquare className="w-5 h-5 text-brand-sage-700 shrink-0" />
-                    ) : (
-                      <Square className="w-5 h-5 text-stone-400 shrink-0" />
-                    )}
-                    <span className="text-xs sm:text-sm font-semibold text-stone-800">
-                      {obj.label}
+                    <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] transition-colors ${
+                      obj.checked ? 'bg-[#5F927B] text-white' : 'border border-stone-300 text-transparent'
+                    }`}>
+                      {obj.checked ? '✓' : ''}
                     </span>
+                    <span>{obj.label}</span>
                   </button>
                 ))}
               </div>
@@ -600,12 +601,15 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
               </h2>
 
               {recentTableEntries.length === 0 ? (
-                <div className="py-8 px-4 text-center bg-brand-sand-50 rounded-2xl border border-brand-sand-200 space-y-1">
-                  <Smile className="w-6 h-6 text-stone-400 mx-auto mb-1" />
-                  <p className="text-xs font-bold text-stone-700">Sin registros emocionales recientes</p>
-                  <p className="text-[11px] text-stone-500 max-w-sm mx-auto">
-                    Guarda tu primera entrada en el Diario Emocional para ver aquí tu histórico y gráfica de intensidad.
-                  </p>
+                <div className="py-4">
+                  <EmptyStat
+                    variant="card"
+                    icon={Smile}
+                    title="Sin registros emocionales recientes"
+                    description="Guarda tu primera entrada en el Diario Emocional para ver aquí tu histórico y gráfica de intensidad."
+                    actionText={onNavigate ? "Ir al Diario Emocional" : undefined}
+                    onAction={onNavigate ? () => onNavigate('journal') : undefined}
+                  />
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
@@ -632,27 +636,47 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
                     </table>
                   </div>
 
-                  {/* Right: Line Chart */}
-                  <div className="h-44 w-full bg-brand-sand-50 rounded-2xl p-3 border border-brand-sand-300">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={chartData}>
-                        <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#78716c' }} />
-                        <YAxis domain={[0, 10]} ticks={[0, 2, 4, 6, 8, 10]} tick={{ fontSize: 10, fill: '#78716c' }} />
-                        <Tooltip 
-                          formatter={(val: any) => [`${val}/10`, 'Intensidad']}
-                          contentStyle={{ borderRadius: 12, fontSize: 11, border: '1px solid #e7e5e4' }}
+                  {/* Right: Line Chart or Single Entry Gauge */}
+                  {chartData.length === 1 ? (
+                    <div className="h-44 w-full bg-[#FBF9F5] rounded-2xl p-4 border border-stone-200 flex flex-col justify-center items-center text-center space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-stone-500 uppercase tracking-wider">Primer registro</span>
+                        <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-[#EBF1EA] text-[#3E6855] border border-[#C5DDD0]">
+                          Intensidad: {chartData[0].intensidad}/10
+                        </span>
+                      </div>
+                      <div className="w-full max-w-xs bg-stone-200 rounded-full h-3 overflow-hidden">
+                        <div 
+                          className="bg-[#5F927B] h-full rounded-full transition-all duration-500"
+                          style={{ width: `${(chartData[0].intensidad / 10) * 100}%` }}
                         />
-                        <Line 
-                          type="monotone" 
-                          dataKey="intensidad" 
-                          stroke="#548c71" 
-                          strokeWidth={3} 
-                          dot={{ r: 4, fill: '#548c71' }} 
-                          activeDot={{ r: 6 }} 
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
+                      </div>
+                      <p className="text-[11px] text-stone-500 max-w-xs leading-snug">
+                        ¡Excelente comienzo! Registra tu siguiente entrada en el Diario para trazar tu curva emocional completa.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="h-44 w-full bg-brand-sand-50 rounded-2xl p-3 border border-brand-sand-300">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={chartData}>
+                          <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#78716c' }} />
+                          <YAxis domain={[0, 10]} ticks={[0, 2, 4, 6, 8, 10]} tick={{ fontSize: 10, fill: '#78716c' }} />
+                          <Tooltip 
+                            formatter={(val: any) => [`${val}/10`, 'Intensidad']}
+                            contentStyle={{ borderRadius: 12, fontSize: 11, border: '1px solid #e7e5e4' }}
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="intensidad" 
+                            stroke="#548c71" 
+                            strokeWidth={3} 
+                            dot={{ r: 4, fill: '#548c71' }} 
+                            activeDot={{ r: 6 }} 
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
 
                 </div>
               )}
@@ -669,7 +693,14 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
               </div>
 
               {timelineActivities.length === 0 ? (
-                <p className="text-xs text-stone-500 text-center py-6">Aún no hay actividades registradas.</p>
+                <div className="py-4">
+                  <EmptyStat
+                    variant="card"
+                    icon={Activity}
+                    title="Aún no hay actividades registradas"
+                    description="Tus reflexiones del diario y misiones completadas aparecerán cronológicamente aquí."
+                  />
+                </div>
               ) : (
                 <div className="relative pl-6 space-y-4 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-brand-sand-300">
                   {timelineActivities.map((act) => (

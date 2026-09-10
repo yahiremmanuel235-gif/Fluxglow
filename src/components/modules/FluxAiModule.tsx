@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { 
   Sparkles, 
   Send, 
+  Search,
   Wand2, 
   History, 
   Volume2, 
@@ -31,6 +32,8 @@ import { ChatMessage, UserProfileData, InstantPracticeItem } from '../../types';
 import { FluxGlowLogo } from '../common/FluxGlowLogo';
 import { soundEngine } from '../../utils/audioSynth';
 import { useToast } from '../common/Toast';
+import { EmptyStat } from '../common/EmptyStat';
+import { formatFluxDate } from '../../utils/dateUtils';
 import { INSTANT_PRACTICES_CATALOG } from '../../data/instantPracticesData';
 import { InstantPracticeModal } from './InstantPracticeModal';
 import { sendChatMessageToGemini } from '../../services/gemini';
@@ -126,7 +129,7 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
       try {
         const newSession: ArchivedSession = {
           id: 'session-' + Date.now(),
-          date: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
+          date: `${formatFluxDate(new Date())} • ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
           preview: messages.find(m => m.sender === 'user')?.text?.slice(0, 75) || messages[0]?.text?.slice(0, 75) || 'Conversación',
           messagesCount: messages.length,
           messages: [...messages]
@@ -366,9 +369,9 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
             <button
               id="chat-history-btn"
               onClick={() => setShowHistoryModal(true)}
-              className="bg-[#E87A52] hover:bg-[#D4653E] text-white px-4 py-2 rounded-full text-xs sm:text-sm font-bold tracking-wide shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
+              className="bg-white hover:bg-[#FAF7F2] text-stone-700 hover:text-stone-900 border border-stone-200 hover:border-stone-300 px-4 py-2 rounded-full text-xs sm:text-sm font-semibold tracking-wide shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer"
             >
-              <History className="w-4 h-4" />
+              <History className="w-4 h-4 text-stone-500" />
               <span>Historial</span>
             </button>
           </div>
@@ -462,7 +465,7 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
                 onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }}
                 className="relative flex items-center bg-white rounded-full border-2 border-[#5F927B]/30 shadow-xs px-4 py-2.5 hover:border-[#5F927B] focus-within:border-[#5F927B] focus-within:ring-2 focus-within:ring-[#5F927B]/20 transition-all"
               >
-                <img src="/assets/icons/search.png" alt="Buscar" className="w-4 h-4 shrink-0 mr-3 object-contain" />
+                <Search className="w-4 h-4 text-stone-400 shrink-0 mr-2.5" />
                 <input
                   id="flux-ai-main-input"
                   type="text"
@@ -492,7 +495,7 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
                     className="w-9 h-9 rounded-full bg-[#E87A52] hover:bg-[#D4653E] disabled:opacity-40 text-white flex items-center justify-center shadow-xs transition-transform hover:scale-105 cursor-pointer"
                     aria-label="Enviar mensaje a Flux AI"
                   >
-                    <img src="/assets/icons/send.png" alt="Enviar" className="w-4 h-4 object-contain brightness-0 invert" />
+                    <Send className="w-4 h-4 text-white" />
                   </button>
                 </div>
               </form>
@@ -514,7 +517,7 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
                     className="w-full text-left bg-white hover:bg-[#EBF1EA] text-stone-900 font-medium text-xs sm:text-sm px-4 py-3 rounded-2xl border border-[#C5DDD0] shadow-2xs transition-all hover:scale-[1.005] cursor-pointer flex items-center justify-between group"
                   >
                     <span>{sug}</span>
-                    <img src="/assets/icons/send.png" alt="Enviar" className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-2" />
+                    <Send className="w-3.5 h-3.5 text-[#5F927B] opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-2" />
                   </button>
                 ))}
               </div>
@@ -522,9 +525,10 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
 
             {/* Bottom Disclaimer */}
             <div className="max-w-2xl text-center">
-              <p className="text-[11px] text-stone-600 leading-relaxed bg-[#EBF1EA] p-3 rounded-2xl border border-[#C5DDD0]">
-                Las respuestas de Flux AI son orientativas y prácticas. Si experimentas una crisis o necesitas atención clínica, consulta siempre con un profesional de la salud mental.
-              </p>
+              <div className="text-xs text-stone-700 leading-relaxed bg-[#FBF9F5] p-3.5 rounded-2xl border border-stone-200 shadow-2xs flex items-center justify-center gap-2.5 text-left sm:text-center">
+                <AlertCircle className="w-4 h-4 text-[#5F927B] shrink-0" />
+                <span>Las respuestas de Flux AI son de orientación psicoeducativa y bienestar práctico. En momentos de crisis, consulta con un profesional o acude a las líneas de ayuda oficiales.</span>
+              </div>
             </div>
           </div>
         ) : (
@@ -683,15 +687,16 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
                 disabled={isLoading || !inputText.trim()}
                 className="bg-[#E87A52] hover:bg-[#D4653E] disabled:opacity-50 text-white px-5 py-2.5 rounded-full text-xs font-bold shadow-xs flex items-center gap-1.5 cursor-pointer transition-transform hover:scale-105"
               >
-                <img src="/assets/icons/send.png" alt="Enviar" className="w-4 h-4 object-contain brightness-0 invert" />
+                <Send className="w-3.5 h-3.5 text-white" />
                 <span>Enviar</span>
               </button>
             </form>
 
             {/* Chat Disclaimer in Active View */}
-            <div className="mt-2 text-center">
-              <p className="text-[10px] text-stone-400 leading-tight">
-                Las respuestas de la IA son informativas y de apoyo práctico. Si experimentas una crisis o necesitas un diagnóstico, consulta siempre con un profesional de la salud mental.
+            <div className="mt-3 pt-2 text-center">
+              <p className="text-xs text-stone-600 leading-relaxed bg-[#FBF9F5] py-2 px-3.5 rounded-xl border border-stone-200/80 inline-flex items-center justify-center gap-2 max-w-2xl mx-auto">
+                <AlertCircle className="w-3.5 h-3.5 text-[#5F927B] shrink-0" />
+                <span>Las respuestas de Flux AI son informativas y de apoyo práctico. En situaciones de crisis, consulta siempre con un profesional de la salud mental.</span>
               </p>
             </div>
           </div>
@@ -746,8 +751,13 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
                   </div>
                 ))
               ) : (
-                <div className="text-center py-4 text-xs text-stone-400">
-                  Aún no tienes sesiones previas archivadas. Al iniciar una nueva conversación, las anteriores se guardarán aquí automáticamente.
+                <div className="py-2">
+                  <EmptyStat
+                    variant="card"
+                    icon={History}
+                    title="Sin sesiones archivadas"
+                    description="Al iniciar una nueva conversación, las anteriores se guardarán aquí automáticamente."
+                  />
                 </div>
               )}
             </div>

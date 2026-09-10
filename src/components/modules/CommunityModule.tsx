@@ -33,6 +33,8 @@ import { CommunityGroup, CommunityPost, UserProfileData } from '../../types';
 import { COMMUNITY_GROUPS, INITIAL_FACEBOOK_STYLE_POSTS } from '../../data/communityData';
 import { useToast } from '../common/Toast';
 import { Button } from '../common/Button';
+import { EmptyStat } from '../common/EmptyStat';
+import { formatFluxDate } from '../../utils/dateUtils';
 import {
   fetchSupabaseCommunityPosts,
   insertSupabaseCommunityPost,
@@ -210,9 +212,9 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
         try {
           localStorage.setItem('fluxglow_community_posts', JSON.stringify(dbPosts));
         } catch (e) {}
-        success('Feed actualizado', 'Mostrando las publicaciones más recientes de Supabase.');
+        success('Feed actualizado', 'Mostrando las publicaciones más recientes de la comunidad.');
       } else {
-        info('Feed al día', 'No hay nuevas publicaciones en la base de datos.');
+        info('Feed al día', 'No hay nuevas publicaciones.');
       }
     } catch (err) {
       console.warn('Error al refrescar:', err);
@@ -306,7 +308,7 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
       success('¡Publicado con éxito!', 'Tu publicación ha sido compartida en la comunidad de FluxGlow.');
     } catch (err: any) {
       console.error('Error insertando post en Supabase:', err);
-      showErrorToast('Error al publicar', err?.message || 'No se pudo guardar la publicación en Supabase.');
+      showErrorToast('Error al publicar', err?.message || 'No se pudo guardar la publicación en este momento.');
     } finally {
       setIsPublishing(false);
     }
@@ -440,21 +442,21 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
             <button
               onClick={handleRefreshFeed}
               disabled={isRefreshing}
-              title="Recargar publicaciones de Supabase"
-              className="text-xs font-semibold text-stone-600 hover:text-[#3E6855] bg-white border border-[#C5DDD0] px-3 py-1.5 rounded-full flex items-center gap-1.5 hover:bg-[#EBF1EA] transition-colors cursor-pointer disabled:opacity-60 shadow-2xs"
+              title="Recargar publicaciones de la comunidad"
+              className="text-xs font-semibold text-stone-600 hover:text-[#3E6855] bg-white border border-stone-200 hover:border-[#5F927B] px-3 py-1.5 rounded-full flex items-center gap-1.5 hover:bg-[#EBF1EA] transition-colors cursor-pointer disabled:opacity-60 shadow-2xs"
             >
               <RefreshCw className={`w-3.5 h-3.5 text-[#5F927B] ${isRefreshing ? 'animate-spin' : ''}`} />
               <span className="hidden sm:inline">Actualizar</span>
             </button>
             <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#3E6855] bg-[#EBF1EA] border border-[#C5DDD0] px-2.5 py-1 rounded-full shadow-2xs">
               <span className="w-1.5 h-1.5 rounded-full bg-[#5F927B] animate-pulse"></span>
-              <span className="hidden md:inline">Supabase</span> En vivo
+              <span>🟢 En vivo</span>
             </div>
             <button
               onClick={() => {
                 setActiveGroupModal(COMMUNITY_GROUPS[0]);
               }}
-              className="text-xs font-semibold text-stone-700 hover:text-[#B54F2C] bg-white border border-[#F7D3C3] px-3.5 py-1.5 rounded-full flex items-center gap-1.5 hover:bg-[#FDF4F0] transition-colors cursor-pointer shadow-2xs"
+              className="text-xs font-semibold text-stone-700 hover:text-[#B54F2C] bg-white border border-stone-200 hover:border-[#F7D3C3] px-3.5 py-1.5 rounded-full flex items-center gap-1.5 hover:bg-[#FDF4F0] transition-colors cursor-pointer shadow-2xs"
             >
               <img src="/assets/icons/alert-shield.png" alt="Normas" className="w-4 h-4 object-contain" />
               <span className="hidden sm:inline">Normas de Convivencia</span>
@@ -594,8 +596,9 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
                             <p className="text-[11px] text-stone-500 line-clamp-1 mt-0.5">
                               {group.description}
                             </p>
-                            <span className="text-[10px] text-stone-400 mt-1 block">
-                              👥 {group.membersCount + (isJoined ? 1 : 0)} miembros
+                            <span className="text-[10px] text-[#3E6855] font-semibold mt-1 flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#5F927B] animate-pulse"></span>
+                              <span>Actividad en tiempo real</span>
                             </span>
                           </div>
                         </div>
@@ -753,21 +756,15 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
 
             {/* 2. Posts Feed */}
             {filteredPosts.length === 0 ? (
-              <div className="bg-white rounded-3xl p-8 text-center border border-stone-200 space-y-3">
-                <div className="w-12 h-12 rounded-2xl bg-brand-sand-100 text-stone-400 mx-auto flex items-center justify-center">
-                  <MessageCircle className="w-6 h-6" />
-                </div>
-                <h3 className="text-sm font-bold text-stone-800">Aún no hay publicaciones en este filtro</h3>
-                <p className="text-xs text-stone-500 max-w-sm mx-auto">
-                  Sé el primero en compartir una reflexión o experiencia en este espacio de confianza.
-                </p>
-                <Button
-                  onClick={() => setActiveFeedFilter('all')}
-                  variant="outline"
-                  className="text-xs font-semibold"
-                >
-                  Ver todas las publicaciones
-                </Button>
+              <div className="py-6 max-w-md mx-auto w-full">
+                <EmptyStat
+                  variant="card"
+                  icon={MessageCircle}
+                  title="Aún no hay publicaciones en este filtro"
+                  description="Sé la primera persona en compartir una reflexión o experiencia en este espacio de confianza."
+                  actionText="Ver todas las publicaciones"
+                  onAction={() => setActiveFeedFilter('all')}
+                />
               </div>
             ) : (
               filteredPosts.map((post) => {
@@ -805,7 +802,7 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
                             </span>
                             <span>•</span>
                             <span className="flex items-center gap-1">
-                              <Clock className="w-3 h-3" /> {post.timeAgo}
+                              <Clock className="w-3 h-3" /> {formatFluxDate(post.timeAgo)}
                             </span>
                           </div>
                         </div>
@@ -896,7 +893,7 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
                               <div key={comment.id} className="bg-white p-3 rounded-xl border border-stone-200 text-xs">
                                 <div className="flex items-center justify-between mb-1">
                                   <span className="font-bold text-stone-900">{comment.author}</span>
-                                  <span className="text-[10px] text-stone-400">{comment.timeAgo}</span>
+                                  <span className="text-[10px] text-stone-400">{formatFluxDate(comment.timeAgo)}</span>
                                 </div>
                                 <p className="text-stone-700 leading-snug">{comment.text}</p>
                               </div>
@@ -1047,8 +1044,9 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
                   </div>
                 </div>
 
-                <div className="hidden sm:block text-xs text-brand-sand-300">
-                  👥 {activeGroupModal.membersCount + (joinedGroupIds.includes(activeGroupModal.id) ? 1 : 0)} miembros
+                <div className="hidden sm:flex items-center gap-1.5 text-xs text-white bg-black/40 px-3 py-1 rounded-full border border-white/20">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#5F927B] animate-pulse"></span>
+                  <span>Comunidad activa</span>
                 </div>
               </div>
             </div>
