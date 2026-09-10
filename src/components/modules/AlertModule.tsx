@@ -24,7 +24,6 @@ import {
   PhoneCall
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { FluxGlowLogo } from '../common/FluxGlowLogo';
 import { soundEngine } from '../../utils/audioSynth';
 import { useToast } from '../common/Toast';
 import { Button } from '../common/Button';
@@ -250,7 +249,7 @@ export const AlertModule: React.FC = () => {
         {/* Top Header with Brand Logo */}
         <div className="flex items-center justify-between py-2 border-b border-[#ece4d9] mb-4">
           <div className="flex items-center gap-2">
-            <FluxGlowLogo size="xs" showText={true} />
+            
           </div>
 
           <div className="text-xs font-semibold text-[#548c71] bg-[#e2eee6] border border-[#548c71]/30 px-3 py-1.5 rounded-full flex items-center gap-1.5">

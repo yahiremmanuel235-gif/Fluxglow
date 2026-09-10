@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { FluxGlowLogo } from '../common/FluxGlowLogo';
 import { 
   Sparkles, 
   Settings, 
@@ -256,7 +255,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
       id: 'streak', 
       title: 'Racha de días', 
       desc: 'Mantén una racha activa continua de bienestar y autorregulación emocional', 
-      badgeImage: '/assets/badges/badge-streak.png',
+      badgeImage: '/assets/Extra/Racha.png',
       current: activeStreak,
       target: 3,
       unlocked: activeStreak >= 1 
@@ -336,7 +335,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
         {/* Top Header with Brand Logo & Account Settings Button */}
         <div className="flex items-center justify-between py-2 border-b border-[#5F927B]/20 mb-4">
           <div className="flex items-center gap-2">
-            <FluxGlowLogo size="xs" showText={true} />
+            
             <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold text-[#3E6855] bg-[#EBF1EA] px-3 py-1 rounded-full border border-[#C5DDD0] shadow-2xs">
               <img src="/assets/icons/nav-profile.png" alt="Perfil" className="w-3.5 h-3.5 object-contain" />
               <span>Mi Cuenta & Progreso</span>
@@ -395,8 +394,8 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
         {/* Consolidated Gamification Header Banner */}
         <div className="max-w-4xl mx-auto mb-8 bg-gradient-to-r from-[#EBF1EA] via-white to-[#FDF4F0] rounded-3xl border-2 border-[#5F927B]/30 p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-[#FDF4F0] text-[#E87A52] border border-[#F7D3C3] flex items-center justify-center font-black text-xl shadow-2xs">
-              <Flame className="w-6 h-6 fill-[#E87A52] text-[#E87A52]" />
+            <div className="w-12 h-12 rounded-2xl bg-[#FDF4F0] border border-[#F7D3C3] flex items-center justify-center p-2 shadow-2xs">
+              <img src="/assets/Extra/Racha.png" alt="Racha" className="w-8 h-8 object-contain" />
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -1045,7 +1044,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
               <div className="grid grid-cols-3 gap-2 text-center bg-white/80 backdrop-blur-xs p-3 rounded-2xl border border-brand-sand-300 mb-4">
                 <div>
                   <p className="text-base font-bold text-brand-terracotta-600 flex items-center justify-center gap-1">
-                    <img src="/assets/badges/badge-streak.png" alt="Racha" className="w-4 h-4 object-contain" />
+                    <img src="/assets/Extra/Racha.png" alt="Racha" className="w-4 h-4 object-contain" />
                     <span>{activeStreak}</span>
                   </p>
                   <p className="text-[10px] text-stone-600 font-medium">Días racha</p>

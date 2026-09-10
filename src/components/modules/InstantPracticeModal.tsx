@@ -21,7 +21,6 @@ import {
 import confetti from 'canvas-confetti';
 import { InstantPracticeItem } from '../../types';
 import { soundEngine } from '../../utils/audioSynth';
-import { FluxGlowLogo } from '../common/FluxGlowLogo';
 
 interface InstantPracticeModalProps {
   practice: InstantPracticeItem | null;

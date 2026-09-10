@@ -5,7 +5,6 @@ import { PlatformFeaturesAndAdvantages } from './PlatformFeaturesAndAdvantages';
 import { ContactSection } from './ContactSection';
 import { FluxGlowLogo } from '../common/FluxGlowLogo';
 import { AuthModals } from '../common/AuthModals';
-import heroImg from '../../assets/images/mental_health_hero_1787964175044.jpg';
 import calmMindImg from '../../assets/images/calm_mind_wellness_1787964189019.jpg';
 import { 
   Sparkles, 
@@ -170,7 +169,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </div>
       </header>
 
-      {/* SECCIÓN HERO PRINCIPAL RECREADA EXACTAMENTE COMO LA CAPTURA */}
+      {/* SECCIÓN HERO PRINCIPAL */}
       <section className="relative pt-12 pb-20 sm:pt-20 sm:pb-28 bg-flux-brand-bath border-b border-[#5F927B]/20 overflow-hidden" id="inicio">
         
         {/* Soft background ambient glow (Organic FluxGlow Halo) */}
@@ -251,16 +250,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <span>{currentUser?.isLoggedIn ? 'Acceder directamente a tu resumen personal' : 'O entra al Centro de Control en modo exploración'}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
-          </div>
-
-          {/* High quality Hero Graphic Banner */}
-          <div className="mt-14 relative rounded-3xl overflow-hidden shadow-2xl border border-stone-200 group">
-            <img 
-              src={heroImg} 
-              alt="Jóvenes en bienestar emocional y mindfulness - FluxGlow"
-              referrerPolicy="no-referrer"
-              className="w-full h-64 sm:h-96 object-cover transition-transform duration-700 group-hover:scale-[1.02]"
-            />
           </div>
 
           {/* Scroll Down Hint */}

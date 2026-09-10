@@ -33,7 +33,6 @@ import {
   Share2
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { FluxGlowLogo } from '../common/FluxGlowLogo';
 import { RachaIcon } from '../common/RachaIcon';
 import { MoodIcon } from '../common/MoodIcon';
 import { useToast } from '../common/Toast';
@@ -519,7 +518,7 @@ Generado con FluxGlow • Cuidado emocional consciente`;
         {/* Top Header with Brand Logo */}
         <div className="flex items-center justify-between py-2 border-b border-[#5F927B]/20 mb-4">
           <div className="flex items-center gap-2">
-            <FluxGlowLogo size="xs" showText={true} />
+            
             <span className="text-[11px] font-bold text-[#3E6855] bg-[#EBF1EA] border border-[#C5DDD0] px-2.5 py-0.5 rounded-full ml-1 hidden sm:inline-flex items-center gap-1.5 shadow-2xs">
               <img src="/assets/icons/nav-analytics.png" alt="Métricas" className="w-3.5 h-3.5 object-contain" />
               <span>Modelos Predictivos</span>
@@ -583,7 +582,7 @@ Generado con FluxGlow • Cuidado emocional consciente`;
               </p>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-[#FDF4F0] border border-[#F7D3C3] flex items-center justify-center p-2 shadow-2xs">
-              <img src="/assets/badges/badge-streak.png" alt="Racha" className="w-8 h-8 object-contain" />
+              <img src="/assets/Extra/Racha.png" alt="Racha" className="w-8 h-8 object-contain" />
             </div>
           </div>
 

@@ -41,7 +41,6 @@ import {
   BadgeCheck
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { FluxGlowLogo } from '../common/FluxGlowLogo';
 import { useToast } from '../common/Toast';
 import { GuideTutorialModal } from './GuideTutorialModal';
 import { YouTubePlayerModal } from './YouTubePlayerModal';
@@ -698,7 +697,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
 
           {/* Center Brand Logo */}
           <div className="flex items-center gap-2">
-            <FluxGlowLogo size="xs" showText={true} />
+            
           </div>
 
           {/* Right Pill: Categorías */}
@@ -776,7 +775,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
               </p>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-[#FDF4F0] border border-[#F7D3C3] flex items-center justify-center p-2 shadow-xs shrink-0">
-              <img src="/assets/badges/badge-streak.png" alt="Racha" className="w-8 h-8 object-contain" />
+              <img src="/assets/Extra/Racha.png" alt="Racha" className="w-8 h-8 object-contain" />
             </div>
           </div>
         </div>

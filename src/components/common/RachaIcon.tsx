@@ -11,7 +11,7 @@ export const RachaIcon: React.FC<RachaIconProps> = ({
 }) => {
   return (
     <img 
-      src="/Registro%20Emocional/Racha.png" 
+      src="/assets/Extra/Racha.png" 
       alt={alt} 
       className={`object-contain inline-block shrink-0 ${className}`} 
       loading="eager"

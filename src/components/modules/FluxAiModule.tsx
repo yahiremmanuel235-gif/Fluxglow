@@ -29,7 +29,6 @@ import {
   Compass
 } from 'lucide-react';
 import { ChatMessage, UserProfileData, InstantPracticeItem } from '../../types';
-import { FluxGlowLogo } from '../common/FluxGlowLogo';
 import { soundEngine } from '../../utils/audioSynth';
 import { useToast } from '../common/Toast';
 import { EmptyStat } from '../common/EmptyStat';

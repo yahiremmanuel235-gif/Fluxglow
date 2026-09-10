@@ -263,18 +263,7 @@ export default function App() {
             userLevel={userProfile.level}
           />
 
-          {/* Banner Fijo Consolidado de Modo Exploración (Local) */}
-          {!userProfile.isLoggedIn && (
-            <div className="bg-[#FAF7F2] border-b border-[#E8E1D5] px-4 py-2 text-center text-xs text-stone-700 flex flex-wrap items-center justify-center gap-2 shadow-2xs">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#FDF4F0] text-[#B54F2C] border border-[#F7D3C3]">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#E87A52] animate-pulse" />
-                Modo Exploración (Local)
-              </span>
-              <span className="text-stone-600">
-                Tus registros y misiones se guardan de forma privada en este navegador. Crea una cuenta gratuita para sincronizar en la nube.
-              </span>
-            </div>
-          )}
+          {/* Banner Fijo Consolidado de Modo Exploración (Local) - Eliminado por petición del usuario */}
         </>
       )}
 

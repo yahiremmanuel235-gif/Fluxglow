@@ -23,7 +23,6 @@ import {
   ChevronUp
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { FluxGlowLogo } from '../common/FluxGlowLogo';
 import { RachaIcon } from '../common/RachaIcon';
 import { EmptyStat } from '../common/EmptyStat';
 import { formatFluxDate } from '../../utils/dateUtils';
@@ -189,7 +188,7 @@ export const MissionsModule: React.FC<MissionsModuleProps> = ({
         {/* Top Header Row with Brand Logo, Connection Status & Back/Explore */}
         <div className="flex flex-wrap items-center justify-between gap-3 py-2 border-b border-[#5F927B]/20 mb-4">
           <div className="flex items-center gap-2">
-            <FluxGlowLogo size="xs" showText={true} />
+            
             <span className="text-[11px] font-bold text-[#B54F2C] bg-[#FDF4F0] border border-[#F7D3C3] px-2.5 py-0.5 rounded-full ml-1 flex items-center gap-1.5 shadow-2xs">
               <img src="/assets/icons/medal.png" alt="Misiones" className="w-3.5 h-3.5 object-contain" />
               <span>Hábitos y Retos Diarios</span>
@@ -313,7 +312,7 @@ export const MissionsModule: React.FC<MissionsModuleProps> = ({
               </div>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-white border border-[#F7D3C3] flex items-center justify-center p-2 shadow-2xs shrink-0">
-              <img src="/assets/badges/badge-streak.png" alt="Racha" className="w-8 h-8 object-contain" />
+              <img src="/assets/Extra/Racha.png" alt="Racha" className="w-8 h-8 object-contain" />
             </div>
           </div>
 

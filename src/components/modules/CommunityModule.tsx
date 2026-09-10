@@ -28,7 +28,6 @@ import {
   Database
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { FluxGlowLogo } from '../common/FluxGlowLogo';
 import { CommunityGroup, CommunityPost, UserProfileData } from '../../types';
 import { COMMUNITY_GROUPS, INITIAL_FACEBOOK_STYLE_POSTS } from '../../data/communityData';
 import { useToast } from '../common/Toast';
@@ -431,7 +430,7 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
         {/* Top Header Row with Logo */}
         <div className="flex items-center justify-between py-2 border-b border-[#5F927B]/20 mb-6">
           <div className="flex items-center gap-3">
-            <FluxGlowLogo size="xs" showText={true} />
+            
             <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold text-[#3E6855] bg-[#EBF1EA] px-3 py-1 rounded-full border border-[#C5DDD0] shadow-2xs">
               <img src="/assets/icons/nav-community.png" alt="Comunidad" className="w-3.5 h-3.5 object-contain" />
               <span>Comunidad & Grupos de Apoyo</span>

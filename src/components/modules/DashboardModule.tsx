@@ -27,7 +27,6 @@ import {
   ExternalLink
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { FluxGlowLogo } from '../common/FluxGlowLogo';
 import { ViewMode, UserProfileData, MoodType, JournalEntry, UserDailyMissionRecord } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
 import { useJournal } from '../../hooks/useJournal';
@@ -235,7 +234,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
         {/* 1. TOP BAR HEADER: Marca y Accesos directos */}
         <div className="flex flex-wrap items-center justify-between gap-3 py-2 border-b border-[#5F927B]/20">
           <div className="flex items-center gap-2">
-            <FluxGlowLogo size="xs" showText={true} />
+            
             <span className="text-[11px] font-bold text-[#3E6855] bg-[#EBF1EA] border border-[#C5DDD0] px-2.5 py-0.5 rounded-full ml-1 flex items-center gap-1.5 shadow-2xs">
               <span className="w-2 h-2 rounded-full bg-[#5F927B] animate-pulse" />
               <span>Centro de Control</span>
@@ -481,7 +480,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
                 Racha General de Bienestar
               </span>
               <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-2xl bg-white border border-[#F7D3C3] flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform shadow-2xs">
-                <img src="/assets/badges/badge-streak.png" alt="Racha" className="w-5 h-5 object-contain" />
+                <img src="/assets/Extra/Racha.png" alt="Racha" className="w-6 h-6 object-contain" />
               </div>
             </div>
             <div>

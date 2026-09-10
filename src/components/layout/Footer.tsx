@@ -23,10 +23,10 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, variant = 'full' }) 
               onClick={() => { onNavigate('landing'); scrollToTop(); }}
               title="Ir a Inicio"
             >
-              <FluxGlowLogo size="sm" variant="light" showText={true} />
+              <img src="/assets/brand/logo-fluxglowSF.png" alt="FluxGlow" className="h-8 sm:h-9 w-auto object-contain" />
             </div>
             <span className="text-stone-600 hidden sm:inline">•</span>
-            <span className="text-stone-400 font-medium">© 2026 FluxGlow. Todos los derechos reservados.</span>
+            <span className="text-stone-400 font-medium">Iluminando tu bienestar comprendiendo tus emociones · Versión Beta 1.0</span>
           </div>
 
           <div className="flex items-center gap-4 text-xs text-stone-400">
@@ -68,7 +68,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, variant = 'full' }) 
               onClick={() => { onNavigate('landing'); scrollToTop(); }}
               title="Ir a Inicio"
             >
-              <FluxGlowLogo size="md" variant="light" showText={true} />
+              <img src="/assets/brand/logo-fluxglowSF.png" alt="FluxGlow" className="h-10 sm:h-12 w-auto object-contain" />
             </div>
             
             <p className="text-stone-300 text-sm leading-relaxed italic font-serif">
@@ -239,7 +239,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, variant = 'full' }) 
 
         {/* Bottom copyright */}
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-stone-400 gap-3">
-          <p>© {new Date().getFullYear()} FluxGlow. Todos los derechos reservados. Desarrollado con vocación por el bienestar juvenil.</p>
+          <p>Iluminando tu bienestar comprendiendo tus emociones · Versión Beta 1.0</p>
           <div className="flex items-center gap-1.5">
             <span>Hecho con</span>
             <img src="/assets/icons/heart.png" alt="Amor" className="w-4 h-4 object-contain" />
