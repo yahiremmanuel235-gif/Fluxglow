@@ -172,9 +172,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       {/* SECCIÓN HERO PRINCIPAL */}
       <section className="relative pt-12 pb-20 sm:pt-20 sm:pb-28 bg-flux-brand-bath border-b border-[#5F927B]/20 overflow-hidden" id="inicio">
         
-        {/* Soft background ambient glow (Organic FluxGlow Halo) */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[680px] h-[400px] bg-gradient-to-tr from-[#5F927B]/25 via-[#D8C97B]/15 to-[#E87A52]/25 blur-3xl rounded-full pointer-events-none animate-pulseGlow"></div>
-
         <div className="max-w-4xl mx-auto px-4 sm:px-6 relative z-10 text-center">
           
           {/* Main Big FluxGlow Logo with sunburst, star and leaf sprouts */}
