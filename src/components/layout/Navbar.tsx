@@ -58,8 +58,19 @@ export const Navbar: React.FC<NavbarProps> = ({
     };
   }, []);
 
-  // The 7 official tabs with local assets according to design guidelines
+  // Modules navigation tabs
   const navTabs: { id: ViewMode; label: string; icon: React.ReactNode; badge?: string }[] = [
+    { 
+      id: 'dashboard', 
+      label: 'Centro de Control', 
+      icon: <LayoutDashboard className="w-4 h-4 shrink-0 text-[#5F927B]" /> 
+    },
+    { 
+      id: 'missions', 
+      label: 'Misiones Diarias', 
+      icon: <img src="/assets/icons/medal.png" alt="Misiones" className="w-4 h-4 shrink-0 object-contain" />,
+      badge: pendingMissions > 0 ? `${pendingMissions}` : undefined
+    },
     { 
       id: 'learn', 
       label: 'Explora y aprende', 
@@ -87,26 +98,24 @@ export const Navbar: React.FC<NavbarProps> = ({
       badge: currentRisk === 'elevado' ? 'SOS' : currentRisk === 'moderado' ? '!' : undefined
     },
     { 
-      id: 'profile', 
-      label: 'Perfil', 
-      icon: <img src="/assets/icons/nav-profile.png" alt="Perfil" className="w-4 h-4 shrink-0 object-contain" /> 
-    },
-    { 
       id: 'community', 
       label: 'Comunidad', 
       icon: <img src="/assets/icons/nav-community.png" alt="Comunidad" className="w-4 h-4 shrink-0 object-contain" /> 
     },
+    { 
+      id: 'profile', 
+      label: 'Perfil', 
+      icon: <img src="/assets/icons/nav-profile.png" alt="Perfil" className="w-4 h-4 shrink-0 object-contain" /> 
+    },
   ];
 
-  const allDrawerLinks = [
-    { id: 'dashboard' as ViewMode, label: 'Centro de Control', icon: <LayoutDashboard className="w-4 h-4 text-[#5F927B]" /> },
-    ...navTabs,
+  const allDrawerLinks: { id: ViewMode; label: string; icon: React.ReactNode; badge?: string }[] = [
     { 
-      id: 'missions' as ViewMode, 
-      label: 'Misiones Diarias', 
-      icon: <img src="/assets/icons/medal.png" alt="Misiones" className="w-4 h-4 shrink-0 object-contain" />,
-      badge: pendingMissions > 0 ? `${pendingMissions}` : undefined
+      id: 'landing', 
+      label: 'Página de Inicio', 
+      icon: <Home className="w-4 h-4 text-[#5F927B]" /> 
     },
+    ...navTabs
   ];
 
   const handleNavClick = (id: ViewMode) => {
@@ -136,7 +145,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           {/* Desktop Navigation Links with Active Sage & Terracotta Indicator */}
-          <nav className="hidden lg:flex items-center gap-1 xl:gap-2 h-16">
+          <nav className="hidden lg:flex items-center gap-0.5 xl:gap-1.5 h-16 overflow-x-auto no-scrollbar">
             {navTabs.map((link) => {
               const isActive = currentView === link.id;
               return (
@@ -145,7 +154,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   id={`nav-${link.id}`}
                   onClick={() => handleNavClick(link.id)}
                   aria-current={isActive ? 'page' : undefined}
-                  className={`relative h-full flex items-center gap-1.5 px-2.5 xl:px-3 text-xs xl:text-[13px] whitespace-nowrap transition-all cursor-pointer ${
+                  className={`relative h-full flex items-center gap-1 xl:gap-1.5 px-2 xl:px-2.5 text-xs xl:text-[13px] whitespace-nowrap transition-all cursor-pointer ${
                     isActive
                       ? 'font-bold text-[#1A1A1A] bg-gradient-to-b from-transparent via-[#5F927B]/5 to-[#5F927B]/10'
                       : 'font-medium text-stone-600 hover:text-stone-900 hover:bg-[#5F927B]/5'
@@ -161,51 +170,22 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </span>
                   )}
                   {isActive && (
-                    <span className="absolute bottom-0 left-2 right-2 h-[3px] bg-gradient-to-r from-[#5F927B] to-[#E87A52] rounded-full shadow-xs" />
+                    <span className="absolute bottom-0 left-1 right-1 h-[3px] bg-gradient-to-r from-[#5F927B] to-[#E87A52] rounded-full shadow-xs" />
                   )}
                 </button>
               );
             })}
           </nav>
 
-          {/* Right helper tools: Landing view switcher + Mobile Menu Toggle */}
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 pl-2">
-            {/* User XP & Level Pill with Trophy Icon - Informative only, does not navigate */}
-            {userPoints !== undefined && (
-              <div
-                id="nav-user-points-badge"
-                title={`Progreso de Hábitos: ${userPoints} XP • Nivel ${userLevel || 1}`}
-                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-bold bg-[#FDF4F0] text-[#B54F2C] border border-[#F7D3C3] shadow-2xs select-none"
-              >
-                <img src="/assets/icons/trophy.png" alt="XP" className="w-3.5 h-3.5 shrink-0 object-contain" />
-                <span className="font-mono text-xs">{userPoints} XP</span>
-                <span className="hidden sm:inline text-[10px] text-[#3E6855] font-semibold bg-[#EBF1EA] border border-[#C5DDD0] px-1.5 py-0.5 rounded-full">
-                  Nv.{userLevel || 1}
-                </span>
-              </div>
-            )}
-
-            <button
-              id="nav-home-landing-toggle"
-              onClick={() => onNavigate(currentView === 'landing' ? 'learn' : 'landing')}
-              aria-label={currentView === 'landing' ? 'Ver Módulos de la Aplicación' : 'Ir a la Portada de Inicio'}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 border cursor-pointer ${
-                currentView === 'landing'
-                  ? 'bg-[#5F927B] text-white border-[#5F927B] shadow-2xs'
-                  : 'bg-white text-stone-700 border-stone-300 hover:bg-stone-100'
-              }`}
-            >
-              <Home className="w-3.5 h-3.5" />
-              <span className="hidden md:inline">{currentView === 'landing' ? 'Ver Módulos' : 'Página de Inicio'}</span>
-            </button>
-
+          {/* Right helper tools: SignOut button + Mobile Menu Toggle */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 pl-1">
             {isLoggedIn && onSignOut && (
               <button
                 id="nav-signout-btn"
                 onClick={onSignOut}
                 aria-label="Cerrar sesión"
-                title="Cerrar sesión de Supabase"
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-stone-600 hover:text-red-700 bg-white border border-stone-300 hover:border-red-200 hover:bg-red-50 transition-colors cursor-pointer"
+                title="Cerrar sesión"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-stone-600 hover:text-red-700 bg-white border border-stone-300 hover:border-red-200 hover:bg-red-50 transition-colors cursor-pointer shadow-2xs"
               >
                 <LogOut className="w-3.5 h-3.5" />
                 <span className="hidden md:inline">Salir</span>
@@ -217,7 +197,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               id="nav-mobile-hamburger-btn"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label={mobileMenuOpen ? 'Cerrar menú' : 'Abrir menú de navegación'}
-              className="lg:hidden p-2 rounded-xl text-stone-700 hover:bg-stone-100 transition-colors border border-stone-200 cursor-pointer"
+              className="lg:hidden p-2 rounded-xl text-stone-700 hover:bg-stone-100 transition-colors border border-stone-200 cursor-pointer shadow-2xs"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
