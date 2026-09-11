@@ -118,11 +118,11 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
 
   // Available Emotions matching uploaded custom assets: Muy Mal / Enojado, Triste, Neutral, Alegre, Muy Feliz
   const emojiMoods: { id: MoodType; image: string; label: string; color: string; bg: string }[] = [
-    { id: 'enojado', image: '/assets/moods/mood-1-angry.png', label: 'Muy Mal / Enojado', color: '#b91c1c', bg: '#fee2e2' },
+    { id: 'enojado', image: '/assets/moods/mood-1-angry.png', label: 'Enojado', color: '#b91c1c', bg: '#fee2e2' },
     { id: 'triste', image: '/assets/moods/mood-2-sad.png', label: 'Triste', color: '#dc2626', bg: '#fef2f2' },
-    { id: 'ansioso', image: '/assets/moods/mood-3-neutral.png', label: 'Neutral', color: '#d97706', bg: '#fef3c7' },
-    { id: 'tranquilo', image: '/assets/moods/mood-4-happy.png', label: 'Alegre', color: '#65a30d', bg: '#ecfccb' },
-    { id: 'feliz', image: '/assets/moods/mood-5-veryhappy.png', label: 'Muy Feliz', color: '#16a34a', bg: '#dcfce7' },
+    { id: 'ansioso', image: '/assets/moods/mood-3-neutral.png', label: 'Inquieto', color: '#d97706', bg: '#fef3c7' },
+    { id: 'tranquilo', image: '/assets/moods/mood-4-happy.png', label: 'Tranquilo', color: '#65a30d', bg: '#ecfccb' },
+    { id: 'feliz', image: '/assets/moods/mood-5-veryhappy.png', label: 'Feliz', color: '#16a34a', bg: '#dcfce7' },
   ];
 
   const availableTriggers = [
@@ -385,20 +385,21 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
               <button
                 id="personal-journal-btn"
                 onClick={() => setShowHistory(!showHistory)}
-                className="bg-[#5F927B] hover:bg-[#3E6855] transition-colors cursor-pointer text-white px-7 py-2.5 min-h-[44px] rounded-full text-sm font-bold tracking-wide shadow-xs flex items-center gap-2.5 whitespace-nowrap self-start md:self-auto"
+                className="bg-[#5F927B] hover:bg-[#3E6855] transition-colors cursor-pointer text-white px-7 py-2.5 min-h-[44px] rounded-full text-sm font-bold tracking-wide shadow-xs flex items-center gap-2.5 whitespace-nowrap self-start md:self-auto shrink-0"
               >
                 <img src="/assets/icons/nav-journal.png" alt="Diario" className="w-4 h-4 object-contain brightness-0 invert" />
                 <span>Ver mi historial</span>
               </button>
 
               {/* Center Capsule: ¿Cómo te sientes hoy? + 5 Emotions */}
-              <div className="w-full md:w-auto flex-1 max-w-2xl bg-white border-2 border-[#5F927B]/30 rounded-3xl sm:rounded-full py-3 sm:py-2 px-4 sm:px-6 shadow-xs flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-3 sm:gap-4">
-                <span className="text-sm font-bold text-stone-800 text-center">
+              <div className="w-full md:contents flex-1 max-w-2xl bg-white border-2 border-[#5F927B]/30 rounded-3xl sm:rounded-full py-3 sm:py-2 px-4 sm:px-6 shadow-xs flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 relative">
+                
+                <span className="text-sm md:text-base font-bold text-stone-800 text-center relative z-0 order-first md:order-none sm:py-1.5 shrink-0">
                   ¿Cómo te sientes hoy?
                 </span>
 
                 {/* 5 Emotions as Images */}
-                <div className="flex items-center justify-center gap-1.5 sm:gap-2.5 w-full sm:w-auto">
+                <div className="flex items-center justify-center gap-1.5 sm:gap-2.5 w-full sm:w-auto sm:absolute md:static sm:left-4 z-10 shrink-0">
                   {emojiMoods.map((m) => {
                     const isSelected = selectedMood === m.id;
                     return (
@@ -406,7 +407,7 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
                         key={m.id}
                         id={`mood-btn-${m.id}`}
                         onClick={() => setSelectedMood(m.id)}
-                        className={`w-10 h-10 sm:w-12 sm:h-12 min-h-[40px] min-w-[40px] sm:min-h-[44px] sm:min-w-[44px] rounded-full flex items-center justify-center p-1 transition-all cursor-pointer ${
+                        className={`w-10 h-10 sm:w-10 sm:h-10 min-h-[40px] min-w-[40px] sm:min-h-[40px] sm:min-w-[40px] rounded-full flex items-center justify-center p-1 transition-all cursor-pointer ${
                           isSelected
                             ? 'scale-115 ring-2 ring-[#5F927B] shadow-md bg-[#EBF1EA]'
                             : 'opacity-75 hover:opacity-100 hover:scale-110'
