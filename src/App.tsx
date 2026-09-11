@@ -45,7 +45,7 @@ export default function App() {
   const [currentView, setCurrentView] = useState<ViewMode>('landing');
   const [isAudioPlaying, setIsAudioPlaying] = useState<boolean>(false);
   const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
-  const [onboardingInitialMode, setOnboardingInitialMode] = useState<'ask_first_time' | 'tutorial' | 'update_notes'>('ask_first_time');
+  const [onboardingInitialMode, setOnboardingInitialMode] = useState<'ask_first_time' | 'tutorial'>('ask_first_time');
   const [activeGuideId, setActiveGuideId] = useState<string | undefined>(undefined);
 
   // Sincronizar el perfil del usuario desde Supabase cuando detecta una sesión activa
@@ -112,20 +112,14 @@ export default function App() {
     };
   }, [user]);
 
-  // Listen for global custom events to open onboarding or update notes
+  // Listen for global custom events to open onboarding
   useEffect(() => {
-    const handleOpenUpdateNotes = () => {
-      setOnboardingInitialMode('update_notes');
-      setShowOnboarding(true);
-    };
     const handleOpenTutorial = () => {
       setOnboardingInitialMode('tutorial');
       setShowOnboarding(true);
     };
-    window.addEventListener('fluxglow_open_update_notes', handleOpenUpdateNotes);
     window.addEventListener('fluxglow_open_tutorial', handleOpenTutorial);
     return () => {
-      window.removeEventListener('fluxglow_open_update_notes', handleOpenUpdateNotes);
       window.removeEventListener('fluxglow_open_tutorial', handleOpenTutorial);
     };
   }, []);
