@@ -137,7 +137,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         'Indicadores rápidos de tu bienestar actual.'
       ],
       valueProp: 'Ideal para iniciar el día y ver rápidamente dónde necesitas concentrarte.',
-      image: 'https://images.unsplash.com/photo-1542435503-956c22714bf7?w=800&auto=format&fit=crop&q=80'
+      image: '/assets/Interfasez/Centro de Control.PNG'
     },
     {
       id: 'learn',
@@ -155,7 +155,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         'Tests psicológicos de autoevaluación orientativa (escalas clínicas breves con resultados y pautas inmediatas).'
       ],
       valueProp: 'Ideal para pasar del desconocimiento al dominio emocional con herramientas interactivas al alcance de un clic.',
-      image: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&auto=format&fit=crop&q=80'
+      image: '/assets/Interfasez/Explora y aprende.PNG'
     },
     {
       id: 'journal',
@@ -173,7 +173,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         'Historial privado protegido con opciones para buscar, filtrar y revisar tus entradas pasadas.'
       ],
       valueProp: 'Te ayuda a desahogar la mente y generar claridad sobre lo que detona tus emociones cotidianas.',
-      image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&auto=format&fit=crop&q=80'
+      image: '/assets/Interfasez/Diario Emocional.PNG'
     },
     {
       id: 'ai',
@@ -191,7 +191,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         'Espacio 100% privado, confidencial y sin juicios, listo para acompañarte tanto de día como de madrugada.'
       ],
       valueProp: 'Un apoyo incondicional cuando necesitas ordenar tus pensamientos o recibir un respiro guiado.',
-      image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80'
+      image: '/assets/Interfasez/Flux IA.PNG'
     },
     {
       id: 'missions',
@@ -209,7 +209,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         'Insignia numérica en tiempo real en la barra de navegación para no olvidar tus hábitos del día.'
       ],
       valueProp: 'Evita que los consejos se queden en el papel y te guía para ejercitar tu bienestar en pocos minutos.',
-      image: 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=800&auto=format&fit=crop&q=80'
+      image: '/assets/Interfasez/Misiones Diarias.PNG'
     },
     {
       id: 'community',
@@ -227,7 +227,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         'Sensación de pertenencia y recordatorio constante de que nunca estás solo en tu camino.'
       ],
       valueProp: 'Un punto de encuentro para compartir sin miedo, normalizar las emociones y recibir calidez humana.',
-      image: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&auto=format&fit=crop&q=80'
+      image: '/assets/Interfasez/Comunidad.PNG'
     },
     {
       id: 'analytics',
@@ -245,7 +245,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         'Detección de factores detonantes recurrentes para ayudarte a tomar decisiones conscientes.'
       ],
       valueProp: 'Transforma tus registros diarios en autoconocimiento real y alertas tempranas de autocuidado.',
-      image: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=800&auto=format&fit=crop&q=80'
+      image: '/assets/Interfasez/Análisis Predictivo.PNG'
     },
     {
       id: 'alert',
@@ -263,24 +263,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
         'Acceso prioritario y visible en todo momento para garantizar tu seguridad emocional.'
       ],
       valueProp: 'Tu red de seguridad inmediata cuando la mente o el cuerpo entran en crisis aguda.',
-      image: 'https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?w=800&auto=format&fit=crop&q=80'
-    },
-    {
-      id: 'profile',
-      viewMode: 'profile',
-      badge: '9. Perfil',
-      title: 'Tu espacio personal y preferencias',
-      tagline: 'Administra tus datos, logros y configuración de la aplicación de forma segura.',
-      color: 'text-stone-600',
-      icon: <User className="w-6 h-6 text-stone-600" />,
-      features: [
-        'Personalización de tu información, metas y preferencias de notificaciones.',
-        'Galería de insignias obtenidas y registro de tu nivel actual.',
-        'Configuración de opciones de accesibilidad y visualización.',
-        'Gestión segura de tu cuenta y privacidad.'
-      ],
-      valueProp: 'El panel donde tienes control total sobre tu experiencia en la plataforma.',
-      image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&auto=format&fit=crop&q=80'
+      image: '/assets/Interfasez/Alerta Emocional.PNG'
     }
   ];
 
@@ -301,7 +284,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
 
           <button
             onClick={handleSkipOrFinishTutorial}
-            className="text-xs font-semibold text-stone-500 hover:text-stone-800 transition-colors cursor-pointer px-2 py-1"
+            className="text-xs font-semibold text-stone-500 hover:text-stone-800 transition-colors cursor-pointer px-3 py-2 min-h-[44px]"
           >
             Saltar tutorial
           </button>
@@ -388,7 +371,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                   <button
                     key={item.id}
                     onClick={() => setCurrentStep(idx)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
+                    className={`px-4 py-2 min-h-[44px] rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
                       isActive
                         ? 'bg-[#548c71] text-white shadow-xs'
                         : 'bg-white/80 text-stone-600 hover:bg-white hover:text-stone-900 border border-stone-200/60'
@@ -431,7 +414,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                   {/* Direct Link Button to that module */}
                   <button
                     onClick={() => handleJumpToSection(currentItem.viewMode)}
-                    className="w-full py-2.5 px-4 rounded-2xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer border border-stone-200"
+                    className="w-full py-2.5 px-4 min-h-[44px] rounded-2xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer border border-stone-200"
                   >
                     <span>Ir a {currentItem.badge} ahora</span>
                     <ExternalLink className="w-3.5 h-3.5 text-stone-500" />
@@ -508,7 +491,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                 {currentStep > 0 && (
                   <button
                     onClick={() => setCurrentStep(prev => prev - 1)}
-                    className="px-3.5 py-2 rounded-full text-xs font-bold text-stone-600 hover:text-stone-900 hover:bg-stone-200/60 transition-colors flex items-center gap-1 cursor-pointer"
+                    className="px-4 py-2 min-h-[44px] rounded-full text-xs font-bold text-stone-600 hover:text-stone-900 hover:bg-stone-200/60 transition-colors flex items-center gap-1 cursor-pointer"
                   >
                     <ArrowLeft className="w-3.5 h-3.5" />
                     <span>Anterior</span>
@@ -523,7 +506,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                       handleSkipOrFinishTutorial();
                     }
                   }}
-                  className="bg-[#548c71] hover:bg-[#43705a] text-white px-5 py-2.5 rounded-full text-xs sm:text-sm font-bold shadow-xs hover:shadow-md transition-all flex items-center gap-2 cursor-pointer"
+                  className="bg-[#548c71] hover:bg-[#43705a] text-white px-6 py-2.5 min-h-[44px] rounded-full text-xs sm:text-sm font-bold shadow-xs hover:shadow-md transition-all flex items-center gap-2 cursor-pointer"
                 >
                   <span>{currentStep === interfacesList.length - 1 ? '¡Empezar a explorar!' : 'Siguiente Interfaz'}</span>
                   {currentStep === interfacesList.length - 1 ? <Check className="w-4 h-4 stroke-[3]" /> : <ArrowRight className="w-4 h-4" />}

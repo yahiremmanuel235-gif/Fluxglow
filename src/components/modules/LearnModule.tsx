@@ -676,7 +676,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
   const completionPercentage = Math.round((completedGuidesCount / totalCatalogGuides) * 100) || 0;
 
   return (
-    <div className="w-full bg-flux-brand-bath min-h-screen pb-20 pt-4 px-4 sm:px-6 lg:px-8">
+    <div className="w-full bg-flux-brand-bath min-h-screen pb-20 pt-4 px-4 sm:px-6 lg:px-8 overflow-x-hidden">
       <div className="max-w-[1360px] mx-auto">
         
         {/* Top Header Row with Pill Buttons & Center Logo */}
@@ -686,7 +686,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
           <button
             id="filters-btn"
             onClick={() => setShowFiltersModal(true)}
-            className="px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold text-stone-700 bg-white/80 hover:bg-[#EBF1EA] border border-[#C5DDD0] shadow-2xs transition-all flex items-center gap-2 cursor-pointer"
+            className="px-4 py-2 min-h-[44px] rounded-full text-xs sm:text-sm font-semibold text-stone-700 bg-white/80 hover:bg-[#EBF1EA] border border-[#C5DDD0] shadow-2xs transition-all flex items-center gap-2 cursor-pointer"
           >
             <SlidersHorizontal className="w-3.5 h-3.5 text-[#5F927B]" />
             <span>Filtros</span>
@@ -704,7 +704,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
           <button
             id="categories-btn"
             onClick={() => setShowCategoriesModal(true)}
-            className="px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold text-stone-700 bg-white/80 hover:bg-[#FDF4F0] border border-[#F7D3C3] shadow-2xs transition-all flex items-center gap-2 cursor-pointer"
+            className="px-4 py-2 min-h-[44px] rounded-full text-xs sm:text-sm font-semibold text-stone-700 bg-white/80 hover:bg-[#FDF4F0] border border-[#F7D3C3] shadow-2xs transition-all flex items-center gap-2 cursor-pointer"
           >
             <FolderOpen className="w-3.5 h-3.5 text-[#E87A52]" />
             <span className="hidden sm:inline">Categorías</span>
@@ -804,7 +804,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
 
             <button
               onClick={() => handleOpenGuide(journalRecommendation.guide)}
-              className="bg-[#5F927B] hover:bg-[#4E7D68] text-white px-5 py-2.5 rounded-full text-xs font-bold shadow-xs transition-all flex items-center gap-2 cursor-pointer shrink-0 whitespace-nowrap self-end sm:self-center"
+              className="bg-[#5F927B] hover:bg-[#4E7D68] text-white px-5 py-2.5 min-h-[44px] rounded-full text-xs font-bold shadow-xs transition-all flex items-center gap-2 cursor-pointer shrink-0 whitespace-nowrap self-end sm:self-center"
             >
               <span>Leer Guía Sugerida</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -827,7 +827,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
             {searchQuery && (
               <button 
                 onClick={() => setSearchQuery('')}
-                className="text-stone-400 hover:text-stone-600 p-1 mr-1 cursor-pointer"
+                className="text-stone-400 hover:text-stone-600 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center mr-1 cursor-pointer rounded-full"
                 title="Limpiar búsqueda"
               >
                 <X className="w-4 h-4" />
@@ -839,7 +839,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                 const randomTerm = terms[Math.floor(Math.random() * terms.length)];
                 setSearchQuery(randomTerm);
               }}
-              className="text-stone-400 hover:text-[#5F927B] p-1 shrink-0 transition-colors cursor-pointer"
+              className="text-stone-400 hover:text-[#5F927B] p-2 min-h-[44px] min-w-[44px] flex items-center justify-center shrink-0 transition-colors cursor-pointer rounded-full"
               title="💡 Sugerir término o concepto"
               aria-label="Sugerir término"
             >
@@ -852,7 +852,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
         <div className="flex items-center justify-center gap-1.5 sm:gap-2 flex-wrap max-w-4xl mx-auto mb-6">
           <button
             onClick={() => setSelectedCategory('todos')}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+            className={`px-4 py-2 min-h-[44px] rounded-full text-xs font-semibold transition-all cursor-pointer ${
               selectedCategory === 'todos'
                 ? 'bg-[#5F927B] text-white shadow-2xs font-bold'
                 : 'bg-white border border-[#C5DDD0] text-stone-700 hover:bg-[#EBF1EA]'
@@ -866,7 +866,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
               <button
                 key={cat}
                 onClick={() => handleCategorySelect(cat)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                className={`px-4 py-2 min-h-[44px] rounded-full text-xs font-semibold transition-all cursor-pointer ${
                   isSelected
                     ? 'bg-[#5F927B] text-white shadow-2xs font-bold'
                     : 'bg-white border border-stone-200 text-stone-700 hover:border-[#5F927B]/40 hover:bg-[#EBF1EA]'
@@ -890,7 +890,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+              className={`px-4 sm:px-5 py-2.5 min-h-[44px] rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
                 activeTab === tab.id
                   ? 'bg-[#5F927B] text-white shadow-2xs'
                   : 'text-stone-600 hover:text-stone-900 hover:bg-white/80'
@@ -931,7 +931,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
 
             <button
               onClick={handleResetFilters}
-              className="text-xs font-semibold text-[#c55835] hover:text-[#de6943] flex items-center gap-1 cursor-pointer shrink-0 ml-2"
+              className="text-xs font-semibold text-[#c55835] hover:text-[#de6943] flex items-center gap-1 cursor-pointer shrink-0 ml-2 min-h-[44px] px-2"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Restablecer</span>

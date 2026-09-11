@@ -134,15 +134,10 @@ export const Navbar: React.FC<NavbarProps> = ({
     }
   ];
 
-  // For the mobile hamburger drawer: list all 9 modules without "Página de Inicio"
+  // For the mobile hamburger drawer: list all 8 modules without "Página de Inicio"
   const allDrawerLinks: { id: ViewMode; label: string; icon: React.ReactNode; badge?: string }[] = [
     ...primaryTabs,
-    ...moreOptionsTabs,
-    { 
-      id: 'profile', 
-      label: 'Perfil', 
-      icon: <img src="/assets/icons/nav-profile.png" alt="Perfil" className="w-4 h-4 shrink-0 object-contain" /> 
-    }
+    ...moreOptionsTabs
   ];
 
   const handleNavClick = (id: ViewMode) => {
@@ -308,7 +303,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               id="nav-mobile-hamburger-btn"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label={mobileMenuOpen ? 'Cerrar menú' : 'Abrir menú de navegación'}
-              className="lg:hidden p-2 rounded-xl text-stone-700 hover:bg-stone-100 transition-colors border border-stone-200 cursor-pointer shadow-2xs"
+              className="lg:hidden min-h-[44px] min-w-[44px] flex items-center justify-center p-2 rounded-xl text-stone-700 hover:bg-stone-100 transition-colors border border-stone-200 cursor-pointer shadow-2xs"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -346,9 +341,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                   id={`mobile-nav-${link.id}`}
                   onClick={() => handleNavClick(link.id)}
                   aria-current={isActive ? 'page' : undefined}
-                  className={`relative flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+                  className={`relative flex items-center justify-between px-3.5 py-3 min-h-[44px] rounded-xl text-sm font-semibold transition-all cursor-pointer ${
                     isActive
-                      ? 'text-[#1A1A1A] bg-gradient-to-b from-transparent via-[#5F927B]/5 to-[#5F927B]/10'
+                      ? 'text-[#1A1A1A]'
                       : 'text-stone-800 hover:bg-[#F2ECE1]'
                   }`}
                 >

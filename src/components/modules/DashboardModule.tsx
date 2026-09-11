@@ -228,7 +228,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
   const userName = userProfile?.name || user?.user_metadata?.name || 'Explorador';
 
   return (
-    <div className="w-full bg-flux-brand-bath min-h-screen pb-24 pt-4 px-4 sm:px-6 lg:px-8 text-stone-800">
+    <div className="w-full bg-flux-brand-bath min-h-screen pb-24 pt-4 px-4 sm:px-6 lg:px-8 text-stone-800 overflow-x-hidden">
       <div className="max-w-[1280px] mx-auto space-y-6">
 
         {/* 1. TOP BAR HEADER: Marca y Accesos directos */}
@@ -255,7 +255,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
               id="dashboard-refresh-btn"
               onClick={handleRefreshAll}
               title="Refrescar datos del Centro de Control"
-              className="p-1.5 rounded-full text-stone-500 hover:text-[#5F927B] bg-white border border-stone-200 hover:border-[#5F927B]/50 hover:bg-[#EBF1EA]/50 transition-colors shadow-2xs cursor-pointer"
+              className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full text-stone-500 hover:text-[#5F927B] bg-white border border-stone-200 hover:border-[#5F927B]/50 hover:bg-[#EBF1EA]/50 transition-colors shadow-2xs cursor-pointer"
             >
               <RefreshCw className="w-3.5 h-3.5" />
             </button>
@@ -347,7 +347,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
               <button
                 id="hero-quick-journal-btn"
                 onClick={() => onNavigate('journal')}
-                className="flex-1 sm:flex-none px-4 py-2.5 rounded-2xl bg-[#5F927B] hover:bg-[#4D7764] text-white text-xs sm:text-sm font-bold shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer group"
+                className="flex-1 sm:flex-none px-4 py-2.5 min-h-[44px] rounded-2xl bg-[#5F927B] hover:bg-[#4D7764] text-white text-xs sm:text-sm font-bold shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer group"
               >
                 <img src="/assets/icons/send.png" alt="Escribir" className="w-4 h-4 object-contain brightness-0 invert group-hover:translate-x-0.5 transition-transform" />
                 <span>Escribir en Diario</span>
@@ -355,7 +355,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
               <button
                 id="hero-quick-missions-btn"
                 onClick={() => onNavigate('missions')}
-                className="flex-1 sm:flex-none px-4 py-2.5 rounded-2xl bg-[#E87A52] hover:bg-[#D4653E] text-white text-xs sm:text-sm font-bold shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer group"
+                className="flex-1 sm:flex-none px-4 py-2.5 min-h-[44px] rounded-2xl bg-[#E87A52] hover:bg-[#D4653E] text-white text-xs sm:text-sm font-bold shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer group"
               >
                 <img src="/assets/icons/medal.png" alt="Misiones" className="w-4 h-4 object-contain brightness-0 invert group-hover:scale-105 transition-transform" />
                 <span>Ver Misiones</span>
@@ -571,7 +571,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
               <button
                 id="dashboard-talk-ai-btn"
                 onClick={() => onNavigate('ai')}
-                className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#5F927B] to-[#E87A52] hover:opacity-95 text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full py-2.5 px-4 min-h-[44px] rounded-xl bg-gradient-to-r from-[#5F927B] to-[#E87A52] hover:opacity-95 text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
               >
                 <img src="/assets/icons/send.png" alt="Enviar" className="w-3.5 h-3.5 object-contain brightness-0 invert" />
                 <span>Conversar con Flux AI</span>
@@ -603,7 +603,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
 
                 <button
                   onClick={() => onNavigate('missions')}
-                  className="text-xs font-bold text-[#E87A52] hover:text-[#B54F2C] flex items-center gap-1 cursor-pointer bg-white px-2.5 py-1 rounded-full border border-[#F7D3C3] shadow-2xs"
+                  className="text-xs font-bold text-[#E87A52] hover:text-[#B54F2C] flex items-center gap-1 cursor-pointer bg-white px-3 py-2 min-h-[44px] rounded-full border border-[#F7D3C3] shadow-2xs"
                 >
                   <span>Ver todas</span>
                   <ChevronRight className="w-3.5 h-3.5" />
@@ -629,7 +629,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
                         <button
                           onClick={() => handleToggleMission(m.id, m.status)}
                           disabled={isItemLoading}
-                          className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all cursor-pointer mt-0.5 ${
+                          className={`w-11 h-11 min-h-[44px] min-w-[44px] rounded-xl flex items-center justify-center shrink-0 transition-all cursor-pointer mt-0.5 ${
                             isItemLoading
                               ? 'bg-[#FDF4F0] border border-[#F7D3C3] text-[#B54F2C]'
                               : isDone
@@ -702,7 +702,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
 
                 <button
                   onClick={() => onNavigate('journal')}
-                  className="text-xs font-bold text-[#3E6855] hover:text-[#253D33] flex items-center gap-1 cursor-pointer bg-white px-2.5 py-1 rounded-full border border-[#C5DDD0] shadow-2xs"
+                  className="text-xs font-bold text-[#3E6855] hover:text-[#253D33] flex items-center gap-1 cursor-pointer bg-white px-3 py-2 min-h-[44px] rounded-full border border-[#C5DDD0] shadow-2xs"
                 >
                   <span>Ver Diario</span>
                   <ChevronRight className="w-3.5 h-3.5" />
@@ -769,7 +769,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
               </span>
               <button
                 onClick={() => onNavigate('journal')}
-                className="px-4 py-2 rounded-xl bg-[#5F927B] hover:bg-[#3E6855] text-white font-bold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                className="px-4 py-2 min-h-[44px] rounded-xl bg-[#5F927B] hover:bg-[#3E6855] text-white font-bold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
               >
                 <img src="/assets/icons/send.png" alt="Enviar" className="w-3.5 h-3.5 object-contain brightness-0 invert" />
                 <span>Nueva Entrada</span>
@@ -795,7 +795,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
                 type="button"
                 onClick={() => setIsModulesCollapsed(!isModulesCollapsed)}
                 title={isModulesCollapsed ? "Mostrar módulos" : "Ocultar módulos"}
-                className="px-2.5 py-1 text-xs font-semibold text-stone-600 hover:text-stone-900 bg-white hover:bg-stone-50 border border-stone-200 rounded-lg transition-colors cursor-pointer flex items-center gap-1 shadow-2xs"
+                className="px-3 py-2 min-h-[44px] text-xs font-semibold text-stone-600 hover:text-stone-900 bg-white hover:bg-stone-50 border border-stone-200 rounded-lg transition-colors cursor-pointer flex items-center gap-1 shadow-2xs"
               >
                 <span>{isModulesCollapsed ? 'Mostrar' : 'Ocultar'}</span>
                 <ChevronRight className={`w-3.5 h-3.5 transition-transform ${isModulesCollapsed ? '' : 'rotate-90'}`} />

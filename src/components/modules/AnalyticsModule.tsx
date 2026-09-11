@@ -39,11 +39,8 @@ import { useToast } from '../common/Toast';
 import { Button } from '../common/Button';
 import { EmptyStat } from '../common/EmptyStat';
 import { formatFluxDate } from '../../utils/dateUtils';
-import { 
-  getStoredMissions, 
-  completeDailyMission, 
-  calculateMissionStreak 
-} from '../../utils/missionsManager';
+import { useJournal } from '../../hooks/useJournal';
+import { useMissions } from '../../hooks/useMissions';
 import { UserDailyMissionRecord, ViewMode, JournalEntry, MoodType } from '../../types';
 import { MOCK_JOURNAL_ENTRIES } from '../../data/mockData';
 import { 
@@ -132,24 +129,8 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
   const [forecastPeriod, setForecastPeriod] = useState<'7d' | '14d' | '30d'>('7d');
   const [selectedTrigger, setSelectedTrigger] = useState<string | null>('ejercicio');
   
-  // Real Journal entries with robust parsing and validation
-  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>(() => {
-    try {
-      const saved = localStorage.getItem('fluxglow_journal_entries');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          return parsed.map(sanitizeJournalEntry);
-        }
-      }
-      return [];
-    } catch {
-      return [];
-    }
-  });
-
-  // Daily Missions State
-  const [missions, setMissions] = useState<UserDailyMissionRecord[]>(() => getStoredMissions());
+  const { entries: journalEntries, loading: isLoadingJournal } = useJournal();
+  const { missions, streakDays, toggleCompleteMission } = useMissions();
   const [missionFilter, setMissionFilter] = useState<'all' | 'pending' | 'completed'>('all');
 
   useEffect(() => {
@@ -162,50 +143,18 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  useEffect(() => {
-    const handleMissionsUpdate = (e: any) => {
-      if (e.detail && Array.isArray(e.detail)) {
-        setMissions(e.detail);
-      } else {
-        setMissions(getStoredMissions());
-      }
-    };
-
-    const handleJournalUpdate = () => {
-      try {
-        const saved = localStorage.getItem('fluxglow_journal_entries');
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed)) {
-            setJournalEntries(parsed.map(sanitizeJournalEntry));
-          }
-        }
-      } catch (err) {
-        console.error('Error parsing journal entries in AnalyticsModule:', err);
-      }
-    };
-
-    window.addEventListener('fluxglow_missions_updated', handleMissionsUpdate);
-    window.addEventListener('fluxglow_journal_updated', handleJournalUpdate);
-    return () => {
-      window.removeEventListener('fluxglow_missions_updated', handleMissionsUpdate);
-      window.removeEventListener('fluxglow_journal_updated', handleJournalUpdate);
-    };
-  }, []);
-
-  const handleCompleteMission = (recordId: string) => {
-    const res = completeDailyMission(recordId);
-    if (res.success) {
+  const handleCompleteMission = async (recordId: string) => {
+    const res = await toggleCompleteMission(recordId, 'pending');
+    if (res?.success) {
       confetti({
         particleCount: 75,
         spread: 70,
         origin: { y: 0.6 }
       });
-      success('¡Misión completada! Sigue así 🌱', `Sumaste +${res.mission?.xp || 30} XP y reforzaste tu racha diaria.`);
+      success('¡Misión completada! Sigue así 🌱', `Reforzaste tu racha diaria.`);
     }
   };
 
-  const streakDays = calculateMissionStreak(missions);
   const completedMissionsCount = missions.filter(m => m && m.status === 'completed').length;
   const filteredMissions = missions.filter(m => {
     if (!m) return false;
