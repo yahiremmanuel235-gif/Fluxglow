@@ -1,18 +1,14 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // 1. VALIDACIONES PREVIAS
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'METHOD_NOT_ALLOWED', message: 'Método no permitido. Utilice POST.' });
   }
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    return res.status(500).json({ 
-      error: "GEMINI_API_KEY_MISSING", 
-      message: "La variable GEMINI_API_KEY no está configurada en Vercel." 
-    });
+    return res.status(500).json({ error: "Falta GEMINI_API_KEY" });
   }
 
   try {
@@ -22,7 +18,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: "BAD_REQUEST", message: "El mensaje es requerido." });
     }
 
-    // 3. LÓGICA DE INTERACCIÓN CON GEMINI
     const systemInstruction = `Eres Flux AI, el acompañante conversacional experto en bienestar emocional y psicología práctica de FluxGlow (diseñado para jóvenes y adultos de 15 a 35 años).
 Tu propósito es ofrecer un espacio de comprensión genuina, validación psicológica auténtica y herramientas prácticas fundamentadas en Terapia Cognitivo-Conductual (TCC), Terapia de Aceptación y Compromiso (ACT), regulación somática y neurociencia afectiva.
 
@@ -52,10 +47,10 @@ Directrices de excelencia para tus respuestas:
    - Ante ideación suicida, autolesión o emergencia grave, responde con máxima calidez, contención inmediata y recuerda con delicadeza la línea de ayuda (+503 7801-4680) o los servicios de emergencia de su localidad.
 5. **Idioma y Tono**: Responde siempre en español natural, cercano, respetuoso y profundamente humano.`;
 
-    const genAI = new GoogleGenerativeAI(apiKey);
+    const aiClient = new GoogleGenAI({ apiKey });
 
-    // Sanitizar y formatear el historial para @google/generative-ai
-    const formattedHistory: { role: 'user' | 'model'; parts: { text: string }[] }[] = [];
+    // Sanitizar y formatear el historial
+    const formattedContents: { role: 'user' | 'model'; parts: { text: string }[] }[] = [];
 
     if (Array.isArray(history)) {
       for (const h of history) {
@@ -65,9 +60,8 @@ Directrices de excelencia para tus respuestas:
         
         const cleanText = typeof rawText === 'string' ? rawText.trim() : '';
         if (cleanText) {
-          // Asegurar que el rol sea exactamente 'user' o 'model'
           const role = (h.role === 'user' || h.sender === 'user') ? 'user' : 'model';
-          formattedHistory.push({
+          formattedContents.push({
             role,
             parts: [{ text: cleanText }]
           });
@@ -75,50 +69,35 @@ Directrices de excelencia para tus respuestas:
       }
     }
 
-    const modelsToAttempt = ["gemini-1.5-flash-latest", "gemini-2.0-flash", "gemini-1.5-flash"];
-    let lastError: any = null;
+    formattedContents.push({
+      role: 'user',
+      parts: [{ text: message.trim() }]
+    });
 
-    for (const modelName of modelsToAttempt) {
-      try {
-        const model = genAI.getGenerativeModel(
-          { 
-            model: modelName,
-            systemInstruction: systemInstruction 
-          },
-          { apiVersion: 'v1beta' }
-        );
-
-        // Iniciar chat e enviar mensaje
-        const chat = model.startChat({
-          history: formattedHistory,
-        });
-
-        const result = await chat.sendMessage(message.trim());
-        const replyText = result.response.text();
-
-        if (replyText) {
-          return res.status(200).json({
-            response: replyText,
-            isFallback: false,
-          });
-        }
-      } catch (err: any) {
-        console.warn(`[Flux AI] Falló el modelo ${modelName}:`, err?.message || err);
-        lastError = err;
+    const response = await aiClient.models.generateContent({
+      model: 'gemini-2.0-flash',
+      contents: formattedContents,
+      config: {
+        systemInstruction: systemInstruction,
+        temperature: 0.7,
       }
+    });
+
+    if (response && response.text) {
+      return res.status(200).json({
+        response: response.text,
+        isFallback: false,
+      });
     }
 
-    // Si ninguno funciona, lanzamos el último error para que lo atrape el catch principal
-    throw lastError || new Error("Todos los modelos de Gemini intentados fallaron.");
+    throw new Error("No se pudo generar una respuesta con el modelo gemini-2.0-flash.");
 
   } catch (error: any) {
-    // 4. MANEJO DE ERRORES EXPLÍCITO (DIAGNÓSTICO 500)
     console.error("[Flux AI] Error crítico en /api/chat Gemini call:", error);
     
     return res.status(500).json({ 
-      error: "GEMINI_EXECUTION_ERROR", 
-      message: error.message || "Error desconocido al invocar Gemini",
-      details: String(error)
+      error: "GEMINI_ERROR", 
+      message: error.message || String(error)
     });
   }
 }
