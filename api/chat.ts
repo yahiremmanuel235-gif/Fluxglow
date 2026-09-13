@@ -53,10 +53,6 @@ Directrices de excelencia para tus respuestas:
 5. **Idioma y Tono**: Responde siempre en español natural, cercano, respetuoso y profundamente humano.`;
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ 
-      model: 'gemini-1.5-flash',
-      systemInstruction: systemInstruction 
-    });
 
     // Sanitizar y formatear el historial para @google/generative-ai
     const formattedHistory: { role: 'user' | 'model'; parts: { text: string }[] }[] = [];
@@ -79,18 +75,41 @@ Directrices de excelencia para tus respuestas:
       }
     }
 
-    // Iniciar chat e enviar mensaje
-    const chat = model.startChat({
-      history: formattedHistory,
-    });
+    const modelsToAttempt = ["gemini-1.5-flash-latest", "gemini-2.0-flash", "gemini-1.5-flash"];
+    let lastError: any = null;
 
-    const result = await chat.sendMessage(message.trim());
-    const replyText = result.response.text();
+    for (const modelName of modelsToAttempt) {
+      try {
+        const model = genAI.getGenerativeModel(
+          { 
+            model: modelName,
+            systemInstruction: systemInstruction 
+          },
+          { apiVersion: 'v1beta' }
+        );
 
-    return res.status(200).json({
-      response: replyText,
-      isFallback: false,
-    });
+        // Iniciar chat e enviar mensaje
+        const chat = model.startChat({
+          history: formattedHistory,
+        });
+
+        const result = await chat.sendMessage(message.trim());
+        const replyText = result.response.text();
+
+        if (replyText) {
+          return res.status(200).json({
+            response: replyText,
+            isFallback: false,
+          });
+        }
+      } catch (err: any) {
+        console.warn(`[Flux AI] Falló el modelo ${modelName}:`, err?.message || err);
+        lastError = err;
+      }
+    }
+
+    // Si ninguno funciona, lanzamos el último error para que lo atrape el catch principal
+    throw lastError || new Error("Todos los modelos de Gemini intentados fallaron.");
 
   } catch (error: any) {
     // 4. MANEJO DE ERRORES EXPLÍCITO (DIAGNÓSTICO 500)
