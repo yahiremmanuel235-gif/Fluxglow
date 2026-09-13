@@ -75,7 +75,7 @@ Directrices de excelencia para tus respuestas:
     });
 
     const response = await aiClient.models.generateContent({
-      model: 'gemini-2.0-flash',
+      model: 'gemini-3.6-flash',
       contents: formattedContents,
       config: {
         systemInstruction: systemInstruction,
@@ -90,7 +90,7 @@ Directrices de excelencia para tus respuestas:
       });
     }
 
-    throw new Error("No se pudo generar una respuesta con el modelo gemini-2.0-flash.");
+    throw new Error("No se pudo generar una respuesta con el modelo gemini-3.6-flash.");
 
   } catch (error: any) {
     console.error("[Flux AI] Error crítico en /api/chat Gemini call:", error);
