@@ -11,9 +11,15 @@ const PORT = 3000;
 // Lazy initialization for Gemini SDK
 let aiClient: GoogleGenAI | null = null;
 function getGeminiClient(): GoogleGenAI | null {
-  if (!aiClient && process.env.GEMINI_API_KEY) {
+  const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+  if (!apiKey) {
+    console.error("[Flux AI] ERROR CRÍTICO: No se encontró la API Key en process.env. Verifique sus variables de entorno.");
+    return null;
+  }
+  
+  if (!aiClient) {
     aiClient = new GoogleGenAI({
-      apiKey: process.env.GEMINI_API_KEY,
+      apiKey: apiKey,
       httpOptions: {
         headers: {
           'User-Agent': 'aistudio-build',
@@ -44,9 +50,7 @@ async function startServer() {
       const client = getGeminiClient();
 
       if (!client) {
-        // Fallback intelligent emotional counselor response engine
-        const fallbackResponses = generateFallbackAssistantResponse(message, userMood, context);
-        return res.json({ response: fallbackResponses, reply: fallbackResponses, isFallback: true });
+        return res.status(500).json({ error: "Fallo de configuración del servidor: API Key de Gemini no encontrada." });
       }
 
       const systemInstruction = `Eres Flux AI, el acompañante conversacional experto en bienestar emocional y psicología práctica de FluxGlow (diseñado para jóvenes y adultos de 15 a 35 años).
@@ -123,12 +127,12 @@ Directrices de excelencia para tus respuestas:
             break;
           }
         } catch (modelErr: any) {
-          console.warn(`Gemini generation failed on model ${modelName}:`, modelErr?.status || modelErr?.message || modelErr);
+          console.error(`[Flux AI] Fallo al generar respuesta con Gemini (${modelName}):`, modelErr?.status || modelErr?.message || modelErr);
         }
       }
 
       if (!replyText) {
-        replyText = generateFallbackAssistantResponse(message, userMood, context);
+        return res.status(500).json({ error: "Error interno: No se pudo generar una respuesta con ninguno de los modelos de Gemini intentados." });
       }
 
       return res.json({
@@ -137,9 +141,8 @@ Directrices de excelencia para tus respuestas:
       });
 
     } catch (error: any) {
-      console.error("Error in /api/chat Gemini call:", error?.message || error);
-      const fallback = generateFallbackAssistantResponse(req.body.message, req.body.userMood, req.body.context);
-      return res.json({ response: fallback, isFallback: true });
+      console.error("[Flux AI] Error crítico en /api/chat Gemini call:", error?.message || error);
+      return res.status(500).json({ error: "Ocurrió un error inesperado al procesar la solicitud con Flux AI." });
     }
   });
 
@@ -151,16 +154,12 @@ Directrices de excelencia para tus respuestas:
       const tags = req.body.tags;
       const client = getGeminiClient();
 
-      if (!client || !text) {
-        return res.json({
-          analysis: {
-            dominantEmotion: mood || "Reflexión",
-            sentimentScore: 78,
-            keywords: tags?.length ? tags : ["Autoconocimiento", "Paz interior", "Resiliencia"],
-            aiInsight: "Identificamos una clara disposición al autoconocimiento y apertura. Mantener este hábito diario fortalecerá tu capacidad de gestionar tensiones.",
-            suggestedAction: "Dedica 3 minutos a una respiración diafragmática 4-7-8 antes de continuar tus actividades."
-          }
-        });
+      if (!client) {
+         return res.status(500).json({ error: "Fallo de configuración del servidor: API Key de Gemini no encontrada." });
+      }
+      
+      if (!text) {
+        return res.status(400).json({ error: "El texto de la entrada es requerido para el análisis." });
       }
 
       const prompt = `Analiza la siguiente entrada de diario emocional de un usuario en FluxGlow:
@@ -195,7 +194,7 @@ Genera un breve análisis psicológico positivo y constructivo con formato JSON:
             break;
           }
         } catch (modelErr: any) {
-          console.warn(`Analyze attempt with model ${modelName} failed:`, modelErr?.status || modelErr?.message || modelErr);
+          console.error(`[Flux AI] Analyze attempt with model ${modelName} failed:`, modelErr?.status || modelErr?.message || modelErr);
         }
       }
 
@@ -203,17 +202,10 @@ Genera un breve análisis psicológico positivo y constructivo con formato JSON:
       if (parsed && (parsed.dominantEmotion || parsed.aiInsight)) {
         return res.json({ analysis: parsed });
       }
-      throw new Error("No valid JSON analysis generated");
-    } catch (err) {
-      return res.json({
-        analysis: {
-          dominantEmotion: req.body.mood || "En balance",
-          sentimentScore: 75,
-          keywords: ["Consciencia", "Bienestar", "Crecimiento"],
-          aiInsight: "Has registrado tus emociones con honestidad. Expresar lo que sientes es el primer paso para procesarlo de forma saludable.",
-          suggestedAction: "Toma un vaso de agua y realiza 3 respiraciones profundas."
-        }
-      });
+      return res.status(500).json({ error: "No se pudo generar un análisis JSON válido." });
+    } catch (err: any) {
+      console.error("[Flux AI] Error crítico en /api/gemini/analyze:", err?.message || err);
+      return res.status(500).json({ error: "Ocurrió un error al analizar la entrada emocional." });
     }
   });
 
