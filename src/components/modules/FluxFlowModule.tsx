@@ -3,7 +3,7 @@ import {
   Sparkles, Zap, Lock, Tag, Clock, CheckCircle2, 
   ArrowRight, Brain, MessageSquare, Target, Users, BarChart, 
   Home, BookOpen, ChevronUp, ChevronDown, Sliders, ChevronLeft, 
-  Square, Heart, BookmarkCheck, Play, ArrowLeft, Quote, Flame, Activity, Timer, Wind
+  Square, Heart, BookmarkCheck, Play, ArrowLeft, Quote, Flame, Activity, Timer, Wind, ChevronRight
 } from 'lucide-react';
 import { useJournal } from '../../hooks/useJournal';
 import { incrementFluxStreak, getFluxStreak, setLastFluxDate } from '../../utils/streakManager';
@@ -13,7 +13,7 @@ import { DEMO_GUIDES_CATALOG, AI_DEMO_NOTICE_TEXT } from '../../data/guidesData'
 import { COMPLETE_COURSES_CATALOG, } from '../../data/completeGuidesData';
 import { MoodIcon } from '../common/MoodIcon';
 import { MoodType, ViewMode } from '../../types';
-import { activateAllMissionsFromGuide } from '../../utils/missionsManager';
+import { addSingleMissionFromGuide, addCustomMission } from '../../utils/missionsManager';
 import { CompleteCoursePlayerModal } from './CompleteCoursePlayerModal';
 
 const emojiMoods = [
@@ -92,6 +92,10 @@ export const FluxFlowModule: React.FC<{ onNavigate: (view: ViewMode) => void }> 
   // Step 2 State
   const [activeGuide, setActiveGuide] = useState<any | null>(null);
   const [activeCourse, setActiveCourse] = useState<any | null>(null);
+  const [showMissions, setShowMissions] = useState<boolean>(false);
+  const [missionStatuses, setMissionStatuses] = useState<Record<string, 'accepted' | 'rejected'>>({});
+  const [isCustomMissionOpen, setIsCustomMissionOpen] = useState(false);
+  const [customMissionData, setCustomMissionData] = useState({ title: '', description: '', date: '', time: '' });
 
   const toggleTrigger = (trigger: string) => {
     if (selectedTriggers.includes(trigger)) {
@@ -140,7 +144,7 @@ export const FluxFlowModule: React.FC<{ onNavigate: (view: ViewMode) => void }> 
         readGuides.push(activeGuide.id);
         localStorage.setItem('fluxglow_read_guides', JSON.stringify(readGuides));
       }
-      activateAllMissionsFromGuide(activeGuide);
+      /* manual accept only now */
     }
     
     incrementFluxStreak();
@@ -340,6 +344,115 @@ export const FluxFlowModule: React.FC<{ onNavigate: (view: ViewMode) => void }> 
           </div>
         )}
 
+        {isCustomMissionOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div 
+              className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm"
+              onClick={() => setIsCustomMissionOpen(false)}
+            ></div>
+            <div className="relative bg-white rounded-3xl p-6 sm:p-8 w-full max-w-md shadow-xl flex flex-col gap-4 border border-stone-100">
+              <div>
+                <h3 className="font-serif text-xl font-bold text-stone-900 mb-1">
+                  Misión Personalizada
+                </h3>
+                <p className="text-stone-500 text-sm">
+                  ¿Quieres aplicar los conocimientos de la guía a tu manera? Crea una misión personalizada.
+                </p>
+              </div>
+              
+              <div className="space-y-4 mt-2">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-stone-700 uppercase tracking-wider">Nombre de la misión</label>
+                  <input 
+                    type="text" 
+                    value={customMissionData.title}
+                    onChange={(e) => setCustomMissionData(prev => ({...prev, title: e.target.value}))}
+                    placeholder="Ej. Escribir 5 minutos en mi diario..."
+                    className="w-full bg-[#fbf9f5] border-2 border-stone-200 focus:border-[#5F927B] rounded-2xl px-4 py-3 text-sm font-medium text-stone-800 focus:outline-none focus:ring-4 focus:ring-[#5F927B]/20 transition-all"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-stone-700 uppercase tracking-wider">Descripción</label>
+                  <textarea 
+                    value={customMissionData.description}
+                    onChange={(e) => setCustomMissionData(prev => ({...prev, description: e.target.value}))}
+                    placeholder="Detalles sobre cómo lo aplicarás..."
+                    className="w-full h-20 bg-[#fbf9f5] border-2 border-stone-200 focus:border-[#5F927B] rounded-2xl px-4 py-3 text-sm font-medium text-stone-800 focus:outline-none focus:ring-4 focus:ring-[#5F927B]/20 transition-all resize-none"
+                  ></textarea>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-stone-700 uppercase tracking-wider">Fecha</label>
+                    <input 
+                      type="date" 
+                      value={customMissionData.date}
+                      onChange={(e) => setCustomMissionData(prev => ({...prev, date: e.target.value}))}
+                      min={new Date().toISOString().split('T')[0]}
+                      className="w-full bg-[#fbf9f5] border-2 border-stone-200 focus:border-[#5F927B] rounded-2xl px-4 py-3 text-sm font-medium text-stone-800 focus:outline-none focus:ring-4 focus:ring-[#5F927B]/20 transition-all cursor-pointer"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-stone-700 uppercase tracking-wider">Hora</label>
+                    <input 
+                      type="time" 
+                      value={customMissionData.time}
+                      onChange={(e) => setCustomMissionData(prev => ({...prev, time: e.target.value}))}
+                      className="w-full bg-[#fbf9f5] border-2 border-stone-200 focus:border-[#5F927B] rounded-2xl px-4 py-3 text-sm font-medium text-stone-800 focus:outline-none focus:ring-4 focus:ring-[#5F927B]/20 transition-all cursor-pointer"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 mt-4">
+                <button
+                  onClick={() => setIsCustomMissionOpen(false)}
+                  className="flex-1 px-4 py-3 rounded-2xl font-bold text-sm text-stone-600 bg-stone-100 hover:bg-stone-200 transition-colors cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => {
+                    if (!customMissionData.title || !customMissionData.date || !customMissionData.time) {
+                      warning('Faltan campos', 'Por favor ingresa nombre, fecha y hora.');
+                      return;
+                    }
+                    
+                    const newMission = addCustomMission(
+                      customMissionData.title, 
+                      customMissionData.description, 
+                      activeGuide?.id || 'custom', 
+                      activeGuide?.title || 'Personalizado', 
+                      activeGuide?.category || 'General'
+                    );
+                    
+                    // Add schedule
+                    try {
+                      const sch = localStorage.getItem('fluxglow_mission_schedules');
+                      let parsedSch = sch ? JSON.parse(sch) : {};
+                      const [year, month, day] = customMissionData.date.split('-').map(Number);
+                      const [hours, minutes] = customMissionData.time.split(':').map(Number);
+                      const d = new Date();
+                      d.setFullYear(year, month - 1, day);
+                      d.setHours(hours, minutes, 0, 0);
+                      
+                      parsedSch[newMission.id] = d.toISOString();
+                      localStorage.setItem('fluxglow_mission_schedules', JSON.stringify(parsedSch));
+                    } catch(e) {}
+
+                    success('¡Misión creada!', 'Se ha programado con éxito.');
+                    setIsCustomMissionOpen(false);
+                    setCustomMissionData({ title: '', description: '', date: '', time: '' });
+                  }}
+                  className="flex-1 px-4 py-3 rounded-2xl font-bold text-sm text-white bg-[#5F927B] hover:bg-[#4C7563] shadow-xs hover:shadow-md transition-all cursor-pointer"
+                >
+                  Crear Misión
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* STEP 1 SUBMITTED */}
         {currentStep === 1 && isSubmitted && (
           <div className="my-8 animate-in zoom-in-95 duration-300 max-w-4xl mx-auto">
@@ -401,6 +514,8 @@ export const FluxFlowModule: React.FC<{ onNavigate: (view: ViewMode) => void }> 
                         setActiveCourse(guide as any);
                       } else {
                         setActiveGuide(guide as any);
+                        setShowMissions(false);
+                        setMissionStatuses({});
                       }
                     }}
                     className={`cursor-pointer group flex flex-col h-full rounded-3xl p-4 sm:p-5 border transition-all shadow-xs ${cardStyle} ${!isCourse ? 'border-stone-200 hover:border-transparent hover:shadow-lg' : ''}`}
@@ -460,6 +575,115 @@ export const FluxFlowModule: React.FC<{ onNavigate: (view: ViewMode) => void }> 
           </div>
         )}
 
+        {isCustomMissionOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div 
+              className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm"
+              onClick={() => setIsCustomMissionOpen(false)}
+            ></div>
+            <div className="relative bg-white rounded-3xl p-6 sm:p-8 w-full max-w-md shadow-xl flex flex-col gap-4 border border-stone-100">
+              <div>
+                <h3 className="font-serif text-xl font-bold text-stone-900 mb-1">
+                  Misión Personalizada
+                </h3>
+                <p className="text-stone-500 text-sm">
+                  ¿Quieres aplicar los conocimientos de la guía a tu manera? Crea una misión personalizada.
+                </p>
+              </div>
+              
+              <div className="space-y-4 mt-2">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-stone-700 uppercase tracking-wider">Nombre de la misión</label>
+                  <input 
+                    type="text" 
+                    value={customMissionData.title}
+                    onChange={(e) => setCustomMissionData(prev => ({...prev, title: e.target.value}))}
+                    placeholder="Ej. Escribir 5 minutos en mi diario..."
+                    className="w-full bg-[#fbf9f5] border-2 border-stone-200 focus:border-[#5F927B] rounded-2xl px-4 py-3 text-sm font-medium text-stone-800 focus:outline-none focus:ring-4 focus:ring-[#5F927B]/20 transition-all"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-stone-700 uppercase tracking-wider">Descripción</label>
+                  <textarea 
+                    value={customMissionData.description}
+                    onChange={(e) => setCustomMissionData(prev => ({...prev, description: e.target.value}))}
+                    placeholder="Detalles sobre cómo lo aplicarás..."
+                    className="w-full h-20 bg-[#fbf9f5] border-2 border-stone-200 focus:border-[#5F927B] rounded-2xl px-4 py-3 text-sm font-medium text-stone-800 focus:outline-none focus:ring-4 focus:ring-[#5F927B]/20 transition-all resize-none"
+                  ></textarea>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-stone-700 uppercase tracking-wider">Fecha</label>
+                    <input 
+                      type="date" 
+                      value={customMissionData.date}
+                      onChange={(e) => setCustomMissionData(prev => ({...prev, date: e.target.value}))}
+                      min={new Date().toISOString().split('T')[0]}
+                      className="w-full bg-[#fbf9f5] border-2 border-stone-200 focus:border-[#5F927B] rounded-2xl px-4 py-3 text-sm font-medium text-stone-800 focus:outline-none focus:ring-4 focus:ring-[#5F927B]/20 transition-all cursor-pointer"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-stone-700 uppercase tracking-wider">Hora</label>
+                    <input 
+                      type="time" 
+                      value={customMissionData.time}
+                      onChange={(e) => setCustomMissionData(prev => ({...prev, time: e.target.value}))}
+                      className="w-full bg-[#fbf9f5] border-2 border-stone-200 focus:border-[#5F927B] rounded-2xl px-4 py-3 text-sm font-medium text-stone-800 focus:outline-none focus:ring-4 focus:ring-[#5F927B]/20 transition-all cursor-pointer"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 mt-4">
+                <button
+                  onClick={() => setIsCustomMissionOpen(false)}
+                  className="flex-1 px-4 py-3 rounded-2xl font-bold text-sm text-stone-600 bg-stone-100 hover:bg-stone-200 transition-colors cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => {
+                    if (!customMissionData.title || !customMissionData.date || !customMissionData.time) {
+                      warning('Faltan campos', 'Por favor ingresa nombre, fecha y hora.');
+                      return;
+                    }
+                    
+                    const newMission = addCustomMission(
+                      customMissionData.title, 
+                      customMissionData.description, 
+                      activeGuide?.id || 'custom', 
+                      activeGuide?.title || 'Personalizado', 
+                      activeGuide?.category || 'General'
+                    );
+                    
+                    // Add schedule
+                    try {
+                      const sch = localStorage.getItem('fluxglow_mission_schedules');
+                      let parsedSch = sch ? JSON.parse(sch) : {};
+                      const [year, month, day] = customMissionData.date.split('-').map(Number);
+                      const [hours, minutes] = customMissionData.time.split(':').map(Number);
+                      const d = new Date();
+                      d.setFullYear(year, month - 1, day);
+                      d.setHours(hours, minutes, 0, 0);
+                      
+                      parsedSch[newMission.id] = d.toISOString();
+                      localStorage.setItem('fluxglow_mission_schedules', JSON.stringify(parsedSch));
+                    } catch(e) {}
+
+                    success('¡Misión creada!', 'Se ha programado con éxito.');
+                    setIsCustomMissionOpen(false);
+                    setCustomMissionData({ title: '', description: '', date: '', time: '' });
+                  }}
+                  className="flex-1 px-4 py-3 rounded-2xl font-bold text-sm text-white bg-[#5F927B] hover:bg-[#4C7563] shadow-xs hover:shadow-md transition-all cursor-pointer"
+                >
+                  Crear Misión
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* STEP 2: Active Guide Reader */}
         {currentStep === 2 && activeGuide && (
           <div className="max-w-3xl mx-auto animate-fadeIn mt-6 bg-white p-6 sm:p-10 rounded-3xl shadow-sm border border-stone-200">
@@ -496,6 +720,94 @@ export const FluxFlowModule: React.FC<{ onNavigate: (view: ViewMode) => void }> 
                 {activeGuide.simpleSummary}
               </p>
             </div>
+            
+            {/* Missions Toggle Button */}
+            {activeGuide.dailyMissions && activeGuide.dailyMissions.length > 0 && (
+              <div className="mb-8">
+                <button
+                  onClick={() => setShowMissions(!showMissions)}
+                  className="w-full bg-white border border-[#548c71]/30 hover:border-[#548c71] p-4 rounded-2xl flex items-center justify-between transition-all cursor-pointer shadow-2xs hover:shadow-sm"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-[#EBF1EA] text-[#3E6855] flex items-center justify-center">
+                      <Zap className="w-5 h-5" />
+                    </div>
+                    <div className="text-left">
+                      <h4 className="text-sm font-bold text-stone-900">Misiones Diarias ({activeGuide.dailyMissions.length})</h4>
+                      <p className="text-xs text-stone-500 font-medium">Ver las acciones prácticas de esta guía</p>
+                    </div>
+                  </div>
+                  <ChevronRight className={`w-5 h-5 text-stone-400 transition-transform ${showMissions ? 'rotate-90' : ''}`} />
+                </button>
+                
+                {showMissions && (
+                  <div className="mt-4 space-y-3 pl-2 sm:pl-4 border-l-2 border-[#548c71]/20 animate-fadeIn">
+                    {activeGuide.dailyMissions.map((mission: any, idx: number) => {
+                      const status = missionStatuses[mission.id];
+                      return (
+                      <div key={idx} className="bg-white p-4 rounded-xl border border-stone-200/80 shadow-2xs flex flex-col sm:flex-row sm:items-start md:items-center justify-between gap-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                              Misión {idx + 1}
+                            </span>
+                            <h5 className="text-sm font-bold text-stone-800">{mission.title}</h5>
+                          </div>
+                          <p className="text-xs text-stone-600 leading-relaxed mb-2">{mission.description}</p>
+                          <div className="flex items-center gap-3">
+                            <span className="text-[11px] font-semibold text-stone-500 flex items-center gap-1">
+                              <Clock className="w-3.5 h-3.5" />
+                              {mission.timeEstimate}
+                            </span>
+                            <span className="text-[11px] font-bold text-[#3E6855] bg-[#EBF1EA] px-2 py-0.5 rounded-full">
+                              +{mission.xp} XP
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 w-full md:w-auto shrink-0 mt-2 md:mt-0 justify-end">
+                          {status === 'accepted' ? (
+                            <span className="text-xs font-bold text-[#3E6855] bg-[#EBF1EA] px-3 py-1.5 rounded-lg flex items-center gap-1 border border-[#C5DDD0]">
+                              <CheckCircle2 className="w-4 h-4" /> Aceptada
+                            </span>
+                          ) : status === 'rejected' ? (
+                            <span className="text-xs font-bold text-stone-500 bg-stone-100 px-3 py-1.5 rounded-lg border border-stone-200">
+                              Rechazada
+                            </span>
+                          ) : (
+                            <>
+                              <button 
+                                onClick={() => setMissionStatuses(prev => ({...prev, [mission.id]: 'rejected'}))}
+                                className="px-3 py-1.5 text-xs font-bold text-stone-500 hover:bg-stone-100 rounded-lg transition-colors border border-stone-200 cursor-pointer"
+                              >
+                                Rechazar
+                              </button>
+                              <button 
+                                onClick={() => {
+                                  addSingleMissionFromGuide(mission, activeGuide);
+                                  setMissionStatuses(prev => ({...prev, [mission.id]: 'accepted'}));
+                                  success('Misión agregada', 'Aparecerá en el apartado de Misiones.');
+                                }}
+                                className="px-3 py-1.5 text-xs font-bold text-white bg-[#5F927B] hover:bg-[#4C7563] rounded-lg transition-colors shadow-xs cursor-pointer"
+                              >
+                                Aceptar
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )})}
+                    
+                    <button 
+                      onClick={() => setIsCustomMissionOpen(true)}
+                      className="w-full mt-2 p-3 border-2 border-dashed border-[#5F927B]/40 hover:border-[#5F927B] bg-[#f8faf9] text-[#3E6855] rounded-xl flex items-center justify-center gap-2 text-sm font-bold transition-colors cursor-pointer"
+                    >
+                      <Zap className="w-4 h-4 fill-current" />
+                      Crear misión personalizada
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="space-y-8 text-stone-800 text-base leading-relaxed mb-10">
               {activeGuide.explainedContent.map((section, idx) => (
@@ -530,6 +842,115 @@ export const FluxFlowModule: React.FC<{ onNavigate: (view: ViewMode) => void }> 
                 <span>Finalizar lectura y continuar</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
+            </div>
+          </div>
+        )}
+
+        {isCustomMissionOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div 
+              className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm"
+              onClick={() => setIsCustomMissionOpen(false)}
+            ></div>
+            <div className="relative bg-white rounded-3xl p-6 sm:p-8 w-full max-w-md shadow-xl flex flex-col gap-4 border border-stone-100">
+              <div>
+                <h3 className="font-serif text-xl font-bold text-stone-900 mb-1">
+                  Misión Personalizada
+                </h3>
+                <p className="text-stone-500 text-sm">
+                  ¿Quieres aplicar los conocimientos de la guía a tu manera? Crea una misión personalizada.
+                </p>
+              </div>
+              
+              <div className="space-y-4 mt-2">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-stone-700 uppercase tracking-wider">Nombre de la misión</label>
+                  <input 
+                    type="text" 
+                    value={customMissionData.title}
+                    onChange={(e) => setCustomMissionData(prev => ({...prev, title: e.target.value}))}
+                    placeholder="Ej. Escribir 5 minutos en mi diario..."
+                    className="w-full bg-[#fbf9f5] border-2 border-stone-200 focus:border-[#5F927B] rounded-2xl px-4 py-3 text-sm font-medium text-stone-800 focus:outline-none focus:ring-4 focus:ring-[#5F927B]/20 transition-all"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-stone-700 uppercase tracking-wider">Descripción</label>
+                  <textarea 
+                    value={customMissionData.description}
+                    onChange={(e) => setCustomMissionData(prev => ({...prev, description: e.target.value}))}
+                    placeholder="Detalles sobre cómo lo aplicarás..."
+                    className="w-full h-20 bg-[#fbf9f5] border-2 border-stone-200 focus:border-[#5F927B] rounded-2xl px-4 py-3 text-sm font-medium text-stone-800 focus:outline-none focus:ring-4 focus:ring-[#5F927B]/20 transition-all resize-none"
+                  ></textarea>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-stone-700 uppercase tracking-wider">Fecha</label>
+                    <input 
+                      type="date" 
+                      value={customMissionData.date}
+                      onChange={(e) => setCustomMissionData(prev => ({...prev, date: e.target.value}))}
+                      min={new Date().toISOString().split('T')[0]}
+                      className="w-full bg-[#fbf9f5] border-2 border-stone-200 focus:border-[#5F927B] rounded-2xl px-4 py-3 text-sm font-medium text-stone-800 focus:outline-none focus:ring-4 focus:ring-[#5F927B]/20 transition-all cursor-pointer"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-stone-700 uppercase tracking-wider">Hora</label>
+                    <input 
+                      type="time" 
+                      value={customMissionData.time}
+                      onChange={(e) => setCustomMissionData(prev => ({...prev, time: e.target.value}))}
+                      className="w-full bg-[#fbf9f5] border-2 border-stone-200 focus:border-[#5F927B] rounded-2xl px-4 py-3 text-sm font-medium text-stone-800 focus:outline-none focus:ring-4 focus:ring-[#5F927B]/20 transition-all cursor-pointer"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 mt-4">
+                <button
+                  onClick={() => setIsCustomMissionOpen(false)}
+                  className="flex-1 px-4 py-3 rounded-2xl font-bold text-sm text-stone-600 bg-stone-100 hover:bg-stone-200 transition-colors cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => {
+                    if (!customMissionData.title || !customMissionData.date || !customMissionData.time) {
+                      warning('Faltan campos', 'Por favor ingresa nombre, fecha y hora.');
+                      return;
+                    }
+                    
+                    const newMission = addCustomMission(
+                      customMissionData.title, 
+                      customMissionData.description, 
+                      activeGuide?.id || 'custom', 
+                      activeGuide?.title || 'Personalizado', 
+                      activeGuide?.category || 'General'
+                    );
+                    
+                    // Add schedule
+                    try {
+                      const sch = localStorage.getItem('fluxglow_mission_schedules');
+                      let parsedSch = sch ? JSON.parse(sch) : {};
+                      const [year, month, day] = customMissionData.date.split('-').map(Number);
+                      const [hours, minutes] = customMissionData.time.split(':').map(Number);
+                      const d = new Date();
+                      d.setFullYear(year, month - 1, day);
+                      d.setHours(hours, minutes, 0, 0);
+                      
+                      parsedSch[newMission.id] = d.toISOString();
+                      localStorage.setItem('fluxglow_mission_schedules', JSON.stringify(parsedSch));
+                    } catch(e) {}
+
+                    success('¡Misión creada!', 'Se ha programado con éxito.');
+                    setIsCustomMissionOpen(false);
+                    setCustomMissionData({ title: '', description: '', date: '', time: '' });
+                  }}
+                  className="flex-1 px-4 py-3 rounded-2xl font-bold text-sm text-white bg-[#5F927B] hover:bg-[#4C7563] shadow-xs hover:shadow-md transition-all cursor-pointer"
+                >
+                  Crear Misión
+                </button>
+              </div>
             </div>
           </div>
         )}
