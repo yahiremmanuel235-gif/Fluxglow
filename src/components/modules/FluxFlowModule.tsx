@@ -320,7 +320,7 @@ export const FluxFlowModule: React.FC<{ onNavigate: (view: ViewMode) => void }> 
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 max-w-3xl mx-auto pb-10">
               <button
                 onClick={() => setCurrentStep(2)}
-                className="text-stone-500 hover:text-stone-800 text-sm font-semibold transition-colors px-4 py-2 cursor-pointer"
+                className="w-full sm:w-auto text-stone-600 hover:text-stone-900 text-sm font-bold transition-all px-8 py-3 min-h-[44px] cursor-pointer bg-white border-2 border-stone-200 hover:border-stone-300 hover:bg-stone-50 rounded-full shadow-xs flex items-center justify-center gap-2"
               >
                 Saltar este paso
               </button>
@@ -382,8 +382,12 @@ export const FluxFlowModule: React.FC<{ onNavigate: (view: ViewMode) => void }> 
           <div className="animate-fadeIn mt-10">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {mergedGuides.map((guide, idx) => {
-                const cardStyle = idx % 2 === 0 ? 'flux-card-sage' : 'flux-card-terracotta';
+                const isCourse = guide.isCourse;
+                const cardStyle = isCourse 
+                  ? 'bg-gradient-to-b from-[#253d33] to-[#1c2e26] border-[#3e6855] text-white hover:border-[#548c71] hover:shadow-xl ring-2 ring-transparent hover:ring-amber-400/30'
+                  : (idx % 2 === 0 ? 'flux-card-sage' : 'flux-card-terracotta');
                 const tagStyle = idx % 2 === 0 ? 'bg-[#EBF1EA] text-[#3E6855] border-[#C5DDD0]' : 'bg-[#FDF4F0] text-[#B54F2C] border-[#F7D3C3]';
+                
                 return (
                   <div
                     key={guide.id}
@@ -394,36 +398,44 @@ export const FluxFlowModule: React.FC<{ onNavigate: (view: ViewMode) => void }> 
                         setActiveGuide(guide as any);
                       }
                     }}
-                    className={`cursor-pointer group flex flex-col h-full rounded-3xl p-4 sm:p-5 border border-stone-200 hover:border-transparent transition-all shadow-xs hover:shadow-lg ${cardStyle}`}
+                    className={`cursor-pointer group flex flex-col h-full rounded-3xl p-4 sm:p-5 border transition-all shadow-xs ${cardStyle} ${!isCourse ? 'border-stone-200 hover:border-transparent hover:shadow-lg' : ''}`}
                   >
                     <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden mb-4 bg-stone-100 shadow-2xs">
                       <img src={guide.image || (guide as any).coverImage} alt={guide.title} referrerPolicy="no-referrer" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                      <div className="absolute top-3 left-3 flex flex-col gap-1.5">
-                        <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full shadow-xs border ${tagStyle}`}>
-                          {guide.category}
-                        </span>
-                        {guide.isCourse && (
-                          <span className="bg-amber-400 text-amber-950 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs flex items-center gap-1 w-max">
-                            <Flame className="w-3 h-3 fill-amber-500" />
-                            <span>{guide.readTime}</span>
+                      <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
+                        {isCourse ? (
+                          <span className="bg-gradient-to-r from-amber-500 to-amber-600 text-white text-[11px] font-black px-3 py-1 rounded-full shadow-md border border-amber-400/50 flex items-center gap-1.5 uppercase tracking-wider">
+                            <BookOpen className="w-3.5 h-3.5" />
+                            Curso de 1 Semana
+                          </span>
+                        ) : (
+                          <span className="bg-white/95 backdrop-blur-md text-emerald-700 text-[11px] font-bold px-3 py-1 rounded-full shadow-sm border border-emerald-200 flex items-center gap-1 uppercase tracking-wider">
+                            <Clock className="w-3.5 h-3.5" />
+                            Lectura 5 Min
                           </span>
                         )}
+                        <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-xs border w-max ${isCourse ? 'bg-white/20 text-white border-white/30 backdrop-blur-md' : tagStyle}`}>
+                          {guide.category}
+                        </span>
                       </div>
+                      {isCourse && (
+                         <div className="absolute inset-0 border-2 border-amber-400/30 rounded-2xl pointer-events-none" />
+                      )}
                     </div>
                     <div className="flex-1 flex flex-col">
-                      <h3 className="text-base sm:text-lg font-bold text-stone-900 leading-tight mb-2 group-hover:text-[#3E6855] transition-colors line-clamp-2">
+                      <h3 className={`text-base sm:text-lg font-bold leading-tight mb-2 transition-colors line-clamp-2 ${isCourse ? 'text-white group-hover:text-amber-400' : 'text-stone-900 group-hover:text-[#3E6855]'}`}>
                         {guide.title}
                       </h3>
-                      <p className="text-xs sm:text-sm text-stone-600 line-clamp-2 leading-relaxed mb-4 flex-1">
+                      <p className={`text-xs sm:text-sm line-clamp-2 leading-relaxed mb-4 flex-1 ${isCourse ? 'text-stone-300' : 'text-stone-600'}`}>
                         {guide.isCourse ? (guide as any).description : (guide as any).simpleSummary}
                       </p>
-                      <div className="flex items-center justify-between pt-3 border-t border-stone-200/50 mt-auto">
-                        <span className="text-xs font-semibold text-stone-500 flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5" />
-                          {!guide.isCourse && guide.readTime}
+                      <div className={`flex items-center justify-between pt-3 border-t mt-auto ${isCourse ? 'border-white/10' : 'border-stone-200/50'}`}>
+                        <span className={`text-xs font-semibold flex items-center gap-1 ${isCourse ? 'text-amber-400/80' : 'text-stone-500'}`}>
+                          <Flame className="w-3.5 h-3.5" />
+                          {isCourse ? 'Desafío Completo' : guide.readTime}
                         </span>
-                        <div className="w-8 h-8 rounded-full bg-white border border-stone-200 flex items-center justify-center group-hover:bg-[#5F927B] group-hover:border-[#5F927B] transition-colors shadow-2xs">
-                          <ArrowRight className="w-4 h-4 text-stone-400 group-hover:text-white" />
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors shadow-2xs ${isCourse ? 'bg-white/10 border border-white/20 group-hover:bg-amber-500 group-hover:border-amber-400' : 'bg-white border border-stone-200 group-hover:bg-[#5F927B] group-hover:border-[#5F927B]'}`}>
+                          <ArrowRight className={`w-4 h-4 ${isCourse ? 'text-white/70 group-hover:text-white' : 'text-stone-400 group-hover:text-white'}`} />
                         </div>
                       </div>
                     </div>
@@ -435,7 +447,7 @@ export const FluxFlowModule: React.FC<{ onNavigate: (view: ViewMode) => void }> 
             <div className="mt-12 text-center pb-12">
               <button
                 onClick={() => setCurrentStep(3)}
-                className="text-stone-500 hover:text-stone-800 text-sm font-semibold transition-colors px-6 py-3 cursor-pointer border border-stone-200 rounded-full hover:bg-stone-50"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 text-stone-600 hover:text-stone-900 text-sm font-bold transition-all px-8 py-3 min-h-[44px] cursor-pointer bg-white border-2 border-stone-200 hover:border-stone-300 hover:bg-stone-50 rounded-full shadow-xs"
               >
                 Saltar este paso y continuar
               </button>
@@ -502,7 +514,7 @@ export const FluxFlowModule: React.FC<{ onNavigate: (view: ViewMode) => void }> 
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-stone-200 mt-12">
               <button
                 onClick={() => setCurrentStep(3)}
-                className="text-stone-500 hover:text-stone-800 text-sm font-semibold transition-colors px-4 py-2 cursor-pointer"
+                className="w-full sm:w-auto text-stone-600 hover:text-stone-900 text-sm font-bold transition-all px-8 py-3 min-h-[44px] cursor-pointer bg-white border-2 border-stone-200 hover:border-stone-300 hover:bg-stone-50 rounded-full shadow-xs flex items-center justify-center gap-2"
               >
                 Saltar este paso
               </button>
