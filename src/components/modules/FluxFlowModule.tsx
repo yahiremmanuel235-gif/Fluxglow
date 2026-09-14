@@ -6,7 +6,7 @@ import {
   Square, Heart, BookmarkCheck, Play, ArrowLeft, Quote, Flame, Activity, Timer, Wind
 } from 'lucide-react';
 import { useJournal } from '../../hooks/useJournal';
-import { incrementFluxStreak, getFluxStreak } from '../../utils/streakManager';
+import { incrementFluxStreak, getFluxStreak, setLastFluxDate } from '../../utils/streakManager';
 import { useToast } from '../common/Toast';
 import confetti from 'canvas-confetti';
 import { DEMO_GUIDES_CATALOG, AI_DEMO_NOTICE_TEXT } from '../../data/guidesData';
@@ -123,6 +123,11 @@ export const FluxFlowModule: React.FC<{ onNavigate: (view: ViewMode) => void }> 
     }
   };
 
+  const goToStep3 = () => {
+    setLastFluxDate();
+    setCurrentStep(3);
+  };
+
   const handleFinishGuide = () => {
     if (activeGuide) {
       let readGuides: string[] = [];
@@ -141,14 +146,14 @@ export const FluxFlowModule: React.FC<{ onNavigate: (view: ViewMode) => void }> 
     incrementFluxStreak();
     confetti({ particleCount: 90, spread: 80, origin: { y: 0.6 } });
     setActiveGuide(null);
-    setCurrentStep(3);
+    goToStep3();
   };
 
   const handleCourseDayComplete = () => {
     incrementFluxStreak();
     confetti({ particleCount: 90, spread: 80, origin: { y: 0.6 } });
     setActiveCourse(null);
-    setCurrentStep(3);
+    goToStep3();
   };
 
   const activeQuoteData = INSPIRATIONAL_QUOTES[selectedMood] || INSPIRATIONAL_QUOTES['feliz'];
@@ -446,7 +451,7 @@ export const FluxFlowModule: React.FC<{ onNavigate: (view: ViewMode) => void }> 
 
             <div className="mt-12 text-center pb-12">
               <button
-                onClick={() => setCurrentStep(3)}
+                onClick={() => goToStep3()}
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 text-stone-600 hover:text-stone-900 text-sm font-bold transition-all px-8 py-3 min-h-[44px] cursor-pointer bg-white border-2 border-stone-200 hover:border-stone-300 hover:bg-stone-50 rounded-full shadow-xs"
               >
                 Saltar este paso y continuar
@@ -513,7 +518,7 @@ export const FluxFlowModule: React.FC<{ onNavigate: (view: ViewMode) => void }> 
 
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-stone-200 mt-12">
               <button
-                onClick={() => setCurrentStep(3)}
+                onClick={() => goToStep3()}
                 className="w-full sm:w-auto text-stone-600 hover:text-stone-900 text-sm font-bold transition-all px-8 py-3 min-h-[44px] cursor-pointer bg-white border-2 border-stone-200 hover:border-stone-300 hover:bg-stone-50 rounded-full shadow-xs flex items-center justify-center gap-2"
               >
                 Saltar este paso

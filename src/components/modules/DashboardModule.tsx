@@ -35,7 +35,7 @@ import { useToast } from '../common/Toast';
 import { AuthModals } from '../common/AuthModals';
 import { EmptyStat } from '../common/EmptyStat';
 import { formatFluxDate } from '../../utils/dateUtils';
-import { getFluxStreak } from '../../utils/streakManager';
+import { getFluxStreak, canStartFluxToday } from '../../utils/streakManager';
 
 interface DashboardModuleProps {
   onNavigate: (view: ViewMode) => void;
@@ -95,8 +95,11 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
   } = useMissions(userProfile, onUpdateProfile);
 
   const [fluxStreak, setFluxStreak] = useState(getFluxStreak());
+  const [canFlux, setCanFlux] = useState(canStartFluxToday());
 
   React.useEffect(() => {
+    setFluxStreak(getFluxStreak());
+    setCanFlux(canStartFluxToday());
     const handleStreakUpdate = (e: any) => {
       setFluxStreak(e.detail);
     };
@@ -357,11 +360,17 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
             <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 shrink-0 w-full md:w-auto">
               <button
                 id="hero-quick-journal-btn"
-                onClick={() => onNavigate('flux' as any)}
-                className="flex-1 sm:flex-none px-4 py-2.5 min-h-[44px] rounded-2xl bg-gradient-to-r from-[#5F927B] to-[#3E6855] hover:opacity-90 text-white text-xs sm:text-sm font-bold shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer group"
+                onClick={() => {
+                  if (canFlux) {
+                    onNavigate('flux' as any);
+                  }
+                }}
+                disabled={!canFlux}
+                title={!canFlux ? "Ya completaste tu Flux hoy. Vuelve mañana." : ""}
+                className={`flex-1 sm:flex-none px-4 py-2.5 min-h-[44px] rounded-2xl text-xs sm:text-sm font-bold shadow-xs transition-all flex items-center justify-center gap-2 group ${canFlux ? 'bg-gradient-to-r from-[#5F927B] to-[#3E6855] hover:opacity-90 text-white cursor-pointer' : 'bg-stone-200 text-stone-400 cursor-not-allowed'}`}
               >
-                <Zap className="w-4 h-4 object-contain fill-current text-brand-gold-300 group-hover:scale-110 transition-transform" />
-                <span>Iniciar Flux</span>
+                <Zap className={`w-4 h-4 object-contain fill-current transition-transform ${canFlux ? 'text-brand-gold-300 group-hover:scale-110' : 'text-stone-400'}`} />
+                <span>{canFlux ? 'Iniciar Flux' : 'Flux Completado'}</span>
               </button>
               <button
                 id="hero-quick-missions-btn"

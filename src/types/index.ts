@@ -119,9 +119,10 @@ export interface UserDailyMissionRecord {
   category: string;
   xp: number;
   timeEstimate: string;
-  status: 'pending' | 'completed' | 'expired';
+  status: 'pending' | 'completed' | 'expired' | 'scheduled' | 'rejected' | 'failed';
   createdAt: string;
   completedAt?: string;
+  scheduledTime?: string;
 }
 
 export interface VideoPodcastItem {
