@@ -18,6 +18,7 @@ import { ProfileModule } from './components/modules/ProfileModule';
 import { CommunityModule } from './components/modules/CommunityModule';
 import { MissionsModule } from './components/modules/MissionsModule';
 import { DashboardModule } from './components/modules/DashboardModule';
+import { FluxFlowModule } from './components/modules/FluxFlowModule';
 import { OnboardingModal } from './components/common/OnboardingModal';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { soundEngine } from './utils/audioSynth';
@@ -304,6 +305,20 @@ export default function App() {
                     userProfile={userProfile}
                     onUpdateProfile={handleUpdateProfile}
                   />
+                </ErrorBoundary>
+              </motion.div>
+            } />
+
+            <Route path="/flux" element={
+              <motion.div
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+                className="w-full h-full"
+              >
+                <ErrorBoundary fallbackTitle="Inconveniente en el Flujo Flux">
+                  <FluxFlowModule onNavigate={handleNavigate} />
                 </ErrorBoundary>
               </motion.div>
             } />
