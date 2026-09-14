@@ -1,305 +1,516 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
-  Sparkles, 
-  ArrowRight, 
-  CheckCircle2,
-  Heart,
-  Brain,
-  Smile,
-  Frown,
-  Meh,
-  Activity,
-  Zap,
-  BookOpen,
-  Target,
-  MessageSquare,
-  Users,
-  BarChart,
-  Home
+  Sparkles, Zap, Lock, Tag, Clock, CheckCircle2, 
+  ArrowRight, Brain, MessageSquare, Target, Users, BarChart, 
+  Home, BookOpen, ChevronUp, ChevronDown, Sliders, ChevronLeft, 
+  Square, Heart, BookmarkCheck, Play, ArrowLeft, Quote, Flame, Activity, Timer, Wind
 } from 'lucide-react';
 import { useJournal } from '../../hooks/useJournal';
 import { incrementFluxStreak, getFluxStreak } from '../../utils/streakManager';
 import { useToast } from '../common/Toast';
 import confetti from 'canvas-confetti';
-import { DEMO_GUIDES_CATALOG, POPULAR_GUIDES_CATALOG } from '../../data/guidesData';
-import { COMPLETE_COURSES_CATALOG } from '../../data/completeGuidesData';
-import { GuideReaderModal } from './GuideReaderModal'; // if exists, or I will inline the reading logic
+import { DEMO_GUIDES_CATALOG, AI_DEMO_NOTICE_TEXT } from '../../data/guidesData';
+import { COMPLETE_COURSES_CATALOG, } from '../../data/completeGuidesData';
+import { MoodIcon } from '../common/MoodIcon';
+import { MoodType, ViewMode } from '../../types';
+import { activateAllMissionsFromGuide } from '../../utils/missionsManager';
+import { CompleteCoursePlayerModal } from './CompleteCoursePlayerModal';
 
-export const FluxFlowModule: React.FC<{ onNavigate: (view: string) => void }> = ({ onNavigate }) => {
-  const [currentStep, setCurrentStep] = useState(1);
-  const { addEntry } = useJournal();
-  const { success, info } = useToast();
+const emojiMoods = [
+  { id: 'enojado', image: '/assets/moods/mood-1-angry.png', label: 'Enojado', color: '#b91c1c', bg: '#fee2e2' },
+  { id: 'triste', image: '/assets/moods/mood-2-sad.png', label: 'Triste', color: '#dc2626', bg: '#fef2f2' },
+  { id: 'ansioso', image: '/assets/moods/mood-3-neutral.png', label: 'Inquieto', color: '#d97706', bg: '#fef3c7' },
+  { id: 'tranquilo', image: '/assets/moods/mood-4-happy.png', label: 'Tranquilo', color: '#65a30d', bg: '#ecfccb' },
+  { id: 'feliz', image: '/assets/moods/mood-5-veryhappy.png', label: 'Feliz', color: '#16a34a', bg: '#dcfce7' },
+];
+
+const availableTriggers = [
+  'Trabajo', 'Estudios', 'Familia', 'Amigos', 'Pareja', 
+  'Salud', 'Sueño', 'Dinero', 'Clima', 'Productividad', 'Descanso', 'Mindfulness'
+];
+
+interface EmotionQuote {
+  quote: string;
+  author: string;
+  reflection: string;
+  themeColor: string;
+  bgColor: string;
+}
+
+const INSPIRATIONAL_QUOTES: Record<string, EmotionQuote> = {
+  enojado: {
+    quote: "La ira no es un defecto; es un mensajero que señala un límite vulnerado. No la reprimas: respírala hondo, comprende su raíz y canaliza su energía hacia una acción justa y serena.",
+    author: "Regulación Emocional y Asertividad",
+    reflection: "Has dado el paso más importante: reconocer tu enfado sin dejar que te controle. Permítete 5 minutos de pausa antes de reaccionar.",
+    themeColor: '#b91c1c',
+    bgColor: 'from-rose-50 to-orange-50'
+  },
+  triste: {
+    quote: "Incluso las tormentas más densas terminan por disiparse. Date permiso para sentir, soltar el peso y recordar que tu valor permanece intacto aun en los días más grises.",
+    author: "Autocompasión y Resiliencia",
+    reflection: "Honrar tu tristeza es un acto de valentía. Hoy no necesitas ser fuerte para todo el mundo; cuídate como cuidarías a tu mejor amigo.",
+    themeColor: '#de6943',
+    bgColor: 'from-orange-50 to-amber-50'
+  },
+  ansioso: {
+    quote: "No tienes que resolver toda tu vida hoy. La ansiedad intenta vivir en futuros hipotéticos; la paz solo existe en este momento presente. Un solo paso consciente basta.",
+    author: "Mindfulness y Neurociencia",
+    reflection: "Tu cuerpo está a salvo en este instante. Respira lento, suelta la mandíbula y concéntrate exclusivamente en lo que puedes hacer en los próximos 15 minutos.",
+    themeColor: '#d97706',
+    bgColor: 'from-amber-50 to-emerald-50/50'
+  },
+  tranquilo: {
+    quote: "La serenidad no es la ausencia de retos, sino la presencia de armonía dentro de ti. Atesora este estado de equilibrio y úsalo como ancla para el resto de tu jornada.",
+    author: "Sabiduría Consciente",
+    reflection: "Cuando tu mente está en calma, tus decisiones son más sabias y tus relaciones más nutritivas. Celebra esta estabilidad interior.",
+    themeColor: '#548c71',
+    bgColor: 'from-emerald-50 to-teal-50/60'
+  },
+  feliz: {
+    quote: "La alegría auténtica florece cuando apreciamos los pequeños milagros cotidianos. Multiplica esta energía compartiendo amabilidad y gratitud con quienes te rodean.",
+    author: "Psicología Positiva y Florecimiento",
+    reflection: "¡Qué dicha sentirte así! Anota qué factores han contribuido a tu bienestar hoy para poder cultivarlos con mayor frecuencia.",
+    themeColor: '#16a34a',
+    bgColor: 'from-emerald-50 to-green-100/60'
+  }
+};
+
+export const FluxFlowModule: React.FC<{ onNavigate: (view: ViewMode) => void }> = ({ onNavigate }) => {
+  const { createEntry } = useJournal();
+  const { success, warning } = useToast();
   
+  const [currentStep, setCurrentStep] = useState(1);
+
   // Step 1 State
-  const [mood, setMood] = useState<string>('');
-  const [intensity, setIntensity] = useState<number>(5);
-  const [notes, setNotes] = useState('');
-  const [factors, setFactors] = useState<string[]>([]);
+  const [selectedMood, setSelectedMood] = useState<MoodType>('feliz');
+  const [intensity, setIntensity] = useState<number>(8);
+  const [noteText, setNoteText] = useState('');
+  const [selectedTriggers, setSelectedTriggers] = useState<string[]>(['Productividad']);
+  const [showAllTriggers, setShowAllTriggers] = useState<boolean>(false);
+  const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
 
   // Step 2 State
-  const [activeGuide, setActiveGuide] = useState<any>(null);
-  const [activeCourse, setActiveCourse] = useState<any>(null);
-  const [courseDay, setCourseDay] = useState<number>(0); // 0 to show catalog, or specific day index
+  const [activeGuide, setActiveGuide] = useState<any | null>(null);
+  const [activeCourse, setActiveCourse] = useState<any | null>(null);
 
-  const handleSaveStep1 = async () => {
-    if (!mood) {
-      info('Aviso', 'Selecciona un estado de ánimo para continuar.');
-      return;
+  const toggleTrigger = (trigger: string) => {
+    if (selectedTriggers.includes(trigger)) {
+      setSelectedTriggers(selectedTriggers.filter(t => t !== trigger));
+    } else {
+      setSelectedTriggers([...selectedTriggers, trigger]);
     }
-    
-    // Save to journal
-    await addEntry({
-      mood: mood as any,
-      intensity,
-      notes,
-      triggers: factors
-    });
-    
-    incrementFluxStreak();
-    success('Registro guardado', 'Tu check-in emocional ha sido guardado exitosamente.');
-    setCurrentStep(2);
   };
 
-  const skipStep1 = () => setCurrentStep(2);
+  const handleSaveJournal = async () => {
+    if (!noteText.trim()) {
+      warning('Escribe unas palabras', 'Por favor redacta cómo te sientes antes de guardar tu registro.');
+      return;
+    }
+    try {
+      await createEntry({
+        mood: selectedMood,
+        notes: noteText.trim(),
+        intensity: intensity,
+        triggers: selectedTriggers,
+        habits: { sleepHours: 8, waterGlasses: 6, exercised: true, energyLevel: intensity },
+        aiFeedback: INSPIRATIONAL_QUOTES[selectedMood]?.reflection || 'Has identificado tus emociones con claridad.'
+      });
+      incrementFluxStreak();
+      setIsSubmitted(true);
+      confetti({ particleCount: 65, spread: 60, origin: { y: 0.6 } });
+    } catch (err: any) {
+      warning('Aviso al guardar', err?.message || 'No se pudo guardar la entrada.');
+    }
+  };
 
-  const finishGuide = () => {
+  const handleFinishGuide = () => {
+    if (activeGuide) {
+      let readGuides: string[] = [];
+      try {
+        const saved = localStorage.getItem('fluxglow_read_guides');
+        if (saved) readGuides = JSON.parse(saved);
+      } catch (e) {}
+      
+      if (!readGuides.includes(activeGuide.id)) {
+        readGuides.push(activeGuide.id);
+        localStorage.setItem('fluxglow_read_guides', JSON.stringify(readGuides));
+      }
+      activateAllMissionsFromGuide(activeGuide);
+    }
+    
     incrementFluxStreak();
-    confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
+    confetti({ particleCount: 90, spread: 80, origin: { y: 0.6 } });
     setActiveGuide(null);
     setCurrentStep(3);
   };
 
-  const finishCourseDay = () => {
+  const handleCourseDayComplete = () => {
     incrementFluxStreak();
-    confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
+    confetti({ particleCount: 90, spread: 80, origin: { y: 0.6 } });
     setActiveCourse(null);
     setCurrentStep(3);
   };
 
+  const activeQuoteData = INSPIRATIONAL_QUOTES[selectedMood] || INSPIRATIONAL_QUOTES['feliz'];
+  const activeEmojiItem = emojiMoods.find(m => m.id === selectedMood) || emojiMoods[4];
+
+  // Combined Catalog for Step 2
+  const mergedGuides = useMemo(() => {
+    return [
+      ...COMPLETE_COURSES_CATALOG.map(c => ({
+        ...c,
+        isCourse: true,
+        readTime: `${c.totalDays} Días`
+      })),
+      ...DEMO_GUIDES_CATALOG.map(g => ({
+        ...g,
+        isCourse: false
+      }))
+    ];
+  }, []);
+
   return (
-    <div className="w-full min-h-screen bg-flux-brand-bath flex flex-col pb-20 pt-4 px-4 sm:px-6 lg:px-8 text-stone-800">
-      <div className="max-w-[800px] mx-auto w-full flex-1 flex flex-col space-y-6">
-        
-        {/* Breadcrumb / Progress Header */}
-        <div className="flex items-center justify-between bg-white/60 backdrop-blur-sm p-4 rounded-3xl border border-white/80 shadow-xs mb-4">
-          <div className="flex items-center gap-2">
-             <Zap className="w-5 h-5 text-amber-500 fill-amber-500" />
-             <span className="font-bold text-stone-900 text-sm">Flujo Flux</span>
-          </div>
-          <div className="flex items-center gap-2 text-xs font-semibold text-stone-500">
-             <span className={currentStep === 1 ? 'text-[#3E6855] font-bold' : ''}>1. Check-in</span>
-             <ArrowRight className="w-3 h-3" />
-             <span className={currentStep === 2 ? 'text-[#3E6855] font-bold' : ''}>2. Aprendizaje</span>
-             <ArrowRight className="w-3 h-3" />
-             <span className={currentStep === 3 ? 'text-[#3E6855] font-bold' : ''}>3. Cierre</span>
-          </div>
-        </div>
+    <div className="w-full bg-flux-brand-bath min-h-screen pb-24 pt-4 px-4 sm:px-6 lg:px-8 overflow-x-hidden relative animate-fadeIn">
+      {/* Course Modal overlays everything if active */}
+      <CompleteCoursePlayerModal 
+        course={activeCourse} 
+        isOpen={!!activeCourse} 
+        onClose={() => setActiveCourse(null)}
+        isFluxMode={true}
+        onFluxComplete={handleCourseDayComplete}
+      />
+
+      <div className="max-w-[1280px] mx-auto">
+        {/* Navigation & Header */}
+        {!activeGuide && (
+          <>
+            <div className="flex items-center justify-between py-2 border-b border-[#5F927B]/20 mb-4">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-bold text-[#3E6855] bg-[#EBF1EA] border border-[#C5DDD0] px-2.5 py-0.5 rounded-full ml-2 hidden sm:inline-flex items-center gap-1.5 shadow-2xs">
+                  <Zap className="w-3.5 h-3.5 fill-[#3E6855]" />
+                  <span>Modo Inmersivo Flux</span>
+                </span>
+              </div>
+              <button onClick={() => onNavigate('dashboard' as any)} className="text-xs font-semibold text-stone-700 hover:text-[#B54F2C] bg-white border border-stone-200 hover:border-[#F7D3C3] px-3.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer">
+                <span>Salir del flujo</span>
+              </button>
+            </div>
+            
+            <div className="text-center my-6 px-2 overflow-visible">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#EBF1EA] border border-[#C5DDD0] text-xs font-bold text-[#3E6855] mb-2 shadow-2xs">
+                <span>Paso {currentStep} de 3</span>
+              </div>
+              <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-normal leading-normal overflow-visible">
+                <span className="bg-gradient-to-r from-[#3E6855] via-[#5F927B] to-[#E87A52] bg-clip-text text-transparent">
+                  {currentStep === 1 ? 'Check-in Emocional' : currentStep === 2 ? 'Aprendizaje Diario' : '¡Flux Completado!'}
+                </span>
+              </h1>
+            </div>
+          </>
+        )}
 
         {/* STEP 1 */}
-        {currentStep === 1 && (
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-brand-sage-300 shadow-sm animate-in fade-in duration-500">
-            <h2 className="text-2xl font-serif font-bold text-stone-900 mb-2">Check-in Emocional</h2>
-            <p className="text-stone-600 text-sm mb-8">Tómate un momento para conectar con cómo te sientes hoy.</p>
-            
-            <div className="space-y-8">
-              {/* Mood Selection */}
-              <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-stone-500 mb-3 block">Estado de Ánimo</label>
-                <div className="grid grid-cols-5 gap-2">
-                  {[
-                    { id: 'muy mal', emoji: '😭' },
-                    { id: 'mal', emoji: '😔' },
-                    { id: 'regular', emoji: '😐' },
-                    { id: 'bien', emoji: '🙂' },
-                    { id: 'muy bien', emoji: '🤩' }
-                  ].map(m => (
-                    <button
-                      key={m.id}
-                      onClick={() => setMood(m.id)}
-                      className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all cursor-pointer ${
-                        mood === m.id ? 'border-brand-sage-500 bg-brand-sage-50 shadow-sm' : 'border-stone-200 bg-stone-50 hover:bg-stone-100'
-                      }`}
-                    >
-                      <span className="text-2xl sm:text-3xl mb-1">{m.emoji}</span>
-                      <span className="text-[10px] font-semibold text-stone-600 capitalize hidden sm:block">{m.id}</span>
-                    </button>
-                  ))}
+        {currentStep === 1 && !isSubmitted && (
+          <div className="max-w-4xl mx-auto animate-fadeIn mt-10">
+            <div className="flex flex-col md:flex-row items-center justify-center gap-4 mb-5">
+              <div className="w-full md:contents flex-1 max-w-2xl bg-white border-2 border-[#5F927B]/30 rounded-3xl sm:rounded-full py-3 sm:py-2 px-4 sm:px-6 shadow-xs flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 relative">
+                <span className="text-sm md:text-base font-bold text-stone-800 text-center relative z-0 order-first md:order-none sm:py-1.5 shrink-0">
+                  ¿Cómo te sientes hoy?
+                </span>
+                <div className="flex items-center justify-center gap-1.5 sm:gap-2.5 w-full sm:w-auto sm:absolute md:static sm:left-4 z-10 shrink-0">
+                  {emojiMoods.map((m) => {
+                    const isSelected = selectedMood === m.id;
+                    return (
+                      <button
+                        key={m.id}
+                        onClick={() => setSelectedMood(m.id as MoodType)}
+                        className={`w-10 h-10 sm:w-10 sm:h-10 min-h-[40px] min-w-[40px] sm:min-h-[40px] sm:min-w-[40px] rounded-full flex items-center justify-center p-1 transition-all cursor-pointer ${
+                          isSelected
+                            ? 'scale-115 ring-2 ring-[#5F927B] shadow-md bg-[#EBF1EA]'
+                            : 'opacity-75 hover:opacity-100 hover:scale-110'
+                        }`}
+                        title={m.label}
+                      >
+                        <img src={m.image} alt={m.label} className="w-full h-full object-contain pointer-events-none select-none" />
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
+            </div>
 
-              {/* Intensity Slider */}
-              {mood && (
-                <div className="animate-in slide-in-from-top-4 duration-300">
-                  <div className="flex justify-between items-center mb-2">
-                    <label className="text-xs font-bold uppercase tracking-wider text-stone-500">Intensidad</label>
-                    <span className="text-sm font-bold text-brand-sage-700">{intensity}/10</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="1"
-                    max="10"
-                    value={intensity}
-                    onChange={(e) => setIntensity(parseInt(e.target.value))}
-                    className="w-full h-2 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-brand-sage-600"
-                  />
+            <div className="bg-white rounded-2xl border border-stone-200/90 p-4 sm:p-5 mb-5 shadow-2xs max-w-3xl mx-auto">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                <div className="flex items-center gap-2">
+                  <Sliders className="w-4 h-4 text-[#5F927B]" />
+                  <h4 className="text-xs sm:text-sm font-bold text-stone-800">
+                    Nivel de Intensidad Emocional
+                  </h4>
                 </div>
-              )}
-
-              {/* Desahogo Textarea */}
-              <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-stone-500 mb-3 block">Desahogo libre</label>
-                <textarea
-                  placeholder="¿Qué tienes en mente? Escribe sin filtros..."
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  className="w-full bg-stone-50 border border-stone-200 rounded-2xl p-4 text-sm focus:outline-hidden focus:border-brand-sage-500 focus:ring-1 focus:ring-brand-sage-500 resize-none h-32 transition-all"
+                <div className="flex items-center gap-2">
+                  <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full border ${
+                    intensity <= 3
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : intensity <= 7
+                      ? 'bg-amber-50 text-amber-700 border-amber-200'
+                      : 'bg-rose-50 text-rose-700 border-rose-200'
+                  }`}>
+                    {intensity <= 3 ? 'Leve' : intensity <= 7 ? 'Moderado' : 'Intenso'} • {intensity}/10
+                  </span>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={intensity}
+                  onChange={(e) => setIntensity(Number(e.target.value))}
+                  className="w-full accent-[#5F927B] cursor-pointer h-2 bg-stone-100 rounded-lg min-h-[44px]"
                 />
               </div>
+            </div>
 
-              {/* Actions */}
-              <div className="flex items-center justify-between pt-4 border-t border-stone-100">
+            <div className="flux-card-sage p-6 sm:p-8 mb-6 max-w-3xl mx-auto">
+              <div className="flex items-center justify-between pb-3.5 border-b border-[#C5DDD0]/70 mb-4">
+                <span className="text-xs font-bold text-[#3E6855] uppercase tracking-wider flex items-center gap-1.5">
+                  <Lock className="w-3.5 h-3.5 text-[#5F927B]" />
+                  Espacio privado y seguro de desahogo
+                </span>
+              </div>
+              <textarea
+                rows={6}
+                value={noteText}
+                onChange={(e) => setNoteText(e.target.value)}
+                placeholder="¿Por qué te sientes así el día de hoy?..."
+                className="w-full bg-transparent border-none text-stone-800 placeholder-stone-400 text-base sm:text-lg focus:outline-none resize-none leading-relaxed"
+              />
+              <div className="mt-4 pt-4 border-t border-stone-100 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-xs font-semibold text-stone-500 mr-1 flex items-center gap-1">
+                    <Tag className="w-3 h-3 text-[#548c71]" /> Factores:
+                  </span>
+                  {(showAllTriggers ? availableTriggers : availableTriggers.slice(0, 6)).map((tag) => {
+                    const isSelected = selectedTriggers.includes(tag);
+                    return (
+                      <button
+                        key={tag}
+                        onClick={() => toggleTrigger(tag)}
+                        className={`px-3 py-2 min-h-[44px] rounded-full text-xs font-medium transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-[#e2eee6] text-[#253d33] border border-[#548c71]'
+                            : 'bg-stone-100 text-stone-600 hover:bg-stone-200 border border-transparent'
+                        }`}
+                      >
+                        {tag}
+                      </button>
+                    );
+                  })}
+                  <button
+                    onClick={() => setShowAllTriggers(!showAllTriggers)}
+                    className="px-3 py-2 min-h-[44px] rounded-full text-xs font-semibold text-[#548c71] hover:bg-[#e2eee6] border border-[#548c71]/30 transition-all cursor-pointer flex items-center gap-1"
+                  >
+                    <span>{showAllTriggers ? 'Menos' : `+${availableTriggers.length - 6} más`}</span>
+                    {showAllTriggers ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 max-w-3xl mx-auto pb-10">
+              <button
+                onClick={() => setCurrentStep(2)}
+                className="text-stone-500 hover:text-stone-800 text-sm font-semibold transition-colors px-4 py-2 cursor-pointer"
+              >
+                Saltar este paso
+              </button>
+              <button
+                onClick={handleSaveJournal}
+                className="w-full sm:w-auto bg-[#E87A52] hover:bg-[#D4653E] active:scale-98 text-white px-8 py-3 min-h-[44px] rounded-full text-sm font-bold shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <img src="/assets/icons/send.png" alt="Enviar" className="w-4 h-4 object-contain brightness-0 invert" />
+                <span>Guardar en mi Diario</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 1 SUBMITTED */}
+        {currentStep === 1 && isSubmitted && (
+          <div className="my-8 animate-in zoom-in-95 duration-300 max-w-4xl mx-auto">
+            <div className={`bg-gradient-to-br ${activeQuoteData.bgColor} rounded-3xl border-2 border-amber-200/90 shadow-md p-6 sm:p-10 text-center relative overflow-hidden`}>
+              <div className="absolute -top-6 -right-6 text-stone-900/5 pointer-events-none">
+                <Quote className="w-48 h-48" />
+              </div>
+              <div className="inline-flex items-center gap-2 bg-white/90 backdrop-blur-xs border border-stone-200 px-4 py-1.5 rounded-full shadow-2xs mb-6">
+                <CheckCircle2 className="w-4 h-4 text-[#548c71]" />
+                <span className="text-xs font-bold text-stone-800">Registro guardado en tu Diario</span>
+              </div>
+              <div className="max-w-2xl mx-auto my-3">
+                <Quote className="w-8 h-8 text-amber-600/80 mx-auto mb-3" />
+                <blockquote className="font-serif text-xl sm:text-2xl lg:text-3xl font-bold text-stone-900 leading-relaxed">
+                  "{activeQuoteData.quote}"
+                </blockquote>
+                <p className="text-xs sm:text-sm font-semibold text-amber-900/80 mt-3 uppercase tracking-wider">
+                  — {activeQuoteData.author}
+                </p>
+              </div>
+              <div className="bg-white/80 backdrop-blur-xs p-4 sm:p-5 rounded-2xl border border-stone-200/80 max-w-xl mx-auto my-6 text-left shadow-2xs">
+                <p className="text-xs font-bold text-[#548c71] uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Mensaje de Acompañamiento:</span>
+                </p>
+                <p className="text-xs sm:text-sm text-stone-700 leading-relaxed">
+                  {activeQuoteData.reflection}
+                </p>
+              </div>
+              <div className="flex items-center justify-center mt-8">
                 <button
-                  onClick={skipStep1}
-                  className="px-4 py-2 text-xs font-semibold text-stone-500 hover:text-stone-800 transition-colors cursor-pointer"
+                  onClick={() => setCurrentStep(2)}
+                  className="bg-brand-sage-600 hover:bg-brand-sage-700 text-white px-8 py-3 min-h-[44px] rounded-full text-sm font-bold shadow-xs transition-all flex items-center gap-2 cursor-pointer"
                 >
-                  Saltar este paso
-                </button>
-                <button
-                  onClick={handleSaveStep1}
-                  disabled={!mood}
-                  className={`px-6 py-3 rounded-xl text-sm font-bold transition-all shadow-xs flex items-center gap-2 cursor-pointer ${
-                    mood ? 'bg-brand-sage-600 text-white hover:bg-brand-sage-700' : 'bg-stone-200 text-stone-400 cursor-not-allowed'
-                  }`}
-                >
-                  <Heart className="w-4 h-4" />
-                  <span>Guardar en mi Diario</span>
+                  <span>Pasar a la siguiente sección</span>
+                  <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* STEP 2 */}
-        {currentStep === 2 && !activeGuide && !activeCourse && (
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-brand-sage-300 shadow-sm animate-in fade-in duration-500">
-            <h2 className="text-2xl font-serif font-bold text-stone-900 mb-2">Aprendizaje Diario</h2>
-            <p className="text-stone-600 text-sm mb-6">Selecciona una guía rápida o un curso de 1 semana para continuar tu racha.</p>
-            
-            <div className="space-y-8">
-              <div>
-                <h3 className="text-xs font-bold uppercase tracking-wider text-stone-500 mb-4 flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-amber-500" />
-                  Guías Cortas Recomendadas
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {DEMO_GUIDES_CATALOG.slice(0, 4).map(guide => (
-                    <button
-                      key={guide.id}
-                      onClick={() => setActiveGuide(guide)}
-                      className="text-left p-4 rounded-2xl bg-stone-50 hover:bg-brand-sage-50 border border-stone-200 hover:border-brand-sage-300 transition-all group cursor-pointer"
-                    >
-                      <h4 className="text-sm font-bold text-stone-900 line-clamp-1 mb-1">{guide.title}</h4>
-                      <p className="text-[11px] text-stone-500 line-clamp-2">{guide.simpleSummary}</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
+        {/* STEP 2: Catalog */}
+        {currentStep === 2 && !activeGuide && (
+          <div className="animate-fadeIn mt-10">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {mergedGuides.map((guide, idx) => {
+                const cardStyle = idx % 2 === 0 ? 'flux-card-sage' : 'flux-card-terracotta';
+                const tagStyle = idx % 2 === 0 ? 'bg-[#EBF1EA] text-[#3E6855] border-[#C5DDD0]' : 'bg-[#FDF4F0] text-[#B54F2C] border-[#F7D3C3]';
+                return (
+                  <div
+                    key={guide.id}
+                    onClick={() => {
+                      if (guide.isCourse) {
+                        setActiveCourse(guide as any);
+                      } else {
+                        setActiveGuide(guide as any);
+                      }
+                    }}
+                    className={`cursor-pointer group flex flex-col h-full rounded-3xl p-4 sm:p-5 border border-stone-200 hover:border-transparent transition-all shadow-xs hover:shadow-lg ${cardStyle}`}
+                  >
+                    <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden mb-4 bg-stone-100 shadow-2xs">
+                      <img src={guide.image || (guide as any).coverImage} alt={guide.title} referrerPolicy="no-referrer" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      <div className="absolute top-3 left-3 flex flex-col gap-1.5">
+                        <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full shadow-xs border ${tagStyle}`}>
+                          {guide.category}
+                        </span>
+                        {guide.isCourse && (
+                          <span className="bg-amber-400 text-amber-950 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs flex items-center gap-1 w-max">
+                            <Flame className="w-3 h-3 fill-amber-500" />
+                            <span>{guide.readTime}</span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex-1 flex flex-col">
+                      <h3 className="text-base sm:text-lg font-bold text-stone-900 leading-tight mb-2 group-hover:text-[#3E6855] transition-colors line-clamp-2">
+                        {guide.title}
+                      </h3>
+                      <p className="text-xs sm:text-sm text-stone-600 line-clamp-2 leading-relaxed mb-4 flex-1">
+                        {guide.isCourse ? (guide as any).description : (guide as any).simpleSummary}
+                      </p>
+                      <div className="flex items-center justify-between pt-3 border-t border-stone-200/50 mt-auto">
+                        <span className="text-xs font-semibold text-stone-500 flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5" />
+                          {!guide.isCourse && guide.readTime}
+                        </span>
+                        <div className="w-8 h-8 rounded-full bg-white border border-stone-200 flex items-center justify-center group-hover:bg-[#5F927B] group-hover:border-[#5F927B] transition-colors shadow-2xs">
+                          <ArrowRight className="w-4 h-4 text-stone-400 group-hover:text-white" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
 
-              <div>
-                <h3 className="text-xs font-bold uppercase tracking-wider text-stone-500 mb-4 flex items-center gap-2">
-                  <BookOpen className="w-4 h-4 text-brand-sage-600" />
-                  Guías de 1 Semana
-                </h3>
-                <div className="space-y-3">
-                  {COMPLETE_COURSES_CATALOG.slice(0, 2).map(course => (
-                    <button
-                      key={course.id}
-                      onClick={() => setActiveCourse(course)}
-                      className="w-full text-left p-4 rounded-2xl bg-gradient-to-r from-stone-50 to-white hover:from-brand-sage-50 border border-stone-200 hover:border-brand-sage-300 transition-all flex items-center gap-4 cursor-pointer group"
-                    >
-                      <div className="w-16 h-16 shrink-0 rounded-xl bg-stone-200 overflow-hidden">
-                        <img src={course.image || course.coverImage} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-bold text-stone-900 mb-0.5">{course.title}</h4>
-                        <p className="text-[11px] text-stone-500">{course.totalDays} Días • {course.category}</p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="pt-4 border-t border-stone-100 text-center">
-                <button
-                  onClick={() => setCurrentStep(3)}
-                  className="px-4 py-2 text-xs font-semibold text-stone-500 hover:text-stone-800 transition-colors cursor-pointer"
-                >
-                  Saltar este paso
-                </button>
-              </div>
+            <div className="mt-12 text-center pb-12">
+              <button
+                onClick={() => setCurrentStep(3)}
+                className="text-stone-500 hover:text-stone-800 text-sm font-semibold transition-colors px-6 py-3 cursor-pointer border border-stone-200 rounded-full hover:bg-stone-50"
+              >
+                Saltar este paso y continuar
+              </button>
             </div>
           </div>
         )}
 
-        {/* STEP 2 - Guide Reader View */}
+        {/* STEP 2: Active Guide Reader */}
         {currentStep === 2 && activeGuide && (
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-brand-sage-300 shadow-sm animate-in slide-in-from-right-8 duration-300">
-            <button onClick={() => setActiveGuide(null)} className="text-xs font-bold text-stone-500 mb-4 hover:text-stone-800 cursor-pointer">← Volver al catálogo</button>
-            <h2 className="text-2xl font-serif font-bold text-stone-900 mb-2">{activeGuide.title}</h2>
-            <div className="bg-brand-sage-50 p-4 rounded-2xl text-sm text-brand-sage-800 italic mb-6">
-              {activeGuide.simpleSummary}
-            </div>
+          <div className="max-w-3xl mx-auto animate-fadeIn mt-6 bg-white p-6 sm:p-10 rounded-3xl shadow-sm border border-stone-200">
+            <button onClick={() => setActiveGuide(null)} className="text-xs font-bold text-stone-500 mb-6 flex items-center gap-1 hover:text-stone-800 cursor-pointer">
+              <ArrowLeft className="w-4 h-4" />
+              <span>Volver a las guías</span>
+            </button>
             
-            <div className="space-y-6 text-sm text-stone-700 leading-relaxed mb-8">
-              {activeGuide.explainedContent.map((section: any, idx: number) => (
-                <div key={idx}>
-                  <h3 className="font-bold text-stone-900 mb-2">{section.heading}</h3>
-                  <p>{section.text}</p>
+            <div className="mb-8">
+              <div className="flex items-center gap-2 flex-wrap mb-3">
+                <span className="bg-[#e2eee6] text-[#253d33] text-xs font-bold px-3 py-1 rounded-full border border-[#548c71]/30">
+                  {activeGuide.category}
+                </span>
+                <span className="text-xs text-stone-500 font-medium flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5" />
+                  {activeGuide.readTime}
+                </span>
+              </div>
+              <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-stone-900 leading-tight mb-4">
+                {activeGuide.title}
+              </h1>
+            </div>
+
+            <div className="w-full aspect-[21/9] sm:aspect-[2.4/1] rounded-3xl overflow-hidden mb-8 shadow-sm border border-stone-200 bg-stone-100">
+              <img src={activeGuide.image} alt={activeGuide.title} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+            </div>
+
+            <div className="mb-8 p-5 sm:p-6 rounded-3xl bg-[#eaf4ef] border border-[#548c71]/30 text-emerald-950 shadow-xs">
+              <div className="flex items-center gap-2 text-xs font-bold text-[#548c71] uppercase tracking-wider mb-2">
+                <BookOpen className="w-4 h-4" />
+                <span>Resumen Ejecutivo Simple</span>
+              </div>
+              <p className="text-sm sm:text-base leading-relaxed font-medium text-stone-800">
+                {activeGuide.simpleSummary}
+              </p>
+            </div>
+
+            <div className="space-y-8 text-stone-800 text-base leading-relaxed mb-10">
+              {activeGuide.explainedContent.map((section, idx) => (
+                <div key={idx} className="bg-white p-6 sm:p-8 rounded-3xl border border-stone-200/90 shadow-xs">
+                  <h3 className="font-bold text-xl text-stone-900 mb-4">{section.heading}</h3>
+                  <p className="whitespace-pre-line text-stone-700 leading-loose">{section.text}</p>
                   {section.bulletPoints && (
-                    <ul className="list-disc pl-5 mt-2 space-y-1">
-                      {section.bulletPoints.map((bp: string, i: number) => <li key={i}>{bp}</li>)}
+                    <ul className="mt-5 space-y-3">
+                      {section.bulletPoints.map((bp, i) => (
+                        <li key={i} className="flex items-start gap-3 bg-stone-50 p-3 rounded-xl border border-stone-100">
+                          <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                          <span className="text-sm text-stone-700 leading-relaxed">{bp}</span>
+                        </li>
+                      ))}
                     </ul>
                   )}
                 </div>
               ))}
             </div>
 
-            <div className="flex justify-end pt-6 border-t border-stone-100">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-stone-200 mt-12">
               <button
-                onClick={finishGuide}
-                className="px-6 py-3 rounded-xl bg-brand-sage-600 hover:bg-brand-sage-700 text-white text-sm font-bold transition-all shadow-xs flex items-center gap-2 cursor-pointer"
+                onClick={() => setCurrentStep(3)}
+                className="text-stone-500 hover:text-stone-800 text-sm font-semibold transition-colors px-4 py-2 cursor-pointer"
               >
-                <span>He terminado de leer la guía</span>
-                <CheckCircle2 className="w-4 h-4" />
+                Saltar este paso
               </button>
-            </div>
-          </div>
-        )}
-
-        {/* STEP 2 - Course Day View */}
-        {currentStep === 2 && activeCourse && (
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-brand-sage-300 shadow-sm animate-in slide-in-from-right-8 duration-300">
-            <button onClick={() => setActiveCourse(null)} className="text-xs font-bold text-stone-500 mb-4 hover:text-stone-800 cursor-pointer">← Volver al catálogo</button>
-            <h2 className="text-2xl font-serif font-bold text-stone-900 mb-2">{activeCourse.title} - Día 1</h2>
-            <p className="text-sm text-stone-600 mb-6">{activeCourse.days[0].title}</p>
-            
-            <div className="space-y-6 text-sm text-stone-700 leading-relaxed mb-8">
-               <h3 className="font-bold text-stone-900">Lección del Día</h3>
-               <p>{activeCourse.days[0].lesson.content}</p>
-               
-               <h3 className="font-bold text-stone-900 mt-6">Misión Práctica</h3>
-               <div className="bg-brand-sand-50 p-4 rounded-xl border border-brand-sand-200">
-                 <p className="font-medium text-brand-sand-900">{activeCourse.days[0].mission.title}</p>
-                 <p className="text-xs text-brand-sand-700 mt-1">{activeCourse.days[0].mission.description}</p>
-               </div>
-            </div>
-
-            <div className="flex justify-end pt-6 border-t border-stone-100">
               <button
-                onClick={finishCourseDay}
-                className="px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold transition-all shadow-xs flex items-center gap-2 cursor-pointer"
+                onClick={handleFinishGuide}
+                className="w-full sm:w-auto bg-brand-sage-600 hover:bg-brand-sage-700 text-white px-8 py-3 min-h-[44px] rounded-full text-sm font-bold shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
-                <span>Finalizar Día 1 y continuar</span>
+                <span>Finalizar lectura y continuar</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
@@ -308,69 +519,66 @@ export const FluxFlowModule: React.FC<{ onNavigate: (view: string) => void }> = 
 
         {/* STEP 3 */}
         {currentStep === 3 && (
-          <div className="bg-white rounded-3xl p-6 sm:p-10 border-2 border-brand-sage-300 shadow-sm animate-in zoom-in-95 duration-500 text-center">
-            
-            <div className="w-20 h-20 mx-auto bg-gradient-to-br from-amber-400 to-amber-600 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-amber-500/20">
-              <Sparkles className="w-10 h-10 text-white fill-white" />
-            </div>
+          <div className="max-w-3xl mx-auto animate-in zoom-in-95 duration-500 mt-10">
+            <div className="bg-gradient-to-r from-white via-[#FBF9F5] to-white rounded-3xl border-2 border-[#E87A52]/30 shadow-md p-8 sm:p-12 text-center">
+              
+              <div className="w-24 h-24 mx-auto bg-gradient-to-br from-amber-400 to-amber-600 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-amber-500/20">
+                <Sparkles className="w-12 h-12 text-white fill-white" />
+              </div>
 
-            <h1 className="text-2xl sm:text-4xl font-black font-serif text-stone-900 mb-4 leading-tight">
-              ✨ ¡Flux completado!<br/>Estás un paso más cerca de tu Glow.
-            </h1>
+              <h2 className="text-3xl sm:text-5xl font-black font-serif text-stone-900 mb-4 leading-tight">
+                ¡Flux completado!
+              </h2>
+              <p className="text-lg text-stone-600 mb-8 font-medium">Estás un paso más cerca de tu Glow.</p>
 
-            <div className="inline-flex items-center gap-3 bg-amber-50 px-6 py-3 rounded-2xl border border-amber-200 mb-8">
-              <Zap className="w-6 h-6 text-amber-500 fill-amber-500" />
+              <div className="inline-flex items-center gap-4 bg-white px-8 py-4 rounded-3xl border border-stone-200 shadow-sm mb-10">
+                <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
+                  <Flame className="w-6 h-6 text-amber-600 fill-amber-600" />
+                </div>
+                <div className="text-left">
+                  <p className="text-xs font-bold text-stone-500 uppercase tracking-wider">Racha Flux Global</p>
+                  <p className="text-3xl font-black text-stone-900">{getFluxStreak()} <span className="text-sm font-bold text-stone-500">Puntos</span></p>
+                </div>
+              </div>
+
+              {selectedMood && (
+                <div className="text-left bg-[#eaf4ef] rounded-3xl p-6 sm:p-8 border border-[#548c71]/30 mb-10 shadow-xs">
+                  <h3 className="text-sm font-bold text-[#253d33] flex items-center gap-2 mb-3 uppercase tracking-wider">
+                    <Brain className="w-5 h-5" />
+                    Mini Análisis Predictivo
+                  </h3>
+                  <p className="text-sm sm:text-base text-stone-700 leading-relaxed">
+                    Hoy iniciaste el flujo registrando tu estado como <strong className="capitalize">{selectedMood}</strong> con una intensidad {intensity}/10. 
+                    {intensity > 7 ? ' Es un nivel de intensidad donde priorizar el descanso y el desahogo consciente es clave.' : ' Mantener tu racha Flux en niveles estables demuestra una sólida autorregulación. Continúa con este equilibrio explorando la comunidad o charlando libremente con Flux AI.'}
+                  </p>
+                </div>
+              )}
+
               <div className="text-left">
-                <p className="text-xs font-bold text-amber-700 uppercase tracking-wider">Racha Flux</p>
-                <p className="text-2xl font-bold text-amber-900">{getFluxStreak()} <span className="text-sm font-semibold">Puntos Totales</span></p>
+                <h3 className="text-sm font-bold text-stone-900 mb-4 uppercase tracking-wider">¿Qué quieres hacer ahora?</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <button onClick={() => onNavigate('ai' as any)} className="p-4 bg-white hover:bg-stone-50 border border-stone-200 rounded-2xl flex items-center gap-3 text-left transition-all hover:shadow-md cursor-pointer group">
+                    <div className="bg-indigo-50 p-2.5 rounded-xl border border-indigo-100 group-hover:scale-105 transition-transform"><MessageSquare className="w-5 h-5 text-indigo-600" /></div>
+                    <span className="text-sm font-bold text-stone-800">Hablar con Flux AI</span>
+                  </button>
+                  <button onClick={() => onNavigate('missions' as any)} className="p-4 bg-white hover:bg-stone-50 border border-stone-200 rounded-2xl flex items-center gap-3 text-left transition-all hover:shadow-md cursor-pointer group">
+                    <div className="bg-emerald-50 p-2.5 rounded-xl border border-emerald-100 group-hover:scale-105 transition-transform"><Target className="w-5 h-5 text-[#3E6855]" /></div>
+                    <span className="text-sm font-bold text-stone-800">Ver mis misiones</span>
+                  </button>
+                  <button onClick={() => onNavigate('community' as any)} className="p-4 bg-white hover:bg-stone-50 border border-stone-200 rounded-2xl flex items-center gap-3 text-left transition-all hover:shadow-md cursor-pointer group">
+                    <div className="bg-amber-50 p-2.5 rounded-xl border border-amber-100 group-hover:scale-105 transition-transform"><Users className="w-5 h-5 text-amber-600" /></div>
+                    <span className="text-sm font-bold text-stone-800">Ir a la comunidad</span>
+                  </button>
+                  <button onClick={() => onNavigate('dashboard' as any)} className="p-4 bg-white hover:bg-stone-50 border border-stone-200 rounded-2xl flex items-center gap-3 text-left transition-all hover:shadow-md cursor-pointer group">
+                    <div className="bg-stone-100 p-2.5 rounded-xl border border-stone-200 group-hover:scale-105 transition-transform"><Home className="w-5 h-5 text-stone-700" /></div>
+                    <span className="text-sm font-bold text-stone-800">Volver al Dashboard</span>
+                  </button>
+                </div>
               </div>
-            </div>
 
-            {mood && (
-              <div className="text-left bg-brand-sage-50 rounded-2xl p-6 border border-brand-sage-200 mb-8">
-                <h3 className="text-sm font-bold text-brand-sage-900 flex items-center gap-2 mb-2">
-                  <Brain className="w-4 h-4" />
-                  Mini Análisis Predictivo
-                </h3>
-                <p className="text-sm text-brand-sage-800 leading-relaxed">
-                  Hoy registraste un estado <strong>{mood}</strong> con intensidad {intensity}/10. 
-                  {intensity > 7 ? ' Es un nivel alto de intensidad, te recomendamos ejercicios de respiración.' : ' Mantén este equilibrio explorando nuestra biblioteca de conocimiento.'}
-                </p>
-              </div>
-            )}
-
-            <div className="text-left">
-              <h3 className="text-base font-bold text-stone-900 mb-4">¿Qué quieres hacer ahora?</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <button onClick={() => onNavigate('ai')} className="p-4 bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-xl flex items-center gap-3 text-left transition-colors cursor-pointer group">
-                  <div className="bg-white p-2 rounded-lg border border-stone-200 shadow-xs group-hover:scale-105 transition-transform"><MessageSquare className="w-5 h-5 text-indigo-500" /></div>
-                  <span className="text-sm font-bold text-stone-800">Hablar con Flux AI</span>
-                </button>
-                <button onClick={() => onNavigate('missions')} className="p-4 bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-xl flex items-center gap-3 text-left transition-colors cursor-pointer group">
-                  <div className="bg-white p-2 rounded-lg border border-stone-200 shadow-xs group-hover:scale-105 transition-transform"><Target className="w-5 h-5 text-brand-sage-600" /></div>
-                  <span className="text-sm font-bold text-stone-800">Ver mis misiones asignadas</span>
-                </button>
-                <button onClick={() => onNavigate('community')} className="p-4 bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-xl flex items-center gap-3 text-left transition-colors cursor-pointer group">
-                  <div className="bg-white p-2 rounded-lg border border-stone-200 shadow-xs group-hover:scale-105 transition-transform"><Users className="w-5 h-5 text-amber-500" /></div>
-                  <span className="text-sm font-bold text-stone-800">Navegar en la comunidad</span>
-                </button>
-                <button onClick={() => onNavigate('analytics')} className="p-4 bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-xl flex items-center gap-3 text-left transition-colors cursor-pointer group">
-                  <div className="bg-white p-2 rounded-lg border border-stone-200 shadow-xs group-hover:scale-105 transition-transform"><BarChart className="w-5 h-5 text-blue-500" /></div>
-                  <span className="text-sm font-bold text-stone-800">Ver mi análisis predictivo</span>
-                </button>
-                <button onClick={() => onNavigate('learn')} className="p-4 bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-xl flex items-center gap-3 text-left transition-colors cursor-pointer group">
-                  <div className="bg-white p-2 rounded-lg border border-stone-200 shadow-xs group-hover:scale-105 transition-transform"><BookOpen className="w-5 h-5 text-rose-500" /></div>
-                  <span className="text-sm font-bold text-stone-800">Seguir aprendiendo</span>
-                </button>
-                <button onClick={() => onNavigate('dashboard')} className="p-4 bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-xl flex items-center gap-3 text-left transition-colors cursor-pointer group">
-                  <div className="bg-white p-2 rounded-lg border border-stone-200 shadow-xs group-hover:scale-105 transition-transform"><Home className="w-5 h-5 text-stone-600" /></div>
-                  <span className="text-sm font-bold text-stone-800">Volver al Centro de Control</span>
-                </button>
-              </div>
             </div>
           </div>
         )}
-
       </div>
     </div>
   );

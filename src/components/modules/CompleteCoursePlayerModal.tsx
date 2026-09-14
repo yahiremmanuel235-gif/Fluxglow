@@ -35,6 +35,8 @@ interface CompleteCoursePlayerModalProps {
   isOpen: boolean;
   onClose: () => void;
   onNavigateToMissions?: () => void;
+  isFluxMode?: boolean;
+  onFluxComplete?: () => void;
 }
 
 interface CourseProgressRecord {
@@ -47,10 +49,14 @@ const CoursePlayerModalContent: React.FC<{
   course: CompleteCourse;
   onClose: () => void;
   onNavigateToMissions?: () => void;
+  isFluxMode?: boolean;
+  onFluxComplete?: () => void;
 }> = ({
   course,
   onClose,
-  onNavigateToMissions
+  onNavigateToMissions,
+  isFluxMode,
+  onFluxComplete
 }) => {
   const { success, warning, info } = useToast();
   
@@ -898,6 +904,15 @@ INSTRUCCIONES:
               <span>Siguiente Página</span>
               <ChevronRight className="w-4 h-4 ml-1" />
             </Button>
+          ) : isFluxMode && selectedDayNumber === 1 ? (
+            <Button
+              onClick={onFluxComplete}
+              variant="primary"
+              className="px-6 py-2.5 text-xs sm:text-sm font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
+            >
+              <span>Finalizar Día 1 y continuar</span>
+              <ArrowRight className="w-4 h-4 ml-1" />
+            </Button>
           ) : selectedDayNumber < course.totalDays ? (
             <Button
               onClick={() => {
@@ -930,7 +945,9 @@ export const CompleteCoursePlayerModal: React.FC<CompleteCoursePlayerModalProps>
   course,
   isOpen,
   onClose,
-  onNavigateToMissions
+  onNavigateToMissions,
+  isFluxMode,
+  onFluxComplete
 }) => {
   useEffect(() => {
     if (!isOpen) return;
@@ -950,6 +967,8 @@ export const CompleteCoursePlayerModal: React.FC<CompleteCoursePlayerModalProps>
       course={course}
       onClose={onClose}
       onNavigateToMissions={onNavigateToMissions}
+      isFluxMode={isFluxMode}
+      onFluxComplete={onFluxComplete}
     />
   );
 };
