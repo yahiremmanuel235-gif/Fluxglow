@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { ViewMode, UserProfileData } from './types';
 import { fetchSupabaseCommunityPosts } from './services/supabaseService';
@@ -40,13 +41,16 @@ const DEFAULT_USER_PROFILE: UserProfileData = {
 
 export default function App() {
   const { user, authLoading, signOut } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  // Starts on the Home / Landing page as requested
-  const [currentView, setCurrentView] = useState<ViewMode>('landing');
   const [isAudioPlaying, setIsAudioPlaying] = useState<boolean>(false);
   const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
   const [onboardingInitialMode, setOnboardingInitialMode] = useState<'ask_first_time' | 'tutorial'>('ask_first_time');
   const [activeGuideId, setActiveGuideId] = useState<string | undefined>(undefined);
+
+  // Derive currentView from location.pathname for compatibility with components expecting ViewMode string
+  const currentView = location.pathname === '/' ? 'landing' : location.pathname.substring(1) as ViewMode;
 
   // Sincronizar el perfil del usuario desde Supabase cuando detecta una sesión activa
   useEffect(() => {
@@ -162,7 +166,7 @@ export default function App() {
   // Scroll to top when changing views
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [currentView]);
+  }, [location.pathname]);
 
   // Auto-launch onboarding check after skipping landing or on initial module entry
   const triggerOnboardingCheck = () => {
@@ -173,16 +177,19 @@ export default function App() {
   };
 
   const handleNavigate = (view: ViewMode) => {
-    // If navigating away from landing for the first time, check tutorial
-    if (currentView === 'landing' && view !== 'landing') {
-      triggerOnboardingCheck();
+    if (view === 'landing') {
+      navigate('/');
+    } else {
+      if (location.pathname === '/') {
+        triggerOnboardingCheck();
+      }
+      navigate(`/${view}`);
     }
-    setCurrentView(view);
   };
 
   const handleOpenGuideById = (guideId: string) => {
     setActiveGuideId(guideId);
-    setCurrentView('learn');
+    handleNavigate('learn');
   };
 
   const handleAuthSuccess = (targetView: ViewMode, updatedProfile?: Partial<UserProfileData>) => {
@@ -197,7 +204,7 @@ export default function App() {
         return next;
       });
     }
-    setCurrentView(targetView || 'dashboard');
+    handleNavigate(targetView || 'dashboard');
   };
 
   const handleUpdateProfile = (updated: Partial<UserProfileData>) => {
@@ -237,14 +244,14 @@ export default function App() {
     } catch (e) {
       console.error('Error limpiando sesión en localStorage:', e);
     }
-    setCurrentView('landing');
+    handleNavigate('landing');
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-brand-sand-50 font-sans antialiased text-stone-800 selection:bg-brand-sage-200 selection:text-brand-sage-900">
       
       {/* Show full modules navbar when inside any application module */}
-      {currentView !== 'landing' && (
+      {location.pathname !== '/' && (
         <>
           <Navbar
             currentView={currentView}
@@ -256,112 +263,186 @@ export default function App() {
             userPoints={userProfile.points}
             userLevel={userProfile.level}
           />
-
-          {/* Banner Fijo Consolidado de Modo Exploración (Local) - Eliminado por petición del usuario */}
         </>
       )}
 
       {/* Main Dynamic View Content with smooth motion transition */}
       <main className="flex-1">
         <AnimatePresence mode="wait">
-          <motion.div
-            key={currentView}
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.15, ease: 'easeOut' }}
-            className="w-full h-full"
-          >
-            {currentView === 'landing' && (
-              <ErrorBoundary fallbackTitle="Inconveniente en la Página de Inicio">
-                <LandingPage 
-                  onNavigate={handleNavigate} 
-                  currentUser={userProfile}
-                  onAuthSuccess={handleAuthSuccess}
-                  onSignOut={handleSignOut}
-                />
-              </ErrorBoundary>
-            )}
+          <Routes location={location} key={location.pathname}>
+            <Route path="/" element={
+              <motion.div
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+                className="w-full h-full"
+              >
+                <ErrorBoundary fallbackTitle="Inconveniente en la Página de Inicio">
+                  <LandingPage 
+                    onNavigate={handleNavigate} 
+                    currentUser={userProfile}
+                    onAuthSuccess={handleAuthSuccess}
+                    onSignOut={handleSignOut}
+                  />
+                </ErrorBoundary>
+              </motion.div>
+            } />
 
-            {currentView === 'dashboard' && (
-              <ErrorBoundary fallbackTitle="Inconveniente en el Centro de Control">
-                <DashboardModule 
-                  onNavigate={handleNavigate} 
-                  onOpenGuideById={handleOpenGuideById}
-                  userProfile={userProfile}
-                  onUpdateProfile={handleUpdateProfile}
-                />
-              </ErrorBoundary>
-            )}
+            <Route path="/dashboard" element={
+              <motion.div
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+                className="w-full h-full"
+              >
+                <ErrorBoundary fallbackTitle="Inconveniente en el Centro de Control">
+                  <DashboardModule 
+                    onNavigate={handleNavigate} 
+                    onOpenGuideById={handleOpenGuideById}
+                    userProfile={userProfile}
+                    onUpdateProfile={handleUpdateProfile}
+                  />
+                </ErrorBoundary>
+              </motion.div>
+            } />
 
-            {currentView === 'learn' && (
-              <ErrorBoundary fallbackTitle="Inconveniente en el Centro de Aprendizaje">
-                <LearnModule 
-                  onNavigate={handleNavigate} 
-                  initialGuideId={activeGuideId} 
-                />
-              </ErrorBoundary>
-            )}
+            <Route path="/learn" element={
+              <motion.div
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+                className="w-full h-full"
+              >
+                <ErrorBoundary fallbackTitle="Inconveniente en el Centro de Aprendizaje">
+                  <LearnModule 
+                    onNavigate={handleNavigate} 
+                    initialGuideId={activeGuideId} 
+                  />
+                </ErrorBoundary>
+              </motion.div>
+            } />
 
-            {currentView === 'journal' && (
-              <ErrorBoundary fallbackTitle="Inconveniente en el Diario Emocional">
-                <JournalModule 
-                  onNavigate={handleNavigate} 
-                />
-              </ErrorBoundary>
-            )}
+            <Route path="/journal" element={
+              <motion.div
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+                className="w-full h-full"
+              >
+                <ErrorBoundary fallbackTitle="Inconveniente en el Diario Emocional">
+                  <JournalModule 
+                    onNavigate={handleNavigate} 
+                  />
+                </ErrorBoundary>
+              </motion.div>
+            } />
 
-            {currentView === 'missions' && (
-              <ErrorBoundary fallbackTitle="Inconveniente en el Panel de Misiones">
-                <MissionsModule 
-                  onNavigate={handleNavigate} 
-                  onOpenGuideById={handleOpenGuideById} 
-                  userProfile={userProfile}
-                  onUpdateProfile={handleUpdateProfile}
-                />
-              </ErrorBoundary>
-            )}
+            <Route path="/missions" element={
+              <motion.div
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+                className="w-full h-full"
+              >
+                <ErrorBoundary fallbackTitle="Inconveniente en el Panel de Misiones">
+                  <MissionsModule 
+                    onNavigate={handleNavigate} 
+                    onOpenGuideById={handleOpenGuideById} 
+                    userProfile={userProfile}
+                    onUpdateProfile={handleUpdateProfile}
+                  />
+                </ErrorBoundary>
+              </motion.div>
+            } />
 
-            {currentView === 'analytics' && (
-              <ErrorBoundary fallbackTitle="Inconveniente en el Análisis Predictivo">
-                <AnalyticsModule onNavigate={handleNavigate} />
-              </ErrorBoundary>
-            )}
+            <Route path="/analytics" element={
+              <motion.div
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+                className="w-full h-full"
+              >
+                <ErrorBoundary fallbackTitle="Inconveniente en el Análisis Predictivo">
+                  <AnalyticsModule onNavigate={handleNavigate} />
+                </ErrorBoundary>
+              </motion.div>
+            } />
 
-            {currentView === 'ai' && (
-              <ErrorBoundary fallbackTitle="Inconveniente en Flux AI">
-                <FluxAiModule userProfile={userProfile} />
-              </ErrorBoundary>
-            )}
+            <Route path="/ai" element={
+              <motion.div
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+                className="w-full h-full"
+              >
+                <ErrorBoundary fallbackTitle="Inconveniente en Flux AI">
+                  <FluxAiModule userProfile={userProfile} />
+                </ErrorBoundary>
+              </motion.div>
+            } />
 
-            {currentView === 'alert' && (
-              <ErrorBoundary fallbackTitle="Inconveniente en Alerta Emocional">
-                <AlertModule />
-              </ErrorBoundary>
-            )}
+            <Route path="/alert" element={
+              <motion.div
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+                className="w-full h-full"
+              >
+                <ErrorBoundary fallbackTitle="Inconveniente en Alerta Emocional">
+                  <AlertModule />
+                </ErrorBoundary>
+              </motion.div>
+            } />
 
-            {currentView === 'profile' && (
-              <ErrorBoundary fallbackTitle="Inconveniente en el Perfil">
-                <ProfileModule 
-                  userProfile={userProfile} 
-                  onUpdateProfile={handleUpdateProfile} 
-                  onNavigate={handleNavigate}
-                  onSignOut={handleSignOut}
-                />
-              </ErrorBoundary>
-            )}
+            <Route path="/profile" element={
+              <motion.div
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+                className="w-full h-full"
+              >
+                <ErrorBoundary fallbackTitle="Inconveniente en el Perfil">
+                  <ProfileModule 
+                    userProfile={userProfile} 
+                    onUpdateProfile={handleUpdateProfile} 
+                    onNavigate={handleNavigate}
+                    onSignOut={handleSignOut}
+                  />
+                </ErrorBoundary>
+              </motion.div>
+            } />
 
-            {currentView === 'community' && (
-              <ErrorBoundary fallbackTitle="Inconveniente en la Comunidad">
-                <CommunityModule userProfile={userProfile} />
-              </ErrorBoundary>
-            )}
-          </motion.div>
+            <Route path="/community" element={
+              <motion.div
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+                className="w-full h-full"
+              >
+                <ErrorBoundary fallbackTitle="Inconveniente en la Comunidad">
+                  <CommunityModule userProfile={userProfile} />
+                </ErrorBoundary>
+              </motion.div>
+            } />
+
+            {/* Ruta de captura (404) que redirige al inicio para evitar pantalla blanca */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
         </AnimatePresence>
       </main>
 
       {/* Global Footer (Marketing on landing, compact on internal views) */}
-      <Footer onNavigate={handleNavigate} variant={currentView === 'landing' ? 'full' : 'compact'} />
+      <Footer onNavigate={handleNavigate} variant={location.pathname === '/' ? 'full' : 'compact'} />
 
       {/* Onboarding and Platform Tour Modal */}
       <OnboardingModal

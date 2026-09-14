@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ViewMode } from '../../types';
+import { NavLink } from 'react-router-dom';
 import { 
   Menu, 
   X, 
@@ -172,35 +173,39 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Desktop Navigation Links with Active Sage & Terracotta Indicator */}
           <nav className="hidden lg:flex items-center gap-1 xl:gap-2 h-16">
-            {primaryTabs.map((link) => {
-              const isActive = currentView === link.id;
-              return (
-                <button
-                  key={link.id}
-                  id={`nav-${link.id}`}
-                  onClick={() => handleNavClick(link.id)}
-                  aria-current={isActive ? 'page' : undefined}
-                  className={`relative h-full flex items-center gap-1.5 px-3 xl:px-3.5 text-xs xl:text-[13px] whitespace-nowrap transition-all cursor-pointer ${
-                    isActive
-                      ? 'font-bold text-[#1A1A1A] bg-gradient-to-b from-transparent via-[#5F927B]/5 to-[#5F927B]/10'
-                      : 'font-medium text-stone-600 hover:text-stone-900 hover:bg-[#5F927B]/5'
-                  }`}
-                >
-                  <span className={isActive ? 'scale-110 drop-shadow-xs transition-transform' : 'opacity-80'}>
-                    {link.icon}
-                  </span>
-                  <span>{link.label}</span>
-                  {link.badge && (
-                    <span className="inline-flex items-center justify-center px-1.5 py-0.2 min-w-4 h-4 text-[10px] font-bold text-white bg-[#E87A52] rounded-full shadow-2xs">
-                      {link.badge}
+            {primaryTabs.map((link) => (
+              <NavLink
+                to={`/${link.id}`}
+                key={link.id}
+                id={`nav-${link.id}`}
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setMoreMenuOpen(false);
+                }}
+                className={({ isActive }) => `relative h-full flex items-center gap-1.5 px-3 xl:px-3.5 text-xs xl:text-[13px] whitespace-nowrap transition-all cursor-pointer ${
+                  isActive
+                    ? 'font-bold text-[#1A1A1A] bg-gradient-to-b from-transparent via-[#5F927B]/5 to-[#5F927B]/10'
+                    : 'font-medium text-stone-600 hover:text-stone-900 hover:bg-[#5F927B]/5'
+                }`}
+              >
+                {({ isActive }) => (
+                  <>
+                    <span className={isActive ? 'scale-110 drop-shadow-xs transition-transform' : 'opacity-80'}>
+                      {link.icon}
                     </span>
-                  )}
-                  {isActive && (
-                    <span className="absolute bottom-0 left-2 right-2 h-[3px] bg-gradient-to-r from-[#5F927B] to-[#E87A52] rounded-full shadow-xs" />
-                  )}
-                </button>
-              );
-            })}
+                    <span>{link.label}</span>
+                    {link.badge && (
+                      <span className="inline-flex items-center justify-center px-1.5 py-0.2 min-w-4 h-4 text-[10px] font-bold text-white bg-[#E87A52] rounded-full shadow-2xs">
+                        {link.badge}
+                      </span>
+                    )}
+                    {isActive && (
+                      <span className="absolute bottom-0 left-2 right-2 h-[3px] bg-gradient-to-r from-[#5F927B] to-[#E87A52] rounded-full shadow-xs" />
+                    )}
+                  </>
+                )}
+              </NavLink>
+            ))}
 
             {/* "Más Opciones" Dropdown Menu */}
             <div className="relative h-full flex items-center" ref={moreMenuRef}>
@@ -237,35 +242,40 @@ export const Navbar: React.FC<NavbarProps> = ({
                     Opciones adicionales
                   </div>
                   <div className="space-y-1">
-                    {moreOptionsTabs.map((item) => {
-                      const isItemActive = currentView === item.id;
-                      return (
-                        <button
-                          key={item.id}
-                          id={`nav-more-${item.id}`}
-                          onClick={() => handleNavClick(item.id)}
-                          className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs sm:text-sm transition-all text-left cursor-pointer ${
-                            isItemActive
-                              ? 'bg-[#5F927B]/10 text-[#2F5343] font-bold'
-                              : 'text-stone-700 hover:bg-[#FBF9F5] hover:text-stone-950 font-medium'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <span className={isItemActive ? 'scale-105' : 'opacity-80'}>{item.icon}</span>
-                            <span>{item.label}</span>
-                          </div>
-                          {item.badge && (
-                            <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full ${
-                              item.badge === 'SOS' 
-                                ? 'bg-red-600 text-white animate-bounce' 
-                                : 'bg-[#E87A52] text-white'
-                            }`}>
-                              {item.badge}
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
+                    {moreOptionsTabs.map((item) => (
+                      <NavLink
+                        to={`/${item.id}`}
+                        key={item.id}
+                        id={`nav-more-${item.id}`}
+                        onClick={() => {
+                          setMobileMenuOpen(false);
+                          setMoreMenuOpen(false);
+                        }}
+                        className={({ isActive }) => `w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs sm:text-sm transition-all text-left cursor-pointer ${
+                          isActive
+                            ? 'bg-[#5F927B]/10 text-[#2F5343] font-bold'
+                            : 'text-stone-700 hover:bg-[#FBF9F5] hover:text-stone-950 font-medium'
+                        }`}
+                      >
+                        {({ isActive }) => (
+                          <>
+                            <div className="flex items-center gap-2.5">
+                              <span className={isActive ? 'scale-105' : 'opacity-80'}>{item.icon}</span>
+                              <span>{item.label}</span>
+                            </div>
+                            {item.badge && (
+                              <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full ${
+                                item.badge === 'SOS' 
+                                  ? 'bg-red-600 text-white animate-bounce' 
+                                  : 'bg-[#E87A52] text-white'
+                              }`}>
+                                {item.badge}
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </NavLink>
+                    ))}
                   </div>
                 </div>
               )}
@@ -274,17 +284,19 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Right helper tools: Profile + SignOut button + Mobile Menu Toggle */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 pl-1">
-            <button
-              onClick={() => handleNavClick('profile')}
+            <NavLink
+              to="/profile"
               title="Mi Perfil"
-              className={`hidden sm:flex items-center justify-center w-8 h-8 rounded-full border transition-colors cursor-pointer shadow-2xs ${
-                currentView === 'profile'
+              className={({ isActive }) => `hidden sm:flex items-center justify-center w-8 h-8 rounded-full border transition-colors cursor-pointer shadow-2xs ${
+                isActive
                   ? 'border-[#5F927B] bg-[#5F927B]/10'
                   : 'border-stone-300 hover:border-[#5F927B] hover:bg-[#FBF9F5] bg-white'
               }`}
             >
-              <img src="/assets/icons/nav-profile.png" alt="Perfil" className={`w-4 h-4 object-contain ${currentView === 'profile' ? 'scale-110' : 'opacity-80'}`} />
-            </button>
+              {({ isActive }) => (
+                <img src="/assets/icons/nav-profile.png" alt="Perfil" className={`w-4 h-4 object-contain ${isActive ? 'scale-110' : 'opacity-80'}`} />
+              )}
+            </NavLink>
             {isLoggedIn && onSignOut && (
               <button
                 id="nav-signout-btn"
@@ -333,37 +345,41 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-            {allDrawerLinks.map((link) => {
-              const isActive = currentView === link.id;
-              return (
-                <button
-                  key={link.id}
-                  id={`mobile-nav-${link.id}`}
-                  onClick={() => handleNavClick(link.id)}
-                  aria-current={isActive ? 'page' : undefined}
-                  className={`relative flex items-center justify-between px-3.5 py-3 min-h-[44px] rounded-xl text-sm font-semibold transition-all cursor-pointer ${
-                    isActive
-                      ? 'text-[#1A1A1A]'
-                      : 'text-stone-800 hover:bg-[#F2ECE1]'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <span className={isActive ? 'scale-110 drop-shadow-xs transition-transform' : 'opacity-80'}>{link.icon}</span>
-                    <span>{link.label}</span>
-                  </div>
-                  {'badge' in link && link.badge && (
-                    <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
-                      link.badge === 'SOS' ? 'bg-red-600 text-white animate-bounce' : 'bg-[#E87A52] text-white'
-                    }`}>
-                      {link.badge}
-                    </span>
-                  )}
-                  {isActive && (
-                    <span className="absolute bottom-0 left-2 right-2 h-[3px] bg-gradient-to-r from-[#5F927B] to-[#E87A52] rounded-full shadow-xs" />
-                  )}
-                </button>
-              );
-            })}
+            {allDrawerLinks.map((link) => (
+              <NavLink
+                to={`/${link.id}`}
+                key={link.id}
+                id={`mobile-nav-${link.id}`}
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setMoreMenuOpen(false);
+                }}
+                className={({ isActive }) => `relative flex items-center justify-between px-3.5 py-3 min-h-[44px] rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+                  isActive
+                    ? 'text-[#1A1A1A]'
+                    : 'text-stone-800 hover:bg-[#F2ECE1]'
+                }`}
+              >
+                {({ isActive }) => (
+                  <>
+                    <div className="flex items-center gap-2.5">
+                      <span className={isActive ? 'scale-110 drop-shadow-xs transition-transform' : 'opacity-80'}>{link.icon}</span>
+                      <span>{link.label}</span>
+                    </div>
+                    {'badge' in link && link.badge && (
+                      <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
+                        link.badge === 'SOS' ? 'bg-red-600 text-white animate-bounce' : 'bg-[#E87A52] text-white'
+                      }`}>
+                        {link.badge}
+                      </span>
+                    )}
+                    {isActive && (
+                      <span className="absolute bottom-0 left-2 right-2 h-[3px] bg-gradient-to-r from-[#5F927B] to-[#E87A52] rounded-full shadow-xs" />
+                    )}
+                  </>
+                )}
+              </NavLink>
+            ))}
           </div>
 
           {isLoggedIn && onSignOut && (
