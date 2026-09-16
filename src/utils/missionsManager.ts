@@ -60,6 +60,29 @@ export function activateMissionFromGuide(guide: GuideItem, specificMissionId?: s
   return newRecord;
 }
 
+
+export function getProposedMissionsFromGuide(guide: GuideItem): UserDailyMissionRecord[] {
+  return guide.dailyMissions.map(targetMission => ({
+    id: `mission-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+    missionId: targetMission.id,
+    guideId: guide.id,
+    guideTitle: guide.title,
+    title: targetMission.title,
+    description: targetMission.description,
+    category: guide.category,
+    xp: targetMission.xp || 30,
+    timeEstimate: targetMission.timeEstimate || '5 min',
+    status: 'pending',
+    createdAt: new Date().toISOString()
+  }));
+}
+
+export function saveSingleMission(mission: UserDailyMissionRecord) {
+  const missions = getStoredMissions();
+  missions.unshift(mission);
+  saveStoredMissions(missions);
+}
+
 export function activateAllMissionsFromGuide(guide: GuideItem): UserDailyMissionRecord[] {
   const missions = getStoredMissions();
   const activatedList: UserDailyMissionRecord[] = [];

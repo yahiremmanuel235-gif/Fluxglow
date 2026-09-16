@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Sparkles, Zap, Lock, Tag, Clock, CheckCircle2, 
   ArrowRight, Brain, MessageSquare, Target, Users, BarChart, 
   Home, BookOpen, ChevronUp, ChevronDown, Sliders, ChevronLeft, 
-  Square, Heart, BookmarkCheck, Play, ArrowLeft, Quote, Flame, Activity, Timer, Wind, ChevronRight
+  Square, Heart, BookmarkCheck, Play, ArrowLeft, Quote, Flame, Activity, Timer, Wind, ChevronRight, Plus, X
 } from 'lucide-react';
 import { useJournal } from '../../hooks/useJournal';
 import { incrementFluxStreak, getFluxStreak, setLastFluxDate } from '../../utils/streakManager';
@@ -75,7 +76,8 @@ const INSPIRATIONAL_QUOTES: Record<string, EmotionQuote> = {
   }
 };
 
-export const FluxFlowModule: React.FC<{ onNavigate: (view: ViewMode) => void }> = ({ onNavigate }) => {
+
+      export const FluxFlowModule: React.FC<{ onNavigate: (view: ViewMode) => void }> = ({ onNavigate }) => {
   const { createEntry } = useJournal();
   const { success, warning } = useToast();
   
@@ -93,9 +95,31 @@ export const FluxFlowModule: React.FC<{ onNavigate: (view: ViewMode) => void }> 
   const [activeGuide, setActiveGuide] = useState<any | null>(null);
   const [activeCourse, setActiveCourse] = useState<any | null>(null);
   const [showMissions, setShowMissions] = useState<boolean>(false);
-  const [missionStatuses, setMissionStatuses] = useState<Record<string, 'accepted' | 'rejected'>>({});
-  const [isCustomMissionOpen, setIsCustomMissionOpen] = useState(false);
-  const [customMissionData, setCustomMissionData] = useState({ title: '', description: '', date: '', time: '' });
+  const [missionStatuses, setMissionStatuses] = useState<Record<string, { status: 'accepted' | 'rejected'; date?: string; time?: string; mission?: any }>>({});
+  const [isCustomMissionOpen, setIsCustomMissionOpen] = useState(false);  const [customMissionData, setCustomMissionData] = useState({ title: '', description: '', date: '', time: '' });
+  const [schedulingMission, setSchedulingMission] = useState<any | null>(null);
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsCustomMissionOpen(false);
+        setSchedulingMission(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+
+  useEffect(() => {
+    if (isCustomMissionOpen || schedulingMission) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isCustomMissionOpen, schedulingMission]);
 
   const toggleTrigger = (trigger: string) => {
     if (selectedTriggers.includes(trigger)) {
@@ -144,7 +168,17 @@ export const FluxFlowModule: React.FC<{ onNavigate: (view: ViewMode) => void }> 
         readGuides.push(activeGuide.id);
         localStorage.setItem('fluxglow_read_guides', JSON.stringify(readGuides));
       }
-      /* manual accept only now */
+      
+      // Save accepted missions with their date and time
+      if (typeof addSingleMissionFromGuide === 'function') {
+        Object.keys(missionStatuses).forEach((mId) => {
+          const statusObj = missionStatuses[mId];
+          if (statusObj.status === 'accepted' && statusObj.mission) {
+            const finalMission = { ...statusObj.mission, time: statusObj.time, date: statusObj.date, isActive: true, status: 'pending' };
+            addSingleMissionFromGuide(finalMission, activeGuide);
+          }
+        });
+      }
     }
     
     incrementFluxStreak();
@@ -344,15 +378,14 @@ export const FluxFlowModule: React.FC<{ onNavigate: (view: ViewMode) => void }> 
           </div>
         )}
 
-        {isCustomMissionOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <div 
-              className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm"
-              onClick={() => setIsCustomMissionOpen(false)}
-            ></div>
-            <div className="relative bg-white rounded-3xl p-6 sm:p-8 w-full max-w-md shadow-xl flex flex-col gap-4 border border-stone-100">
+        {isCustomMissionOpen && createPortal(
+<div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto bg-black/50 backdrop-blur-sm" onClick={() => setIsCustomMissionOpen(false)}>
+            <div className="m-auto relative w-full max-w-lg bg-white rounded-2xl shadow-2xl z-[101] max-h-[85vh] overflow-y-auto p-6 sm:p-8 flex flex-col gap-4 border border-stone-100 animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+              <button onClick={() => setIsCustomMissionOpen(false)} className="absolute top-4 right-4 p-2 text-stone-400 hover:text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-full transition-colors cursor-pointer">
+                <X className="w-5 h-5" />
+              </button>
               <div>
-                <h3 className="font-serif text-xl font-bold text-stone-900 mb-1">
+                <h3 className="font-serif text-xl font-bold text-stone-900 mb-1 pr-8">
                   Misión Personalizada
                 </h3>
                 <p className="text-stone-500 text-sm">
@@ -450,8 +483,7 @@ export const FluxFlowModule: React.FC<{ onNavigate: (view: ViewMode) => void }> 
                 </button>
               </div>
             </div>
-          </div>
-        )}
+          </div>, document.body)}
 
         {/* STEP 1 SUBMITTED */}
         {currentStep === 1 && isSubmitted && (
@@ -575,15 +607,14 @@ export const FluxFlowModule: React.FC<{ onNavigate: (view: ViewMode) => void }> 
           </div>
         )}
 
-        {isCustomMissionOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <div 
-              className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm"
-              onClick={() => setIsCustomMissionOpen(false)}
-            ></div>
-            <div className="relative bg-white rounded-3xl p-6 sm:p-8 w-full max-w-md shadow-xl flex flex-col gap-4 border border-stone-100">
+        {isCustomMissionOpen && createPortal(
+<div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto bg-black/50 backdrop-blur-sm" onClick={() => setIsCustomMissionOpen(false)}>
+            <div className="m-auto relative w-full max-w-lg bg-white rounded-2xl shadow-2xl z-[101] max-h-[85vh] overflow-y-auto p-6 sm:p-8 flex flex-col gap-4 border border-stone-100 animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+              <button onClick={() => setIsCustomMissionOpen(false)} className="absolute top-4 right-4 p-2 text-stone-400 hover:text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-full transition-colors cursor-pointer">
+                <X className="w-5 h-5" />
+              </button>
               <div>
-                <h3 className="font-serif text-xl font-bold text-stone-900 mb-1">
+                <h3 className="font-serif text-xl font-bold text-stone-900 mb-1 pr-8">
                   Misión Personalizada
                 </h3>
                 <p className="text-stone-500 text-sm">
@@ -681,10 +712,9 @@ export const FluxFlowModule: React.FC<{ onNavigate: (view: ViewMode) => void }> 
                 </button>
               </div>
             </div>
-          </div>
-        )}
+          </div>, document.body)}
 
-        {/* STEP 2: Active Guide Reader */}
+                {/* STEP 2: Active Guide Reader */}
         {currentStep === 2 && activeGuide && (
           <div className="max-w-3xl mx-auto animate-fadeIn mt-6 bg-white p-6 sm:p-10 rounded-3xl shadow-sm border border-stone-200">
             <button onClick={() => setActiveGuide(null)} className="text-xs font-bold text-stone-500 mb-6 flex items-center gap-1 hover:text-stone-800 cursor-pointer">
@@ -721,102 +751,14 @@ export const FluxFlowModule: React.FC<{ onNavigate: (view: ViewMode) => void }> 
               </p>
             </div>
             
-            {/* Missions Toggle Button */}
-            {activeGuide.dailyMissions && activeGuide.dailyMissions.length > 0 && (
-              <div className="mb-8">
-                <button
-                  onClick={() => setShowMissions(!showMissions)}
-                  className="w-full bg-white border border-[#548c71]/30 hover:border-[#548c71] p-4 rounded-2xl flex items-center justify-between transition-all cursor-pointer shadow-2xs hover:shadow-sm"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-[#EBF1EA] text-[#3E6855] flex items-center justify-center">
-                      <Zap className="w-5 h-5" />
-                    </div>
-                    <div className="text-left">
-                      <h4 className="text-sm font-bold text-stone-900">Misiones Diarias ({activeGuide.dailyMissions.length})</h4>
-                      <p className="text-xs text-stone-500 font-medium">Ver las acciones prácticas de esta guía</p>
-                    </div>
-                  </div>
-                  <ChevronRight className={`w-5 h-5 text-stone-400 transition-transform ${showMissions ? 'rotate-90' : ''}`} />
-                </button>
-                
-                {showMissions && (
-                  <div className="mt-4 space-y-3 pl-2 sm:pl-4 border-l-2 border-[#548c71]/20 animate-fadeIn">
-                    {activeGuide.dailyMissions.map((mission: any, idx: number) => {
-                      const status = missionStatuses[mission.id];
-                      return (
-                      <div key={idx} className="bg-white p-4 rounded-xl border border-stone-200/80 shadow-2xs flex flex-col sm:flex-row sm:items-start md:items-center justify-between gap-3">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
-                              Misión {idx + 1}
-                            </span>
-                            <h5 className="text-sm font-bold text-stone-800">{mission.title}</h5>
-                          </div>
-                          <p className="text-xs text-stone-600 leading-relaxed mb-2">{mission.description}</p>
-                          <div className="flex items-center gap-3">
-                            <span className="text-[11px] font-semibold text-stone-500 flex items-center gap-1">
-                              <Clock className="w-3.5 h-3.5" />
-                              {mission.timeEstimate}
-                            </span>
-                            <span className="text-[11px] font-bold text-[#3E6855] bg-[#EBF1EA] px-2 py-0.5 rounded-full">
-                              +{mission.xp} XP
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 w-full md:w-auto shrink-0 mt-2 md:mt-0 justify-end">
-                          {status === 'accepted' ? (
-                            <span className="text-xs font-bold text-[#3E6855] bg-[#EBF1EA] px-3 py-1.5 rounded-lg flex items-center gap-1 border border-[#C5DDD0]">
-                              <CheckCircle2 className="w-4 h-4" /> Aceptada
-                            </span>
-                          ) : status === 'rejected' ? (
-                            <span className="text-xs font-bold text-stone-500 bg-stone-100 px-3 py-1.5 rounded-lg border border-stone-200">
-                              Rechazada
-                            </span>
-                          ) : (
-                            <>
-                              <button 
-                                onClick={() => setMissionStatuses(prev => ({...prev, [mission.id]: 'rejected'}))}
-                                className="px-3 py-1.5 text-xs font-bold text-stone-500 hover:bg-stone-100 rounded-lg transition-colors border border-stone-200 cursor-pointer"
-                              >
-                                Rechazar
-                              </button>
-                              <button 
-                                onClick={() => {
-                                  addSingleMissionFromGuide(mission, activeGuide);
-                                  setMissionStatuses(prev => ({...prev, [mission.id]: 'accepted'}));
-                                  success('Misión agregada', 'Aparecerá en el apartado de Misiones.');
-                                }}
-                                className="px-3 py-1.5 text-xs font-bold text-white bg-[#5F927B] hover:bg-[#4C7563] rounded-lg transition-colors shadow-xs cursor-pointer"
-                              >
-                                Aceptar
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    )})}
-                    
-                    <button 
-                      onClick={() => setIsCustomMissionOpen(true)}
-                      className="w-full mt-2 p-3 border-2 border-dashed border-[#5F927B]/40 hover:border-[#5F927B] bg-[#f8faf9] text-[#3E6855] rounded-xl flex items-center justify-center gap-2 text-sm font-bold transition-colors cursor-pointer"
-                    >
-                      <Zap className="w-4 h-4 fill-current" />
-                      Crear misión personalizada
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-
             <div className="space-y-8 text-stone-800 text-base leading-relaxed mb-10">
-              {activeGuide.explainedContent.map((section, idx) => (
+              {activeGuide.explainedContent.map((section: any, idx: number) => (
                 <div key={idx} className="bg-white p-6 sm:p-8 rounded-3xl border border-stone-200/90 shadow-xs">
                   <h3 className="font-bold text-xl text-stone-900 mb-4">{section.heading}</h3>
                   <p className="whitespace-pre-line text-stone-700 leading-loose">{section.text}</p>
                   {section.bulletPoints && (
                     <ul className="mt-5 space-y-3">
-                      {section.bulletPoints.map((bp, i) => (
+                      {section.bulletPoints.map((bp: string, i: number) => (
                         <li key={i} className="flex items-start gap-3 bg-stone-50 p-3 rounded-xl border border-stone-100">
                           <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
                           <span className="text-sm text-stone-700 leading-relaxed">{bp}</span>
@@ -828,33 +770,163 @@ export const FluxFlowModule: React.FC<{ onNavigate: (view: ViewMode) => void }> 
               ))}
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-stone-200 mt-12">
-              <button
-                onClick={() => goToStep3()}
-                className="w-full sm:w-auto text-stone-600 hover:text-stone-900 text-sm font-bold transition-all px-8 py-3 min-h-[44px] cursor-pointer bg-white border-2 border-stone-200 hover:border-stone-300 hover:bg-stone-50 rounded-full shadow-xs flex items-center justify-center gap-2"
-              >
-                Saltar este paso
-              </button>
-              <button
-                onClick={handleFinishGuide}
-                className="w-full sm:w-auto bg-brand-sage-600 hover:bg-brand-sage-700 text-white px-8 py-3 min-h-[44px] rounded-full text-sm font-bold shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <span>Finalizar lectura y continuar</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
+            {/* PROMINENT BUTTON: HE TERMINADO DE LEER LA GUÍA */}
+            <div className="my-10 p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-[#f2ece1] to-[#e8f1ec] border border-[#548c71]/40 text-center shadow-sm">
+                <h3 className="font-serif text-2xl sm:text-3xl font-bold text-stone-900 mb-2">
+                  ¿Has asimilado los conceptos de esta guía?
+                </h3>
+                <p className="text-stone-600 text-xs sm:text-sm max-w-lg mx-auto mb-6">
+                  Haz clic a continuación para registrar la lectura completa y activar tus <strong>misiones prácticas</strong> en tu plan diario.
+                </p>
+
+                <button
+                  id="finish-reading-guide-btn"
+                  onClick={() => setShowMissions(true)}
+                  className="bg-[#548c71] hover:bg-[#43705a] active:scale-98 text-white px-8 sm:px-10 py-4 rounded-full font-bold text-base sm:text-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-3 mx-auto cursor-pointer"
+                >
+                  <CheckCircle2 className="w-5 h-5" />
+                  <span>He terminado de leer la guía</span>
+                  <Sparkles className="w-5 h-5 text-amber-300" />
+                </button>
+              </div>
+
+            {/* Missions Toggle Button / Expanded Missions */}
+            {activeGuide.dailyMissions && activeGuide.dailyMissions.length > 0 && showMissions && (
+              <div className="mb-8">
+                <div className="my-8 flex flex-col gap-4 animate-in zoom-in-95 duration-200">
+                  <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-amber-50 via-orange-50/70 to-amber-100/50 border-2 border-amber-300 shadow-md relative overflow-hidden">
+                    
+
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-amber-200 mb-6">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-2xl bg-amber-400 text-amber-950 flex items-center justify-center shadow-xs">
+                          <Zap className="w-6 h-6" />
+                        </div>
+                        <div className="pr-12">
+                          <span className="text-[11px] font-bold uppercase tracking-wider text-amber-800">
+                            ¡Misiones Desbloqueadas y Listas para tu Día!
+                          </span>
+                          <h4 className="font-serif text-xl sm:text-2xl font-bold text-stone-900">
+                            Retos Prácticos Propuestos
+                          </h4>
+                        </div>
+                      </div>
+                    </div>
+
+                    <p className="text-stone-700 text-xs sm:text-sm mb-6 leading-relaxed">
+                      💡 <strong>Propósito de las misiones:</strong> Estas acciones están diseñadas para trasladar la teoría a la práctica en tu día a día. Acepta las que desees y prográmales una hora para activarlas en tu panel de misiones.
+                    </p>
+
+                    <div className="flex flex-col gap-4 mb-6">
+                      {activeGuide.dailyMissions.map((mission: any, idx: number) => {
+                        const statusObj = missionStatuses[mission.id];
+                        const status = statusObj?.status;
+                        return (
+                        <div key={mission.id || idx} className={`bg-white/95 rounded-2xl border shadow-sm flex flex-col md:flex-row overflow-hidden transition-all ${status === 'accepted' ? 'border-emerald-400 ring-1 ring-emerald-400' : status === 'rejected' ? 'border-red-200 opacity-60' : 'border-amber-200'}`}>
+                {/* Left accent & Icon */}
+                <div className={`w-1.5 hidden md:block shrink-0 ${status === 'accepted' ? 'bg-emerald-400' : status === 'rejected' ? 'bg-red-300' : 'bg-amber-400'}`}></div>
+                <div className="hidden md:flex flex-col justify-center pl-4 py-4 shrink-0">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${status === 'accepted' ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : status === 'rejected' ? 'bg-red-50 border-red-200 text-red-600' : 'bg-amber-50 border-amber-200 text-amber-600'}`}>
+                    {status === 'accepted' ? <CheckCircle2 className="w-5 h-5" /> : status === 'rejected' ? <X className="w-5 h-5" /> : <Target className="w-5 h-5" />}
+                  </div>
+                </div>
+                
+                {/* Main content body */}
+                <div className="flex-1 p-4 sm:p-5 flex flex-col justify-center">
+                  <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold text-amber-900 mb-2">
+                    <span className={`px-2 py-0.5 rounded-md ${status === 'accepted' ? 'bg-emerald-100 text-emerald-800' : status === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'}`}>
+                      Reto {idx + 1}
+                    </span>
+                    {status === 'accepted' && (
+                      <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" /> Aceptada {statusObj?.time ? `(${statusObj.time})` : ''}
+                      </span>
+                    )}
+                    {status === 'rejected' && (
+                      <span className="text-red-700 bg-red-50 px-2 py-0.5 rounded-md flex items-center gap-1">
+                        <X className="w-3 h-3" /> Rechazada
+                      </span>
+                    )}
+                  </div>
+                  
+                  <h5 className="text-sm sm:text-base font-bold text-stone-900 mb-1.5 leading-snug">
+                    {mission.title}
+                  </h5>
+                  
+                  <p className="text-xs sm:text-sm text-stone-600 leading-relaxed mb-3">
+                    {mission.description}
+                  </p>
+                  
+                  <div className="flex flex-wrap items-center gap-2 mt-auto">
+                    <span className="text-[11px] font-bold text-stone-500 bg-stone-100 px-2 py-1 rounded-md flex items-center gap-1.5">
+                      <Clock className="w-3 h-3" /> {mission.timeEstimate}
+                    </span>
+                    <span className="text-[11px] font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-md flex items-center gap-1.5 border border-amber-100">
+                      <Sparkles className="w-3 h-3" /> +{mission.xp || 30} XP
+                    </span>
+                  </div>
+                </div>
+                
+                {/* Right side actions */}
+                {!status && (
+                  <div className="border-t md:border-t-0 md:border-l border-stone-100 p-4 sm:p-5 flex md:flex-col items-center justify-center gap-2 bg-stone-50/50 shrink-0 md:w-40">
+                    <button
+                       onClick={() => setSchedulingMission(mission)}
+                      className="flex-1 md:flex-none w-full py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-emerald-500 text-white text-xs sm:text-sm font-bold transition-colors shadow-xs cursor-pointer flex items-center justify-center gap-2"
+                    >
+                      Aceptar
+                    </button>
+                    <button
+                       onClick={() => setMissionStatuses({...missionStatuses, [mission.id]: { status: 'rejected' }})}
+                      className="flex-1 md:flex-none w-full py-2.5 px-4 rounded-xl bg-white border border-stone-200 hover:bg-red-50 hover:border-red-200 text-stone-600 hover:text-red-600 text-xs sm:text-sm font-bold transition-colors cursor-pointer flex items-center justify-center gap-2"
+                    >
+                      Rechazar
+                    </button>
+                  </div>
+                )}
+              </div>
+            )})}
             </div>
+                    
+                    <button
+                      onClick={() => setIsCustomMissionOpen(true)}
+                      className="w-full mt-2 bg-white hover:bg-amber-50 border-2 border-dashed border-amber-200 hover:border-amber-400 text-amber-700 py-3.5 rounded-2xl text-sm sm:text-base font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm hover:shadow"
+                    >
+                      <span>👉 Crear una misión personalizada</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {showMissions && (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-stone-200 mt-12">
+                <button
+                  onClick={() => goToStep3()}
+                  className="w-full sm:w-auto text-stone-600 hover:text-stone-900 text-sm font-bold transition-all px-8 py-3 min-h-[44px] cursor-pointer bg-white border-2 border-stone-200 hover:border-stone-300 hover:bg-stone-50 rounded-full shadow-xs flex items-center justify-center gap-2"
+                >
+                  Saltar este paso
+                </button>
+                <button
+                  onClick={handleFinishGuide}
+                  className="w-full sm:w-auto bg-brand-sage-600 hover:bg-brand-sage-700 text-white px-8 py-3 min-h-[44px] rounded-full text-sm font-bold shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span>Finalizar lectura y continuar</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
           </div>
         )}
 
-        {isCustomMissionOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <div 
-              className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm"
-              onClick={() => setIsCustomMissionOpen(false)}
-            ></div>
-            <div className="relative bg-white rounded-3xl p-6 sm:p-8 w-full max-w-md shadow-xl flex flex-col gap-4 border border-stone-100">
+        {isCustomMissionOpen && createPortal(
+<div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto bg-black/50 backdrop-blur-sm" onClick={() => setIsCustomMissionOpen(false)}>
+            <div className="m-auto relative w-full max-w-lg bg-white rounded-2xl shadow-2xl z-[101] max-h-[85vh] overflow-y-auto p-6 sm:p-8 flex flex-col gap-4 border border-stone-100 animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+              <button onClick={() => setIsCustomMissionOpen(false)} className="absolute top-4 right-4 p-2 text-stone-400 hover:text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-full transition-colors cursor-pointer">
+                <X className="w-5 h-5" />
+              </button>
               <div>
-                <h3 className="font-serif text-xl font-bold text-stone-900 mb-1">
+                <h3 className="font-serif text-xl font-bold text-stone-900 mb-1 pr-8">
                   Misión Personalizada
                 </h3>
                 <p className="text-stone-500 text-sm">
@@ -952,8 +1024,7 @@ export const FluxFlowModule: React.FC<{ onNavigate: (view: ViewMode) => void }> 
                 </button>
               </div>
             </div>
-          </div>
-        )}
+          </div>, document.body)}
 
         {/* STEP 3 */}
         {currentStep === 3 && (
@@ -1018,6 +1089,72 @@ export const FluxFlowModule: React.FC<{ onNavigate: (view: ViewMode) => void }> 
           </div>
         )}
       </div>
+
+      {/* Scheduling Mission Modal */}
+      {schedulingMission && createPortal(
+<div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto bg-black/50 backdrop-blur-sm" onClick={() => setSchedulingMission(null)}>
+          <div className="m-auto relative w-full max-w-lg bg-white rounded-2xl shadow-2xl z-[101] max-h-[85vh] overflow-y-auto p-6 animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+            <button onClick={() => setSchedulingMission(null)} className="absolute top-4 right-4 p-2 text-stone-400 hover:text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-full transition-colors cursor-pointer">
+              <X className="w-5 h-5" />
+            </button>
+            <h3 className="font-serif text-xl font-bold text-stone-900 mb-2 pr-8">Programar Misión</h3>
+            <p className="text-xs text-stone-500 mb-4">{schedulingMission.title}</p>
+            
+            <div className="mb-4">
+              <label className="block text-xs font-bold text-stone-700 mb-2">¿Qué día realizarás esta misión?</label>
+              <input 
+                type="date" 
+                className="w-full px-4 py-3 rounded-xl border border-stone-200 bg-stone-50 focus:bg-white focus:ring-2 focus:ring-amber-500 outline-none transition-all"
+                defaultValue={new Date().toISOString().split('T')[0]}
+                id="flux-mission-date-input"
+              />
+            </div>
+            
+            <div className="mb-6">
+              <label className="block text-xs font-bold text-stone-700 mb-2">¿A qué hora realizarás esta misión?</label>
+              <input 
+                type="time" 
+                className="w-full px-4 py-3 rounded-xl border border-stone-200 bg-stone-50 focus:bg-white focus:ring-2 focus:ring-amber-500 outline-none transition-all"
+                defaultValue="12:00"
+                id="flux-mission-time-input"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setSchedulingMission(null)}
+                className="flex-1 py-3 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold transition-colors cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={() => {
+                  const dateInput = document.getElementById('flux-mission-date-input') as HTMLInputElement;
+                  const timeInput = document.getElementById('flux-mission-time-input') as HTMLInputElement;
+                  const date = dateInput ? dateInput.value : new Date().toISOString().split('T')[0];
+                  const time = timeInput ? timeInput.value : '12:00';
+                  
+                  setMissionStatuses({
+                    ...missionStatuses, 
+                    [schedulingMission.id]: { 
+                      status: 'accepted', 
+                      date,
+                      time,
+                      mission: schedulingMission 
+                    }
+                  });
+                  setSchedulingMission(null);
+                  success('Misión Aceptada', `La misión se guardará para el ${date} a las ${time}`);
+                }}
+                className="flex-1 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition-colors cursor-pointer shadow-md"
+              >
+                Confirmar y Programar
+              </button>
+            </div>
+          </div>
+        </div>, document.body)}
+
+
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   X, 
   ChevronLeft, 
@@ -27,7 +28,7 @@ import confetti from 'canvas-confetti';
 import { CompleteCourse, DayLesson, GuideDailyMission, LessonQuizQuestion } from '../../types';
 import { useToast } from '../common/Toast';
 import { Button } from '../common/Button';
-import { activateMissionFromGuide } from '../../utils/missionsManager';
+import { activateMissionFromGuide, saveSingleMission } from '../../utils/missionsManager';
 import { sendChatMessageToGemini } from '../../services/gemini';
 
 interface CompleteCoursePlayerModalProps {
@@ -89,6 +90,22 @@ const CoursePlayerModalContent: React.FC<{
   const [isAiLoading, setIsAiLoading] = useState(false);
   const aiChatScrollRef = useRef<HTMLDivElement>(null);
   const contentContainerRef = useRef<HTMLDivElement>(null);
+
+  // State for mission scheduling
+  const [schedulingMission, setSchedulingMission] = useState<any>(null);
+
+  useEffect(() => {
+    if (schedulingMission) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [schedulingMission]);
+  const [missionStatuses, setMissionStatuses] = useState<{ [missionId: string]: { status: 'accepted'|'rejected', time?: string } }>({});
+
 
   // Current day lesson data
   const currentDayLesson: DayLesson = useMemo(() => {
@@ -720,33 +737,160 @@ INSTRUCCIONES:
             </div>
 
             {/* Missions Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {currentDayLesson.missions.map((m) => (
-                <div key={m.id} className="bg-white rounded-3xl p-6 sm:p-8 border border-stone-200 shadow-xs flex flex-col justify-between space-y-5 hover:border-amber-400 transition-all">
-                  <div>
-                    <div className="flex items-center justify-between text-xs mb-3">
-                      <span className="font-bold text-amber-800 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200 flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5" /> {m.timeEstimate}
-                      </span>
-                      <span className="font-bold text-brand-gold-700 bg-amber-100 px-2.5 py-1 rounded-lg border border-amber-300">
-                        +{m.xp} XP
-                      </span>
-                    </div>
-                    <h3 className="font-bold text-stone-900 text-lg mb-2">{m.title}</h3>
-                    <p className="text-sm sm:text-base text-stone-600 leading-relaxed">{m.description}</p>
+            <div className="flex flex-col gap-4 mb-6">
+              {currentDayLesson.missions.map((m) => {
+                const decision = missionStatuses[m.id];
+                
+                return (
+                <div key={m.id} className={`bg-white/95 rounded-2xl border shadow-sm flex flex-col md:flex-row overflow-hidden transition-all ${decision?.status === 'accepted' ? 'border-emerald-400 ring-1 ring-emerald-400' : decision?.status === 'rejected' ? 'border-red-200 opacity-60' : 'border-stone-200 hover:border-amber-400'}`}>
+                {/* Left accent & Icon */}
+                <div className={`w-1.5 hidden md:block shrink-0 ${decision?.status === 'accepted' ? 'bg-emerald-400' : decision?.status === 'rejected' ? 'bg-red-300' : 'bg-amber-400'}`}></div>
+                <div className="hidden md:flex flex-col justify-center pl-4 py-4 shrink-0">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${decision?.status === 'accepted' ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : decision?.status === 'rejected' ? 'bg-red-50 border-red-200 text-red-600' : 'bg-amber-50 border-amber-200 text-amber-600'}`}>
+                    {decision?.status === 'accepted' ? <CheckCircle2 className="w-5 h-5" /> : decision?.status === 'rejected' ? <X className="w-5 h-5" /> : <Target className="w-5 h-5" />}
                   </div>
-
-                  <Button
-                    onClick={() => handleActivateMission(m)}
-                    variant="outline"
-                    className="w-full py-3 text-sm font-bold text-brand-sage-800 border-brand-sage-300 hover:bg-brand-sage-50"
-                  >
-                    Activar en Mis Misiones <ArrowRight className="w-4 h-4 ml-1.5" />
-                  </Button>
                 </div>
-              ))}
+                
+                {/* Main content body */}
+                <div className="flex-1 p-4 sm:p-5 flex flex-col justify-center">
+                  <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold text-amber-900 mb-2">
+                    <span className={`px-2 py-0.5 rounded-md ${decision?.status === 'accepted' ? 'bg-emerald-100 text-emerald-800' : decision?.status === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'}`}>
+                      Reto Práctico
+                    </span>
+                    {decision?.status === 'accepted' && (
+                      <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" /> Aceptada {decision.time ? `(${decision.time})` : ''}
+                      </span>
+                    )}
+                    {decision?.status === 'rejected' && (
+                      <span className="text-red-700 bg-red-50 px-2 py-0.5 rounded-md flex items-center gap-1">
+                        <X className="w-3 h-3" /> Rechazada
+                      </span>
+                    )}
+                  </div>
+                  
+                  <h5 className="text-sm sm:text-base font-bold text-stone-900 mb-1.5 leading-snug">
+                    {m.title}
+                  </h5>
+                  
+                  <p className="text-xs sm:text-sm text-stone-600 leading-relaxed mb-3">
+                    {m.description}
+                  </p>
+                  
+                  <div className="flex flex-wrap items-center gap-2 mt-auto">
+                    <span className="text-[11px] font-bold text-stone-500 bg-stone-100 px-2 py-1 rounded-md flex items-center gap-1.5">
+                      <Clock className="w-3 h-3" /> {m.timeEstimate}
+                    </span>
+                    <span className="text-[11px] font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-md flex items-center gap-1.5 border border-amber-100">
+                      <Sparkles className="w-3 h-3" /> +{m.xp || 30} XP
+                    </span>
+                  </div>
+                </div>
+                
+                {/* Right side actions */}
+                {!decision && (
+                  <div className="border-t md:border-t-0 md:border-l border-stone-100 p-4 sm:p-5 flex md:flex-col items-center justify-center gap-2 bg-stone-50/50 shrink-0 md:w-40">
+                    <button
+                       onClick={() => setSchedulingMission(m)}
+                      className="flex-1 md:flex-none w-full py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-emerald-500 text-white text-xs sm:text-sm font-bold transition-colors shadow-xs cursor-pointer flex items-center justify-center gap-2"
+                    >
+                      Aceptar
+                    </button>
+                    <button
+                       onClick={() => setMissionStatuses({ ...missionStatuses, [m.id]: { status: 'rejected' } })}
+                      className="flex-1 md:flex-none w-full py-2.5 px-4 rounded-xl bg-white border border-stone-200 hover:bg-red-50 hover:border-red-200 text-stone-600 hover:text-red-600 text-xs sm:text-sm font-bold transition-colors cursor-pointer flex items-center justify-center gap-2"
+                    >
+                      Rechazar
+                    </button>
+                  </div>
+                )}
+              </div>
+            )})}
             </div>
+            
+            {/* Scheduling Mission Modal */}
+            {schedulingMission && createPortal(
+<div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto bg-black/50 backdrop-blur-sm" onClick={() => setSchedulingMission(null)}>
+          <div className="m-auto relative w-full max-w-lg bg-white rounded-2xl shadow-2xl z-[101] max-h-[85vh] overflow-y-auto p-6 animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+            <button onClick={() => setSchedulingMission(null)} className="absolute top-4 right-4 p-2 text-stone-400 hover:text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-full transition-colors cursor-pointer">
+              <X className="w-5 h-5" />
+            </button>
+            <h3 className="font-serif text-xl font-bold text-stone-900 mb-2 pr-8">Programar Misión</h3>
+                  <p className="text-xs text-stone-500 mb-4">{schedulingMission.title}</p>
+                  
+                  <div className="mb-4">
+                    <label className="block text-xs font-bold text-stone-700 mb-2">¿Qué día realizarás esta misión?</label>
+                    <input 
+                      type="date" 
+                      className="w-full px-4 py-3 rounded-xl border border-stone-200 bg-stone-50 focus:bg-white focus:ring-2 focus:ring-amber-500 outline-none transition-all"
+                      defaultValue={new Date().toISOString().split('T')[0]}
+                      id="course-mission-date-input"
+                    />
+                  </div>
+                  
+                  <div className="mb-6">
+                    <label className="block text-xs font-bold text-stone-700 mb-2">¿A qué hora realizarás esta misión?</label>
+                    <input 
+                      type="time" 
+                      className="w-full px-4 py-3 rounded-xl border border-stone-200 bg-stone-50 focus:bg-white focus:ring-2 focus:ring-amber-500 outline-none transition-all"
+                      defaultValue="12:00"
+                      id="course-mission-time-input"
+                    />
+                  </div>
+                  <div className="flex gap-3">
+                    <button 
+                      onClick={() => setSchedulingMission(null)}
+                      className="flex-1 py-3 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold transition-colors cursor-pointer"
+                    >
+                      Cancelar
+                    </button>
+                    <button 
+                      onClick={() => {
+                        const dateInput = document.getElementById('course-mission-date-input') as HTMLInputElement;
+                        const timeInput = document.getElementById('course-mission-time-input') as HTMLInputElement;
+                        const date = dateInput ? dateInput.value : new Date().toISOString().split('T')[0];
+                        const time = timeInput ? timeInput.value : '12:00';
+                        
+                        const newMissionRecord = {
+                          id: `mission-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+                          missionId: schedulingMission.id,
+                          guideId: course.id,
+                          guideTitle: course.title,
+                          title: schedulingMission.title,
+                          description: schedulingMission.description,
+                          category: 'course',
+                          xp: schedulingMission.xp || 30,
+                          timeEstimate: schedulingMission.timeEstimate || '10 min',
+                          status: 'pending' as const,
+                          createdAt: new Date().toISOString()
+                        };
+                        saveSingleMission(newMissionRecord);
 
+                        try {
+                          const sch = localStorage.getItem('fluxglow_mission_schedules');
+                          let parsedSch = sch ? JSON.parse(sch) : {};
+                          const [year, month, day] = date.split('-').map(Number);
+                          const [hours, minutes] = time.split(':').map(Number);
+                          const d = new Date();
+                          d.setFullYear(year, month - 1, day);
+                          d.setHours(hours, minutes, 0, 0);
+                          
+                          parsedSch[newMissionRecord.id] = d.toISOString();
+                          localStorage.setItem('fluxglow_mission_schedules', JSON.stringify(parsedSch));
+                        } catch(e) {}
+                        
+                        setMissionStatuses({ ...missionStatuses, [schedulingMission.id]: { status: 'accepted', time, date } });
+                        setSchedulingMission(null);
+                        success('Misión aceptada', 'Se ha añadido a tus misiones diarias.');
+                      }}
+                      className="flex-1 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold transition-colors shadow-md cursor-pointer"
+                    >
+                      Confirmar y Programar
+              </button>
+                  </div>
+                </div>
+              </div>, document.body)}
+            
             {/* Tip on habits */}
             <div className="bg-[#fbf9f5] rounded-2xl p-5 border border-brand-sand-300 text-xs sm:text-sm text-stone-700 flex items-center gap-3">
               <Sparkles className="w-5 h-5 text-brand-sage-600 shrink-0" />

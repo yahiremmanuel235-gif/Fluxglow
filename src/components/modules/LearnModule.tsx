@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { 
-  Search, 
+import { createPortal } from 'react-dom';
+import { Search, 
   Sparkles, 
   Heart, 
   Play, 
@@ -38,15 +38,15 @@ import {
   Compass,
   ExternalLink,
   Tv,
-  BadgeCheck
+  BadgeCheck,
+  Plus
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useToast } from '../common/Toast';
 import { GuideTutorialModal } from './GuideTutorialModal';
 import { YouTubePlayerModal } from './YouTubePlayerModal';
 import { PSYCHOLOGICAL_TESTS, MOCK_JOURNAL_ENTRIES } from '../../data/mockData';
-import { 
-  DEMO_GUIDES_CATALOG, 
+import { DEMO_GUIDES_CATALOG, 
   POPULAR_GUIDES_CATALOG, 
   VERIFIED_MEDIA_CATALOG,
   AI_DEMO_NOTICE_TEXT 
@@ -55,16 +55,14 @@ import { INSTANT_PRACTICES_CATALOG } from '../../data/instantPracticesData';
 import { COMPLETE_COURSES_CATALOG } from '../../data/completeGuidesData';
 import { CompleteCoursePlayerModal } from './CompleteCoursePlayerModal';
 import { InstantPracticeModal } from './InstantPracticeModal';
-import { 
-  activateMissionFromGuide,
-  activateAllMissionsFromGuide,
+import { activateMissionFromGuide,
+  activateAllMissionsFromGuide, getProposedMissionsFromGuide, saveSingleMission,
   completeDailyMission, 
   getStoredMissions 
 } from '../../utils/missionsManager';
 import { EmptyStat } from '../common/EmptyStat';
 import { formatFluxDate } from '../../utils/dateUtils';
-import { 
-  GuideItem, 
+import { GuideItem, 
   VideoPodcastItem, 
   PsychologicalTest, 
   UserDailyMissionRecord, 
@@ -115,6 +113,33 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
 
   // State for the 3 missions unlocked upon finishing reading
   const [unlockedMissions, setUnlockedMissions] = useState<UserDailyMissionRecord[] | null>(null);
+  // Mission Flow states
+  const [missionDecisions, setMissionDecisions] = useState<{ [missionId: string]: { status: 'accepted'|'rejected', scheduledTime?: string } }>({});
+  const [schedulingMission, setSchedulingMission] = useState<any>(null);
+  const [showCustomMission, setShowCustomMission] = useState<boolean>(false);
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowCustomMission(false);
+        setSchedulingMission(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  useEffect(() => {
+    if (showCustomMission || schedulingMission) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showCustomMission, schedulingMission]);
+  const [customMissionData, setCustomMissionData] = useState({ title: '', description: '', timeEstimate: '15 min', scheduledTime: '12:00' });
+
 
   // Video player modal
   const [activeMedia, setActiveMedia] = useState<VideoPodcastItem | null>(null);
@@ -504,16 +529,16 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
 
     recordLearningActivity();
 
-    // Activate missions in pending state (so user takes them to real practice throughout the day)
-    const activated = activateAllMissionsFromGuide(guide);
-    setUnlockedMissions(activated);
+    // Generate proposed missions instead of automatically activating them
+    const proposed = getProposedMissionsFromGuide(guide);
+    setUnlockedMissions(proposed);
 
     confetti({
       particleCount: 90,
       spread: 80,
       origin: { y: 0.6 }
     });
-    success('¡Lectura completada con éxito! 🎉', 'Has desbloqueado 3 misiones prácticas para llevar la teoría a tu día.');
+    success('¡Lectura completada con éxito! 🎉', 'Revisa estas misiones propuestas y decide cuáles aceptar.');
   };
 
   // String normalizer for accent-free search
@@ -1873,105 +1898,303 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
               </button>
             </div>
 
+            
             {/* UNLOCKED 3 DAILY MISSIONS PANEL (FOCUSED ON REAL DAILY PRACTICE) */}
             {unlockedMissions && unlockedMissions.length > 0 && (
-              <div className="my-8 p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-amber-50 via-orange-50/70 to-amber-100/50 border-2 border-amber-300 shadow-md animate-in zoom-in-95 duration-200">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-amber-200 mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-amber-400 text-amber-950 flex items-center justify-center shadow-xs">
-                      <Target className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-amber-800">
-                        ¡Misiones Desbloqueadas y Listas para tu Día!
-                      </span>
-                      <h4 className="font-serif text-xl sm:text-2xl font-bold text-stone-900">
-                        3 Retos Prácticos Asignados
-                      </h4>
+              <div className="my-8 flex flex-col gap-4 animate-in zoom-in-95 duration-200">
+                <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-amber-50 via-orange-50/70 to-amber-100/50 border-2 border-amber-300 shadow-md relative overflow-hidden">
+                  
+
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-amber-200 mb-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-2xl bg-amber-400 text-amber-950 flex items-center justify-center shadow-xs">
+                        <Target className="w-6 h-6" />
+                      </div>
+                      <div className="pr-12">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-amber-800">
+                          ¡Misiones Desbloqueadas y Listas para tu Día!
+                        </span>
+                        <h4 className="font-serif text-xl sm:text-2xl font-bold text-stone-900">
+                          3 Retos Prácticos Propuestos
+                        </h4>
+                      </div>
                     </div>
                   </div>
 
-                  {onNavigate && (
-                    <button
-                      onClick={() => {
-                        stopGuideAudio();
-                        setActiveGuide(null);
-                        setUnlockedMissions(null);
-                        onNavigate('missions');
-                      }}
-                      className="bg-amber-600 hover:bg-amber-700 text-white px-5 py-2.5 rounded-full text-xs sm:text-sm font-bold shadow-xs transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap"
-                    >
-                      <Target className="w-4 h-4" />
-                      <span>Ir a Misiones Diarias</span>
-                    </button>
-                  )}
+                  <p className="text-stone-700 text-xs sm:text-sm mb-6 leading-relaxed">
+                    💡 <strong>Propósito de las misiones:</strong> Estas acciones están diseñadas para trasladar la teoría a la práctica en tu día a día. Acepta las que desees y prográmales una hora para activarlas en tu panel de misiones.
+                  </p>
+
+                  {/* 3 Missions Cards Grid */}
+                  <div className="flex flex-col gap-4 mb-6">
+                    {unlockedMissions.slice(0, 3).map((m, mIdx) => {
+                      const decision = missionDecisions[m.id];
+                      return (
+                      <div key={m.id || mIdx} className={`bg-white/95 rounded-2xl border shadow-sm flex flex-col md:flex-row overflow-hidden transition-all ${decision?.status === 'accepted' ? 'border-emerald-400 ring-1 ring-emerald-400' : decision?.status === 'rejected' ? 'border-red-200 opacity-60' : 'border-amber-200'}`}>
+                {/* Left accent & Icon */}
+                <div className={`w-1.5 hidden md:block shrink-0 ${decision?.status === 'accepted' ? 'bg-emerald-400' : decision?.status === 'rejected' ? 'bg-red-300' : 'bg-amber-400'}`}></div>
+                <div className="hidden md:flex flex-col justify-center pl-4 py-4 shrink-0">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${decision?.status === 'accepted' ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : decision?.status === 'rejected' ? 'bg-red-50 border-red-200 text-red-600' : 'bg-amber-50 border-amber-200 text-amber-600'}`}>
+                    {decision?.status === 'accepted' ? <CheckCircle2 className="w-5 h-5" /> : decision?.status === 'rejected' ? <X className="w-5 h-5" /> : <Target className="w-5 h-5" />}
+                  </div>
                 </div>
-
-                <p className="text-stone-700 text-xs sm:text-sm mb-4 leading-relaxed">
-                  💡 <strong>Propósito de las misiones:</strong> Estas acciones están diseñadas para trasladar la teoría a la práctica en tu día a día. Las encontrarás activas en tu apartado de <strong>Misiones Diarias</strong> para completarlas y registrar tus XP conforme las realices.
-                </p>
-
-                {/* 3 Missions Cards Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                  {unlockedMissions.slice(0, 3).map((m, mIdx) => (
-                    <div key={m.id || mIdx} className="bg-white/95 rounded-2xl p-4 border border-amber-200 shadow-2xs flex flex-col justify-between">
-                      <div>
-                        <div className="flex items-center justify-between text-[11px] font-bold text-amber-900 mb-2">
-                          <span className="bg-amber-100 px-2 py-0.5 rounded-md">Reto {mIdx + 1}</span>
-                          <span className="text-stone-400 font-medium flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            {m.timeEstimate}
-                          </span>
-                        </div>
-                        <h5 className="text-xs sm:text-sm font-bold text-stone-900 mb-1 leading-snug">
-                          {m.title}
-                        </h5>
-                        <p className="text-xs text-stone-600 line-clamp-3 leading-relaxed">
-                          {m.description}
-                        </p>
-                      </div>
-
-                      <div className="mt-3 pt-2 border-t border-stone-100 flex items-center justify-between">
-                        <span className="text-xs font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full">
-                          +{m.xp || 30} XP
-                        </span>
-
-                        <span className="text-[11px] font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full flex items-center gap-1">
-                          <Check className="w-3 h-3 stroke-[3]" />
-                          <span>Activada en tu día</span>
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-amber-900 pt-2 border-t border-amber-200/60">
-                  <span className="font-semibold">
-                    🌱 Ponlas en práctica durante tu jornada y márcalas como completadas en tu panel.
-                  </span>
+                
+                {/* Main content body */}
+                <div className="flex-1 p-4 sm:p-5 flex flex-col justify-center">
+                  <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold text-amber-900 mb-2">
+                    <span className={`px-2 py-0.5 rounded-md ${decision?.status === 'accepted' ? 'bg-emerald-100 text-emerald-800' : decision?.status === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'}`}>
+                      Reto {mIdx + 1}
+                    </span>
+                    {decision?.status === 'accepted' && (
+                      <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" /> Aceptada {decision.scheduledTime ? `(${decision.scheduledTime})` : ''}
+                      </span>
+                    )}
+                    {decision?.status === 'rejected' && (
+                      <span className="text-red-700 bg-red-50 px-2 py-0.5 rounded-md flex items-center gap-1">
+                        <X className="w-3 h-3" /> Rechazada
+                      </span>
+                    )}
+                  </div>
                   
-                  {onNavigate && (
-                    <button
-                      onClick={() => {
-                        stopGuideAudio();
-                        setActiveGuide(null);
-                        setUnlockedMissions(null);
-                        onNavigate('missions');
-                      }}
-                      className="font-bold underline hover:text-amber-950 cursor-pointer flex items-center gap-1"
-                    >
-                      <span>Ver todas mis misiones en curso</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-                  )}
+                  <h5 className="text-sm sm:text-base font-bold text-stone-900 mb-1.5 leading-snug">
+                    {m.title}
+                  </h5>
+                  
+                  <p className="text-xs sm:text-sm text-stone-600 leading-relaxed mb-3">
+                    {m.description}
+                  </p>
+                  
+                  <div className="flex flex-wrap items-center gap-2 mt-auto">
+                    <span className="text-[11px] font-bold text-stone-500 bg-stone-100 px-2 py-1 rounded-md flex items-center gap-1.5">
+                      <Clock className="w-3 h-3" /> {m.timeEstimate}
+                    </span>
+                    <span className="text-[11px] font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-md flex items-center gap-1.5 border border-amber-100">
+                      <Sparkles className="w-3 h-3" /> +{m.xp || 30} XP
+                    </span>
+                  </div>
                 </div>
+                
+                {/* Right side actions */}
+                {!decision && (
+                  <div className="border-t md:border-t-0 md:border-l border-stone-100 p-4 sm:p-5 flex md:flex-col items-center justify-center gap-2 bg-stone-50/50 shrink-0 md:w-40">
+                    <button
+                       onClick={() => setSchedulingMission(m)}
+                      className="flex-1 md:flex-none w-full py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-emerald-500 text-white text-xs sm:text-sm font-bold transition-colors shadow-xs cursor-pointer flex items-center justify-center gap-2"
+                    >
+                      Aceptar
+                    </button>
+                    <button
+                       onClick={() => setMissionDecisions({...missionDecisions, [m.id]: {status: 'rejected', scheduledTime: ''}})}
+                      className="flex-1 md:flex-none w-full py-2.5 px-4 rounded-xl bg-white border border-stone-200 hover:bg-red-50 hover:border-red-200 text-stone-600 hover:text-red-600 text-xs sm:text-sm font-bold transition-colors cursor-pointer flex items-center justify-center gap-2"
+                    >
+                      Rechazar
+                    </button>
+                  </div>
+                )}
+              </div>
+            )})}
+            </div>
+                  
+                  <button
+                    onClick={() => setShowCustomMission(true)}
+                    className="w-full mt-2 bg-white hover:bg-amber-50 border-2 border-dashed border-amber-200 hover:border-amber-400 text-amber-700 py-3.5 rounded-2xl text-sm sm:text-base font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm hover:shadow"
+                  >
+                    <span>👉 Crear una misión personalizada</span>
+                  </button>
+                </div>
+                
+                <button
+                  onClick={() => {
+                    stopGuideAudio();
+                    setActiveGuide(null);
+                    setUnlockedMissions(null);
+                    setMissionDecisions({});
+                  }}
+                  className="w-full bg-stone-800 hover:bg-stone-900 text-white py-4 rounded-2xl font-bold shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span>Finalizar lectura y continuar</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
               </div>
             )}
-
           </div>
-
         </div>
       )}
+
+      {/* Scheduling Mission Modal */}
+      {schedulingMission && createPortal(
+<div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto bg-black/50 backdrop-blur-sm" onClick={() => setSchedulingMission(null)}>
+          <div className="m-auto relative w-full max-w-lg bg-white rounded-2xl shadow-2xl z-[101] max-h-[85vh] overflow-y-auto p-6 animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+            <button onClick={() => setSchedulingMission(null)} className="absolute top-4 right-4 p-2 text-stone-400 hover:text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-full transition-colors cursor-pointer">
+              <X className="w-5 h-5" />
+            </button>
+            <h3 className="font-serif text-xl font-bold text-stone-900 mb-2 pr-8">Programar Misión</h3>
+            <p className="text-xs text-stone-500 mb-4">{schedulingMission.title}</p>
+            
+            <div className="mb-6">
+              <label className="block text-xs font-bold text-stone-700 mb-2">¿A qué hora realizarás esta misión?</label>
+              <input 
+                type="time" 
+                className="w-full px-4 py-3 rounded-xl border border-stone-200 bg-stone-50 focus:bg-white focus:ring-2 focus:ring-amber-500 outline-none transition-all"
+                defaultValue="12:00"
+                id="mission-time-input"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setSchedulingMission(null)}
+                className="flex-1 py-3 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold transition-colors"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={() => {
+                  const time = (document.getElementById('mission-time-input') as HTMLInputElement).value;
+                  const newMission = { ...schedulingMission, scheduledTime: time };
+                  saveSingleMission(newMission);
+                  
+                  try {
+                    const sch = localStorage.getItem('fluxglow_mission_schedules');
+                    let parsedSch = sch ? JSON.parse(sch) : {};
+                    const [hours, minutes] = time.split(':').map(Number);
+                    const d = new Date();
+                    d.setHours(hours, minutes, 0, 0);
+                    parsedSch[newMission.id] = d.toISOString();
+                    localStorage.setItem('fluxglow_mission_schedules', JSON.stringify(parsedSch));
+                  } catch(e) {}
+
+                  setMissionDecisions({ ...missionDecisions, [schedulingMission.id]: { status: 'accepted', scheduledTime: time } });
+                  setSchedulingMission(null);
+                  success('Misión aceptada', 'Se ha añadido a tus misiones diarias.');
+                }}
+                className="flex-1 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold transition-colors shadow-md"
+              >
+                Confirmar y Programar
+              </button>
+            </div>
+          </div>
+        </div>, document.body)}
+
+      {/* Custom Mission Modal */}
+      {showCustomMission && activeGuide && createPortal(
+<div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto bg-black/50 backdrop-blur-sm" onClick={() => setShowCustomMission(false)}>
+          <div className="m-auto relative w-full max-w-lg bg-white rounded-2xl shadow-2xl z-[101] max-h-[85vh] overflow-y-auto p-6 sm:p-8 animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+            <button onClick={() => setShowCustomMission(false)} className="absolute top-4 right-4 p-2 text-stone-400 hover:text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-full transition-colors cursor-pointer">
+              <X className="w-5 h-5" />
+            </button>
+            <div className="flex items-center mb-4">
+              <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
+                <Target className="w-5 h-5" />
+              </div>
+            </div>
+            <h3 className="font-serif text-xl font-bold text-stone-900 mb-2 pr-8">Crear Misión Personalizada</h3>
+            <p className="text-xs text-stone-500 mb-6">
+              ¿Quieres aplicar los conocimientos de la guía a tu manera? Crea una misión personalizada.
+            </p>
+
+            <div className="space-y-4 mb-8">
+              <div>
+                <label className="block text-xs font-bold text-stone-700 mb-1.5">Nombre del reto</label>
+                <input 
+                  type="text" 
+                  value={customMissionData.title}
+                  onChange={(e) => setCustomMissionData({...customMissionData, title: e.target.value})}
+                  placeholder="Ej. Meditar 10 minutos"
+                  className="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50 focus:bg-white focus:ring-2 focus:ring-amber-500 outline-none transition-all text-sm"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-xs font-bold text-stone-700 mb-1.5">Descripción</label>
+                <textarea 
+                  value={customMissionData.description}
+                  onChange={(e) => setCustomMissionData({...customMissionData, description: e.target.value})}
+                  placeholder="Describe cómo lo harás..."
+                  rows={2}
+                  className="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50 focus:bg-white focus:ring-2 focus:ring-amber-500 outline-none transition-all text-sm resize-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-stone-700 mb-1.5">Hora</label>
+                  <input 
+                    type="time" 
+                    value={customMissionData.scheduledTime}
+                    onChange={(e) => setCustomMissionData({...customMissionData, scheduledTime: e.target.value})}
+                    className="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50 focus:bg-white focus:ring-2 focus:ring-amber-500 outline-none transition-all text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-stone-700 mb-1.5">Duración</label>
+                  <select
+                    value={customMissionData.timeEstimate}
+                    onChange={(e) => setCustomMissionData({...customMissionData, timeEstimate: e.target.value})}
+                    className="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50 focus:bg-white focus:ring-2 focus:ring-amber-500 outline-none transition-all text-sm"
+                  >
+                    <option value="5 min">5 min</option>
+                    <option value="10 min">10 min</option>
+                    <option value="15 min">15 min</option>
+                    <option value="30 min">30 min</option>
+                    <option value="1 hora">1 hora</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <button 
+              onClick={() => {
+                if (!customMissionData.title.trim()) {
+                  success('Aviso', 'El nombre de la misión es obligatorio.');
+                  return;
+                }
+                const newMission = {
+                  id: `mission-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+                  missionId: `custom-${Date.now()}`,
+                  guideId: activeGuide.id,
+                  guideTitle: activeGuide.title,
+                  title: customMissionData.title,
+                  description: customMissionData.description,
+                  category: activeGuide.category,
+                  xp: 40,
+                  timeEstimate: customMissionData.timeEstimate,
+                  scheduledTime: customMissionData.scheduledTime,
+                  status: 'pending' as const,
+                  createdAt: new Date().toISOString()
+                };
+                
+                // Add to unlockedMissions so it appears in the list
+                const updatedMissions = [...(unlockedMissions || []), newMission];
+                setUnlockedMissions(updatedMissions);
+                
+                // Save and accept it automatically
+                saveSingleMission(newMission);
+                
+                try {
+                  const sch = localStorage.getItem('fluxglow_mission_schedules');
+                  let parsedSch = sch ? JSON.parse(sch) : {};
+                  const [hours, minutes] = customMissionData.scheduledTime.split(':').map(Number);
+                  const d = new Date();
+                  d.setHours(hours, minutes, 0, 0);
+                  parsedSch[newMission.id] = d.toISOString();
+                  localStorage.setItem('fluxglow_mission_schedules', JSON.stringify(parsedSch));
+                } catch(e) {}
+
+                setMissionDecisions({ ...missionDecisions, [newMission.id]: { status: 'accepted', scheduledTime: newMission.scheduledTime } });
+                
+                setShowCustomMission(false);
+                setCustomMissionData({ title: "", description: "", timeEstimate: "15 min", scheduledTime: "12:00" });
+                success('Misión creada', 'Se ha añadido a tus misiones diarias.');
+              }}
+              className="w-full py-3.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold transition-all shadow-md active:scale-95"
+            >
+              Crear y Aceptar Misión
+            </button>
+          </div>
+        </div>
+      , document.body)}
 
       {/* Psychological Test Modal */}
       {activeTest && (
@@ -2221,6 +2444,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
         onClose={() => setShowGuideTutorial(false)}
       />
 
-    </div>
+      </div>
   );
 };
+export default LearnModule;

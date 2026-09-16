@@ -12,6 +12,9 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@babel/core": "^8.0.5",
+    "@babel/preset-react": "^8.0.1",
+    "@babel/preset-typescript": "^8.0.1",
     "@google/genai": "^2.4.0",
     "@google/generative-ai": "^0.24.1",
     "@supabase/supabase-js": "^2.115.0",
