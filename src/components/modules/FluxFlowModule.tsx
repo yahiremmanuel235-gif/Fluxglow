@@ -7,7 +7,7 @@ import {
   Square, Heart, BookmarkCheck, Play, ArrowLeft, Quote, Flame, Activity, Timer, Wind, ChevronRight, Plus, X
 } from 'lucide-react';
 import { useJournal } from '../../hooks/useJournal';
-import { incrementFluxStreak, getFluxStreak, setLastFluxDate } from '../../utils/streakManager';
+import { incrementFluxStreak, getFluxStreak, setLastFluxDate, canStartFluxToday } from '../../utils/streakManager';
 import { useToast } from '../common/Toast';
 import confetti from 'canvas-confetti';
 import { DEMO_GUIDES_CATALOG, AI_DEMO_NOTICE_TEXT } from '../../data/guidesData';
