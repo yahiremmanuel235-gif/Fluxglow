@@ -175,7 +175,6 @@ export const MissionsModule: React.FC<MissionsModuleProps> = ({
         newRejected.push(id);
         rejectedChanged = true;
         warning('Has fallado una misión programada (pasó 1 hora). Se restó XP.');
-        decrementFluxStreak(30);
       }
     });
 

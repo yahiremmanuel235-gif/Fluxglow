@@ -468,6 +468,15 @@ INSTRUCCIONES:
         ref={contentContainerRef}
         className="flex-1 overflow-y-auto p-4 sm:p-8 md:p-12 max-w-5xl w-full mx-auto"
       >
+        {course.isDemoContent && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 flex items-start gap-3 shadow-sm">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <h4 className="text-sm font-bold text-amber-900">Contenido Generado por IA (Demostrativo)</h4>
+              <p className="text-xs text-amber-800 mt-1">Este curso es un ejemplo generado por IA para demostrar la funcionalidad de FluxGlow. En la versión final, este contenido será desarrollado por profesionales de la salud mental.</p>
+            </div>
+          </div>
+        )}
         
         {/* ======================================================== */}
         {/* CASE A: CONTENT SECTION PAGE (Concepto 1, Concepto 2...) */}

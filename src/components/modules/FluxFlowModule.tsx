@@ -143,7 +143,6 @@ const INSPIRATIONAL_QUOTES: Record<string, EmotionQuote> = {
         habits: { sleepHours: 8, waterGlasses: 6, exercised: true, energyLevel: intensity },
         aiFeedback: INSPIRATIONAL_QUOTES[selectedMood]?.reflection || 'Has identificado tus emociones con claridad.'
       });
-      incrementFluxStreak();
       setIsSubmitted(true);
       confetti({ particleCount: 65, spread: 60, origin: { y: 0.6 } });
     } catch (err: any) {
@@ -152,6 +151,9 @@ const INSPIRATIONAL_QUOTES: Record<string, EmotionQuote> = {
   };
 
   const goToStep3 = () => {
+    if (canStartFluxToday()) {
+      incrementFluxStreak();
+    }
     setLastFluxDate();
     setCurrentStep(3);
   };
@@ -181,14 +183,12 @@ const INSPIRATIONAL_QUOTES: Record<string, EmotionQuote> = {
       }
     }
     
-    incrementFluxStreak();
     confetti({ particleCount: 90, spread: 80, origin: { y: 0.6 } });
     setActiveGuide(null);
     goToStep3();
   };
 
   const handleCourseDayComplete = () => {
-    incrementFluxStreak();
     confetti({ particleCount: 90, spread: 80, origin: { y: 0.6 } });
     setActiveCourse(null);
     goToStep3();

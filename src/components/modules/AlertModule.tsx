@@ -278,7 +278,7 @@ export const AlertModule: React.FC = () => {
   const handleBookAppointment = () => {
     setShowContactModal(false);
     confetti({ particleCount: 30, spread: 50 });
-    success('Solicitud enviada', 'La Dra. María López ha recibido tu solicitud de cita prioritaria.');
+    success('Solicitud simulada enviada', 'En la versión final, esta solicitud se enviará a un profesional de la salud asignado.');
   };
 
   return (

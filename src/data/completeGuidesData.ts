@@ -3,6 +3,7 @@ import { CompleteCourse } from '../types';
 export const COMPLETE_COURSES_CATALOG: CompleteCourse[] = [
   {
     id: 'course-ansiedad-7d',
+    isDemoContent: true,
     badge: 'Ejemplo Demostrativo IA',
     title: 'Guía Completa de 1 Semana: Maestría en Calma y Desactivación de la Ansiedad',
     subtitle: 'Aprende paso a paso a regular tu sistema nervioso, frenar la rumiación y cultivar serenidad cotidiana.',

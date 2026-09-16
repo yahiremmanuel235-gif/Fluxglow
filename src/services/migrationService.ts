@@ -30,9 +30,12 @@ export async function migrateGuestDataToSupabase(userId: string): Promise<{
             const noteContent = (entry.notes || entry.note || '').trim();
             const mood = entry.mood || 'neutral';
             const intensity = typeof entry.intensity === 'number' ? entry.intensity : 7;
-            const triggers = Array.isArray(entry.triggers) ? entry.triggers : [];
-            const habits = entry.habits || null;
+            const triggers = Array.isArray(entry.triggers) ? entry.triggers : (Array.isArray(entry.tags) ? entry.tags : []);
+            
+            // Safely handle optional JSON objects
+            const habits = (entry.habits && typeof entry.habits === 'object') ? entry.habits : null;
             const aiFeedback = entry.aiFeedback || entry.ai_feedback || null;
+
             let createdAt = new Date().toISOString();
 
             if (entry.date) {

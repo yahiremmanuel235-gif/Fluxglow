@@ -9,19 +9,20 @@ import { migrateGuestDataToSupabase } from './services/migrationService';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 import { LandingPage } from './components/landing/LandingPage';
-import { LearnModule } from './components/modules/LearnModule';
-import { JournalModule } from './components/modules/JournalModule';
-import { AnalyticsModule } from './components/modules/AnalyticsModule';
-import { FluxAiModule } from './components/modules/FluxAiModule';
-import { AlertModule } from './components/modules/AlertModule';
-import { ProfileModule } from './components/modules/ProfileModule';
-import { CommunityModule } from './components/modules/CommunityModule';
-import { MissionsModule } from './components/modules/MissionsModule';
-import { DashboardModule } from './components/modules/DashboardModule';
-import { FluxFlowModule } from './components/modules/FluxFlowModule';
 import { OnboardingModal } from './components/common/OnboardingModal';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { soundEngine } from './utils/audioSynth';
+
+const LearnModule = React.lazy(() => import('./components/modules/LearnModule').then(m => ({ default: m.LearnModule })));
+const JournalModule = React.lazy(() => import('./components/modules/JournalModule').then(m => ({ default: m.JournalModule })));
+const AnalyticsModule = React.lazy(() => import('./components/modules/AnalyticsModule').then(m => ({ default: m.AnalyticsModule })));
+const FluxAiModule = React.lazy(() => import('./components/modules/FluxAiModule').then(m => ({ default: m.FluxAiModule })));
+const AlertModule = React.lazy(() => import('./components/modules/AlertModule').then(m => ({ default: m.AlertModule })));
+const ProfileModule = React.lazy(() => import('./components/modules/ProfileModule').then(m => ({ default: m.ProfileModule })));
+const CommunityModule = React.lazy(() => import('./components/modules/CommunityModule').then(m => ({ default: m.CommunityModule })));
+const MissionsModule = React.lazy(() => import('./components/modules/MissionsModule').then(m => ({ default: m.MissionsModule })));
+const DashboardModule = React.lazy(() => import('./components/modules/DashboardModule').then(m => ({ default: m.DashboardModule })));
+const FluxFlowModule = React.lazy(() => import('./components/modules/FluxFlowModule').then(m => ({ default: m.FluxFlowModule })));
 
 const DEFAULT_USER_PROFILE: UserProfileData = {
   name: 'Usuario FluxGlow',
@@ -39,6 +40,13 @@ const DEFAULT_USER_PROFILE: UserProfileData = {
   points: 120,
   level: 1,
 };
+
+const PageTransition = () => (
+  <div className="flex h-full w-full flex-col items-center justify-center p-8 bg-brand-sand-50">
+    <div className="w-12 h-12 border-4 border-brand-sage-200 border-t-brand-sage-500 rounded-full animate-spin"></div>
+    <p className="mt-4 text-brand-sage-700 font-medium">Cargando módulo...</p>
+  </div>
+);
 
 export default function App() {
   const { user, authLoading, signOut } = useAuth();
@@ -270,6 +278,7 @@ export default function App() {
       {/* Main Dynamic View Content with smooth motion transition */}
       <main className="flex-1">
         <AnimatePresence mode="wait">
+          <React.Suspense fallback={<PageTransition />}>
           <Routes location={location} key={location.pathname}>
             <Route path="/" element={
               <motion.div
@@ -453,6 +462,7 @@ export default function App() {
             {/* Ruta de captura (404) que redirige al inicio para evitar pantalla blanca */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          </React.Suspense>
         </AnimatePresence>
       </main>
 

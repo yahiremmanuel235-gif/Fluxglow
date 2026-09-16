@@ -335,6 +335,7 @@ export interface CompleteCourse {
   targetAudience: string;
   learningOutcomes: string[];
   days: DayLesson[];
+  isDemoContent?: boolean;
 }
 
 export interface TeamMember {
