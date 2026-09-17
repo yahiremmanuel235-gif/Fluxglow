@@ -24,6 +24,7 @@ import {
   RefreshCw,
   Cloud
 } from 'lucide-react';
+import { isPositiveEmotion } from '../../utils/emotionUtils';
 import confetti from 'canvas-confetti';
 import { RachaIcon } from '../common/RachaIcon';
 import { MoodIcon } from '../common/MoodIcon';
@@ -33,6 +34,7 @@ import { MoodType, JournalEntry, ViewMode } from '../../types';
 import { useToast } from '../common/Toast';
 import { useJournal } from '../../hooks/useJournal';
 import { useMissions } from '../../hooks/useMissions';
+import { useStreak } from '../../hooks/useStreak';
 
 interface JournalModuleProps {
   onEntryCreated?: (entry: JournalEntry) => void;
@@ -102,6 +104,7 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
   } = useJournal();
 
   const { streakDays } = useMissions();
+  const { userStreak } = useStreak();
 
   const [selectedMood, setSelectedMood] = useState<MoodType>('feliz');
   const [intensity, setIntensity] = useState<number>(8);
@@ -340,8 +343,8 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
             </div>
             <div>
               <h4 className="text-xs sm:text-sm font-bold text-stone-900 flex items-center gap-1.5">
-                <span>Racha de Registro Consciente: {streakDays} {streakDays === 1 ? 'día' : 'días'}</span>
-                {streakDays > 0 && <span className="text-[10px] font-bold bg-[#E87A52] text-white px-2 py-0.5 rounded-full shadow-2xs">¡Activa!</span>}
+                <span>Racha de Registro Consciente: {userStreak} {userStreak === 1 ? 'día' : 'días'}</span>
+                {userStreak > 0 && <span className="text-[10px] font-bold bg-[#E87A52] text-white px-2 py-0.5 rounded-full shadow-2xs">¡Activa!</span>}
               </h4>
               <p className="text-xs text-stone-500">Constancia y hábitos emocionales de la semana</p>
             </div>
@@ -445,6 +448,8 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
                       ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                       : intensity <= 7
                       ? 'bg-amber-50 text-amber-700 border-amber-200'
+                      : isPositiveEmotion(selectedMood)
+                      ? 'bg-[#FDF4F0] text-[#E87A52] border-[#F7D3C3]'
                       : 'bg-rose-50 text-rose-700 border-rose-200'
                   }`}>
                     {intensity <= 3 ? 'Leve' : intensity <= 7 ? 'Moderado' : 'Intenso'} • {intensity}/10

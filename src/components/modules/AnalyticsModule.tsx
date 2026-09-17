@@ -41,6 +41,7 @@ import { EmptyStat } from '../common/EmptyStat';
 import { formatFluxDate } from '../../utils/dateUtils';
 import { useJournal } from '../../hooks/useJournal';
 import { useMissions } from '../../hooks/useMissions';
+import { useStreak } from '../../hooks/useStreak';
 import { UserDailyMissionRecord, ViewMode, JournalEntry, MoodType } from '../../types';
 import { MOCK_JOURNAL_ENTRIES } from '../../data/mockData';
 import { 
@@ -130,7 +131,8 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
   const [selectedTrigger, setSelectedTrigger] = useState<string | null>('ejercicio');
   
   const { entries: journalEntries, loading: isLoadingJournal } = useJournal();
-  const { missions, streakDays, toggleCompleteMission } = useMissions();
+  const { missions, toggleCompleteMission } = useMissions();
+  const { userStreak } = useStreak();
   const [missionFilter, setMissionFilter] = useState<'all' | 'pending' | 'completed'>('all');
 
   useEffect(() => {
@@ -351,7 +353,7 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
 
     if (forecastPeriod === '7d') {
       const riskPercent = baseRiskPercent;
-      const batteryPercent = Math.min(95, 60 + streakDays * 5 + completedMissionsCount * 4);
+      const batteryPercent = Math.min(95, 60 + userStreak * 5 + completedMissionsCount * 4);
       return {
         title: 'Horizonte Inmediato (Próximos 7 Días)',
         riskLevel: riskPercent <= 25 ? 'Riesgo Bajo (Estable)' : riskPercent <= 50 ? 'Riesgo Medio (Atención)' : riskPercent <= 75 ? 'Riesgo Moderado' : 'Riesgo Elevado',
@@ -368,7 +370,7 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
       };
     } else if (forecastPeriod === '14d') {
       const riskPercent = Math.min(100, baseRiskPercent + 5); // Add slight margin for longer forecast
-      const batteryPercent = Math.min(90, 55 + streakDays * 4 + completedMissionsCount * 3);
+      const batteryPercent = Math.min(90, 55 + userStreak * 4 + completedMissionsCount * 3);
       return {
         title: 'Proyección Quincenal (14 Días)',
         riskLevel: riskPercent <= 25 ? 'Riesgo Bajo (Estable)' : riskPercent <= 50 ? 'Riesgo Medio (Atención)' : riskPercent <= 75 ? 'Riesgo Moderado' : 'Riesgo Elevado',
@@ -385,7 +387,7 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
       };
     } else {
       const riskPercent = Math.min(100, baseRiskPercent + 10);
-      const batteryPercent = Math.min(88, 50 + streakDays * 5 + completedMissionsCount * 3);
+      const batteryPercent = Math.min(88, 50 + userStreak * 5 + completedMissionsCount * 3);
       return {
         title: 'Tendencia Mensual Global (30 Días)',
         riskLevel: riskPercent <= 25 ? 'Riesgo Bajo (Estable)' : riskPercent <= 50 ? 'Riesgo Medio (Atención)' : riskPercent <= 75 ? 'Riesgo Moderado' : 'Riesgo Elevado',
@@ -401,14 +403,14 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
         actionType: 'Estrategia de consolidación a 30 días'
       };
     }
-  }, [forecastPeriod, monthlyMoodPath, streakDays, journalEntries.length, completedMissionsCount]);
+  }, [forecastPeriod, monthlyMoodPath, userStreak, journalEntries.length, completedMissionsCount]);
 
   // Subjective Wellbeing & Stress Episodes
   const subjectiveWellbeing = useMemo(() => {
     if (!Array.isArray(journalEntries) || journalEntries.length === 0) {
       return { score: '0.0', deltaText: '0% Sin registros aún' };
     }
-    const total = journalEntries.reduce((acc, e) => acc + (typeof e.intensity === 'number' ? e.intensity : 5), 0);
+    const total = journalEntries.reduce((acc, e) => acc + calculateWellbeingScore(e.mood, typeof e.intensity === 'number' ? e.intensity : 5), 0);
     const avg = (total / journalEntries.length).toFixed(1);
     return {
       score: `${avg}`,
@@ -444,7 +446,7 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
     const report = `📊 INFORME DE BIENESTAR FLUXGLOW
 Periodo: ${currentPeriodText}
 ---------------------------------
-🌱 Racha de Hábitos: ${streakDays} días continuos
+🌱 Racha de Hábitos: ${userStreak} días continuos
 🎯 Misiones Completadas: ${completedMissionsCount}
 📈 Nivel de Bienestar: +14% vs periodo previo
 🔋 Batería Mental Estimada: ${forecastData.batteryState}
@@ -526,10 +528,10 @@ Generado con FluxGlow • Cuidado emocional consciente`;
           <div className="flux-card-terracotta p-5 flex items-center justify-between">
             <div>
               <p className="text-[11px] font-bold text-stone-600 uppercase tracking-wider">Consistencia de Hábitos</p>
-              <h3 className="text-2xl font-bold text-stone-900 mt-1">{streakDays} días activos</h3>
+              <h3 className="text-2xl font-bold text-stone-900 mt-1">{userStreak} días activos</h3>
               <p className="text-xs text-[#B54F2C] font-bold flex items-center gap-1 mt-1.5">
                 <ArrowUpRight className="w-3.5 h-3.5 text-[#E87A52]" />
-                <span>{streakDays === 0 ? '0% Racha por iniciar' : `+${streakDays * 10}% racha sostenida`}</span>
+                <span>{userStreak === 0 ? '0% Racha por iniciar' : `+${userStreak * 10}% racha sostenida`}</span>
               </p>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-[#FDF4F0] border border-[#F7D3C3] flex items-center justify-center p-2 shadow-2xs">
@@ -785,7 +787,7 @@ Generado con FluxGlow • Cuidado emocional consciente`;
                   <span className="truncate">Enfoque cognitivo fortalecido</span>
                 </span>
                 <span className="font-bold text-stone-900 whitespace-nowrap bg-brand-sage-100 px-3 py-1.5 rounded-full border border-brand-sage-200">
-                  Índice de progreso: {Math.min(100, completedMissionsCount * 25 + streakDays * 15 + journalEntries.length * 10)}/100
+                  Índice de progreso: {Math.min(100, completedMissionsCount * 25 + userStreak * 15 + journalEntries.length * 10)}/100
                 </span>
               </div>
             )}
@@ -1011,7 +1013,7 @@ Generado con FluxGlow • Cuidado emocional consciente`;
                 Mis Misiones y Hábitos Diarios
               </h2>
               <p className="text-xs text-stone-600 mt-0.5">
-                {completedMissionsCount} retos completados • Racha activa: {streakDays} {streakDays === 1 ? 'día consecutivo' : 'días consecutivos'} • +{completedMissionsCount * 30} XP acumulados
+                {completedMissionsCount} retos completados • Racha activa: {userStreak} {userStreak === 1 ? 'día consecutivo' : 'días consecutivos'} • +{completedMissionsCount * 30} XP acumulados
               </p>
             </div>
           </div>
@@ -1065,7 +1067,7 @@ Generado con FluxGlow • Cuidado emocional consciente`;
                 <div>
                   <p className="text-base font-bold text-brand-terracotta-600 flex items-center justify-center gap-1">
                     <RachaIcon className="w-4 h-4" />
-                    <span>{streakDays}d</span>
+                    <span>{userStreak}d</span>
                   </p>
                   <p className="text-[10px] text-stone-500 font-medium">Racha Hábitos</p>
                 </div>

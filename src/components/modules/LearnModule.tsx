@@ -1,3 +1,5 @@
+import { STORAGE_KEYS, getDynamicStorageKey } from '../../constants/storageKeys';
+import { getFluxStreak, recordAppActivity } from '../../utils/streakManager';
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Search, 
@@ -161,7 +163,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
   // Favorites state with localStorage persistence
   const [favorites, setFavorites] = useState<{ [id: string]: boolean }>(() => {
     try {
-      const saved = localStorage.getItem('fluxglow_guide_favorites');
+      const saved = localStorage.getItem(STORAGE_KEYS.GUIDE_FAVORITES);
       if (saved) return JSON.parse(saved);
     } catch (e) {
       console.error(e);
@@ -175,7 +177,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
   // Read guides persistent history
   const [readGuides, setReadGuides] = useState<string[]>(() => {
     try {
-      const saved = localStorage.getItem('fluxglow_read_guides');
+      const saved = localStorage.getItem(STORAGE_KEYS.READ_GUIDES);
       if (saved) return JSON.parse(saved);
     } catch (e) {
       console.error(e);
@@ -186,7 +188,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
   // Guide ratings state
   const [guideRatings, setGuideRatings] = useState<{ [guideId: string]: 'positive' | 'negative' }>(() => {
     try {
-      const saved = localStorage.getItem('fluxglow_guide_ratings');
+      const saved = localStorage.getItem(STORAGE_KEYS.GUIDE_RATINGS);
       if (saved) return JSON.parse(saved);
     } catch (e) {
       console.error(e);
@@ -197,7 +199,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
   // Reading progress state (last section index per guide)
   const [readingProgress, setReadingProgress] = useState<{ [guideId: string]: { sectionIndex: number; lastUpdated: string } }>(() => {
     try {
-      const saved = localStorage.getItem('fluxglow_guide_reading_progress');
+      const saved = localStorage.getItem(STORAGE_KEYS.GUIDE_READING_PROGRESS);
       if (saved) return JSON.parse(saved);
     } catch (e) {
       console.error(e);
@@ -206,16 +208,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
   });
 
   // Learning streak state
-  const [learningStreak, setLearningStreak] = useState<{ streak: number; lastDate: string }>(() => {
-    try {
-      const saved = localStorage.getItem('fluxglow_learning_streak');
-      if (saved) return JSON.parse(saved);
-    } catch (e) {
-      console.error(e);
-    }
-    const today = new Date().toISOString().split('T')[0];
-    return { streak: 3, lastDate: today };
-  });
+  const [learningStreak, setLearningStreak] = useState<{ streak: number }>(() => ({ streak: getFluxStreak() }));
 
   // Text-to-Speech audio state for full guide narration
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
@@ -239,27 +232,15 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
 
   // Update learning streak when exploring or reading
   const recordLearningActivity = () => {
-    const today = new Date().toISOString().split('T')[0];
-    setLearningStreak(prev => {
-      if (prev.lastDate === today) return prev;
-      
-      const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-      const newStreak = prev.lastDate === yesterday ? prev.streak + 1 : 1;
-      const updated = { streak: newStreak, lastDate: today };
-      try {
-        localStorage.setItem('fluxglow_learning_streak', JSON.stringify(updated));
-      } catch (e) {
-        console.error(e);
-      }
-      return updated;
-    });
+    const newStreak = recordAppActivity();
+    setLearningStreak({ streak: newStreak });
   };
 
   // Cross-reference with Journal entries for smart contextual recommendations
   const journalRecommendation = useMemo(() => {
     let entries: any[] = [];
     try {
-      const saved = localStorage.getItem('fluxglow_journal_entries');
+      const saved = localStorage.getItem(STORAGE_KEYS.JOURNAL_ENTRIES);
       if (saved) {
         entries = JSON.parse(saved);
       } else {
@@ -341,7 +322,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
     setFavorites(prev => {
       const next = { ...prev, [id]: !prev[id] };
       try {
-        localStorage.setItem('fluxglow_guide_favorites', JSON.stringify(next));
+        localStorage.setItem(STORAGE_KEYS.GUIDE_FAVORITES, JSON.stringify(next));
       } catch (err) {
         console.error(err);
       }
@@ -388,10 +369,10 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
     recordLearningActivity();
     
     // Check if first time opening a guide to display the quick tutorial
-    const tutorialSeen = localStorage.getItem('fluxglow_guide_tutorial_seen');
+    const tutorialSeen = localStorage.getItem(STORAGE_KEYS.GUIDE_TUTORIAL_SEEN);
     if (!tutorialSeen) {
       setShowGuideTutorial(true);
-      localStorage.setItem('fluxglow_guide_tutorial_seen', 'true');
+      localStorage.setItem(STORAGE_KEYS.GUIDE_TUTORIAL_SEEN, 'true');
     }
   };
 
@@ -406,7 +387,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
         }
       };
       try {
-        localStorage.setItem('fluxglow_guide_reading_progress', JSON.stringify(next));
+        localStorage.setItem(STORAGE_KEYS.GUIDE_READING_PROGRESS, JSON.stringify(next));
       } catch (e) {
         console.error(e);
       }
@@ -419,7 +400,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
     setGuideRatings(prev => {
       const next = { ...prev, [guideId]: rating };
       try {
-        localStorage.setItem('fluxglow_guide_ratings', JSON.stringify(next));
+        localStorage.setItem(STORAGE_KEYS.GUIDE_RATINGS, JSON.stringify(next));
       } catch (e) {
         console.error(e);
       }
@@ -521,7 +502,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
       const updated = [...readGuides, guide.id];
       setReadGuides(updated);
       try {
-        localStorage.setItem('fluxglow_read_guides', JSON.stringify(updated));
+        localStorage.setItem(STORAGE_KEYS.READ_GUIDES, JSON.stringify(updated));
       } catch (e) {
         console.error(e);
       }
@@ -1635,7 +1616,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                     onClick={stopGuideAudio}
                     className="bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white p-1.5 rounded-full transition-all cursor-pointer"
                     title="Detener audio"
-                  >
+                   aria-label="Detener audio">
                     <Square className="w-3.5 h-3.5 fill-current" />
                   </button>
                 </div>
@@ -1980,13 +1961,13 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                   <div className="border-t md:border-t-0 md:border-l border-stone-100 p-4 sm:p-5 flex md:flex-col items-center justify-center gap-2 bg-stone-50/50 shrink-0 md:w-40">
                     <button
                        onClick={() => setSchedulingMission(m)}
-                      className="flex-1 md:flex-none w-full py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-emerald-500 text-white text-xs sm:text-sm font-bold transition-colors shadow-xs cursor-pointer flex items-center justify-center gap-2"
+                      className="flex-1 md:flex-none w-full py-2.5 px-4 rounded-xl bg-[#5F927B] hover:bg-[#3E6855] text-white text-xs sm:text-sm font-bold transition-colors shadow-xs cursor-pointer flex items-center justify-center gap-2"
                     >
                       Aceptar
                     </button>
                     <button
                        onClick={() => setMissionDecisions({...missionDecisions, [m.id]: {status: 'rejected', scheduledTime: ''}})}
-                      className="flex-1 md:flex-none w-full py-2.5 px-4 rounded-xl bg-white border border-stone-200 hover:bg-red-50 hover:border-red-200 text-stone-600 hover:text-red-600 text-xs sm:text-sm font-bold transition-colors cursor-pointer flex items-center justify-center gap-2"
+                      className="flex-1 md:flex-none w-full py-2.5 px-4 rounded-xl bg-stone-100 hover:bg-rose-50 hover:text-rose-600 text-stone-600 text-xs sm:text-sm font-bold transition-colors cursor-pointer flex items-center justify-center gap-2"
                     >
                       Rechazar
                     </button>
@@ -2056,20 +2037,20 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                   saveSingleMission(newMission);
                   
                   try {
-                    const sch = localStorage.getItem('fluxglow_mission_schedules');
+                    const sch = localStorage.getItem(STORAGE_KEYS.MISSION_SCHEDULES);
                     let parsedSch = sch ? JSON.parse(sch) : {};
                     const [hours, minutes] = time.split(':').map(Number);
                     const d = new Date();
                     d.setHours(hours, minutes, 0, 0);
                     parsedSch[newMission.id] = d.toISOString();
-                    localStorage.setItem('fluxglow_mission_schedules', JSON.stringify(parsedSch));
+                    localStorage.setItem(STORAGE_KEYS.MISSION_SCHEDULES, JSON.stringify(parsedSch));
                   } catch(e) {}
 
                   setMissionDecisions({ ...missionDecisions, [schedulingMission.id]: { status: 'accepted', scheduledTime: time } });
                   setSchedulingMission(null);
                   success('Misión aceptada', 'Se ha añadido a tus misiones diarias.');
                 }}
-                className="flex-1 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold transition-colors shadow-md"
+                className="flex-1 py-3 rounded-xl bg-[#5F927B] hover:bg-[#4D7764] text-white font-bold transition-colors shadow-md cursor-pointer"
               >
                 Confirmar y Programar
               </button>
@@ -2173,13 +2154,13 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                 saveSingleMission(newMission);
                 
                 try {
-                  const sch = localStorage.getItem('fluxglow_mission_schedules');
+                  const sch = localStorage.getItem(STORAGE_KEYS.MISSION_SCHEDULES);
                   let parsedSch = sch ? JSON.parse(sch) : {};
                   const [hours, minutes] = customMissionData.scheduledTime.split(':').map(Number);
                   const d = new Date();
                   d.setHours(hours, minutes, 0, 0);
                   parsedSch[newMission.id] = d.toISOString();
-                  localStorage.setItem('fluxglow_mission_schedules', JSON.stringify(parsedSch));
+                  localStorage.setItem(STORAGE_KEYS.MISSION_SCHEDULES, JSON.stringify(parsedSch));
                 } catch(e) {}
 
                 setMissionDecisions({ ...missionDecisions, [newMission.id]: { status: 'accepted', scheduledTime: newMission.scheduledTime } });
@@ -2188,7 +2169,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                 setCustomMissionData({ title: "", description: "", timeEstimate: "15 min", scheduledTime: "12:00" });
                 success('Misión creada', 'Se ha añadido a tus misiones diarias.');
               }}
-              className="w-full py-3.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold transition-all shadow-md active:scale-95"
+              className="w-full py-3.5 rounded-xl bg-[#5F927B] hover:bg-[#4D7764] text-white font-bold transition-all shadow-md active:scale-95 cursor-pointer"
             >
               Crear y Aceptar Misión
             </button>

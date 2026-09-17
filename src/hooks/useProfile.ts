@@ -1,3 +1,4 @@
+import { STORAGE_KEYS, getDynamicStorageKey } from '../constants/storageKeys';
 import { useState, useEffect, useCallback } from 'react';
 import { UserProfileData } from '../types';
 
@@ -16,7 +17,7 @@ export const DEFAULT_USER_PROFILE: UserProfileData = {
   isLoggedIn: false,
 };
 
-const STORAGE_KEY = 'fluxglow_user_profile';
+const STORAGE_KEY = STORAGE_KEYS.USER_PROFILE;
 
 export function useProfile() {
   const [profile, setProfile] = useState<UserProfileData>(() => {

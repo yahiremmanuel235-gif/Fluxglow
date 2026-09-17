@@ -1,3 +1,4 @@
+import { STORAGE_KEYS, getDynamicStorageKey } from '../../constants/storageKeys';
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Target, 
@@ -71,9 +72,9 @@ export const MissionsModule: React.FC<MissionsModuleProps> = ({
 
   useEffect(() => {
     try {
-      const s = localStorage.getItem('fluxglow_mission_schedules');
+      const s = localStorage.getItem(STORAGE_KEYS.MISSION_SCHEDULES);
       if (s) setSchedules(JSON.parse(s));
-      const r = localStorage.getItem('fluxglow_mission_rejected');
+      const r = localStorage.getItem(STORAGE_KEYS.MISSION_REJECTED);
       if (r) setRejected(JSON.parse(r));
     } catch (e) {}
     
@@ -85,11 +86,11 @@ export const MissionsModule: React.FC<MissionsModuleProps> = ({
 
   const saveSchedules = (newSchedules: Record<string, string>) => {
     setSchedules(newSchedules);
-    localStorage.setItem('fluxglow_mission_schedules', JSON.stringify(newSchedules));
+    localStorage.setItem(STORAGE_KEYS.MISSION_SCHEDULES, JSON.stringify(newSchedules));
   };
   const saveRejected = (newRejected: string[]) => {
     setRejected(newRejected);
-    localStorage.setItem('fluxglow_mission_rejected', JSON.stringify(newRejected));
+    localStorage.setItem(STORAGE_KEYS.MISSION_REJECTED, JSON.stringify(newRejected));
   };
 
   const formatLocalDate = (date: Date) => {
@@ -137,14 +138,14 @@ export const MissionsModule: React.FC<MissionsModuleProps> = ({
 
   useEffect(() => {
     try {
-      const n = localStorage.getItem('fluxglow_mission_notified');
+      const n = localStorage.getItem(STORAGE_KEYS.MISSION_NOTIFIED);
       if (n) setNotified(JSON.parse(n));
     } catch (e) {}
   }, []);
 
   const saveNotified = (newNotified: Record<string, boolean>) => {
     setNotified(newNotified);
-    localStorage.setItem('fluxglow_mission_notified', JSON.stringify(newNotified));
+    localStorage.setItem(STORAGE_KEYS.MISSION_NOTIFIED, JSON.stringify(newNotified));
   };
 
   // Check for expirations and notifications

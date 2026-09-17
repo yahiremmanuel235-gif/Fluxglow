@@ -1,3 +1,4 @@
+import { STORAGE_KEYS, getDynamicStorageKey } from '../constants/storageKeys';
 import { useState, useEffect, useCallback } from 'react';
 import { CommunityPost } from '../types';
 import { INITIAL_FACEBOOK_STYLE_POSTS } from '../data/communityData';
@@ -15,7 +16,7 @@ export function useCommunity() {
   const { user } = useAuth();
   const [posts, setPosts] = useState<CommunityPost[]>(() => {
     try {
-      const saved = localStorage.getItem('fluxglow_community_posts');
+      const saved = localStorage.getItem(STORAGE_KEYS.COMMUNITY_POSTS);
       if (saved) return JSON.parse(saved);
     } catch (e) {
       console.error(e);
@@ -25,7 +26,7 @@ export function useCommunity() {
 
   const [likedPostIds, setLikedPostIds] = useState<Set<string>>(() => {
     try {
-      const saved = localStorage.getItem('fluxglow_liked_posts_guest');
+      const saved = localStorage.getItem(getDynamicStorageKey.likedPosts('guest'));
       if (saved) return new Set(JSON.parse(saved));
     } catch {}
     return new Set();
@@ -39,7 +40,7 @@ export function useCommunity() {
   const syncUserLikes = useCallback(async (userId?: string) => {
     if (!userId) {
       try {
-        const guestLikes = localStorage.getItem('fluxglow_liked_posts_guest');
+        const guestLikes = localStorage.getItem(getDynamicStorageKey.likedPosts('guest'));
         if (guestLikes) setLikedPostIds(new Set(JSON.parse(guestLikes)));
       } catch {}
       return;
@@ -48,7 +49,7 @@ export function useCommunity() {
       const ids = await fetchUserLikedPostIds(userId);
       setLikedPostIds(new Set(ids));
       try {
-        localStorage.setItem(`fluxglow_liked_posts_${userId}`, JSON.stringify(ids));
+        localStorage.setItem(getDynamicStorageKey.likedPosts(userId), JSON.stringify(ids));
       } catch {}
     } catch (err) {
       console.warn('Error sincronizando post_likes:', err);
@@ -65,7 +66,7 @@ export function useCommunity() {
         setPosts(livePosts);
         setIsUsingLocalFallback(false);
         try {
-          localStorage.setItem('fluxglow_community_posts', JSON.stringify(livePosts));
+          localStorage.setItem(STORAGE_KEYS.COMMUNITY_POSTS, JSON.stringify(livePosts));
         } catch {}
       } else {
         // Si no hay posts en la base de datos remota, mantener la cuadrícula con los iniciales
@@ -102,7 +103,7 @@ export function useCommunity() {
           if (prev.some((p) => p.id === newPost.id)) return prev;
           const updated = [newPost, ...prev];
           try {
-            localStorage.setItem('fluxglow_community_posts', JSON.stringify(updated));
+            localStorage.setItem(STORAGE_KEYS.COMMUNITY_POSTS, JSON.stringify(updated));
           } catch {}
           return updated;
         });
@@ -144,7 +145,7 @@ export function useCommunity() {
           if (prev.some((p) => p.id === savedPost.id)) return prev;
           const updated = [savedPost, ...prev];
           try {
-            localStorage.setItem('fluxglow_community_posts', JSON.stringify(updated));
+            localStorage.setItem(STORAGE_KEYS.COMMUNITY_POSTS, JSON.stringify(updated));
           } catch {}
           return updated;
         });
@@ -171,7 +172,7 @@ export function useCommunity() {
       const next = new Set(prev);
       next.add(postId);
       try {
-        const storageKey = user ? `fluxglow_liked_posts_${user.id}` : 'fluxglow_liked_posts_guest';
+        const storageKey = user ? getDynamicStorageKey.likedPosts(user.id) : getDynamicStorageKey.likedPosts('guest');
         localStorage.setItem(storageKey, JSON.stringify(Array.from(next)));
       } catch {}
       return next;

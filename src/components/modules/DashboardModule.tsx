@@ -22,7 +22,7 @@ import {
   RefreshCw, 
   ChevronRight, 
   Cloud, 
-  UserPlus, 
+  UserPlus, User, 
   Lock,
   ExternalLink
 } from 'lucide-react';
@@ -31,6 +31,7 @@ import { ViewMode, UserProfileData, MoodType, JournalEntry, UserDailyMissionReco
 import { useAuth } from '../../hooks/useAuth';
 import { useJournal } from '../../hooks/useJournal';
 import { useMissions } from '../../hooks/useMissions';
+import { useStreak } from '../../hooks/useStreak';
 import { useToast } from '../common/Toast';
 import { AuthModals } from '../common/AuthModals';
 import { EmptyStat } from '../common/EmptyStat';
@@ -94,7 +95,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
     isGuest
   } = useMissions(userProfile, onUpdateProfile);
 
-  const [fluxStreak, setFluxStreak] = useState(getFluxStreak());
+  const { userStreak } = useStreak();
   const [canFlux, setCanFlux] = useState(canStartFluxToday());
 
   React.useEffect(() => {
@@ -270,15 +271,15 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
               onClick={handleRefreshAll}
               title="Refrescar datos del Centro de Control"
               className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full text-stone-500 hover:text-[#5F927B] bg-white border border-stone-200 hover:border-[#5F927B]/50 hover:bg-[#EBF1EA]/50 transition-colors shadow-2xs cursor-pointer"
-            >
+             aria-label="Actualizar datos">
               <RefreshCw className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
 
-        {/* 2. GUEST NOTICE BANNER (si !user) */}
-        {isGuest && !user && (
-          <div className="bg-gradient-to-r from-[#FDF4F0] via-[#FAF7F2] to-[#EBF1EA] border-2 border-[#E87A52]/30 rounded-3xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
+        {/* 2. AUTH STATUS BANNER */}
+        {!user ? (
+          <div className="bg-gradient-to-r from-[#FDF4F0] via-[#FAF7F2] to-[#EBF1EA] border-2 border-[#E87A52]/30 rounded-3xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs mb-6">
             <div className="flex items-start gap-3">
               <div className="w-9 h-9 rounded-2xl bg-[#FDF4F0] border border-[#F7D3C3] flex items-center justify-center shrink-0 text-[#B54F2C] mt-0.5 shadow-2xs">
                 <Lock className="w-4 h-4" />
@@ -316,6 +317,34 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
                 className="w-full sm:w-auto px-3.5 py-2 rounded-2xl bg-white hover:bg-[#FDF4F0] text-[#B54F2C] text-xs font-bold border border-[#F7D3C3] transition-all shadow-2xs flex items-center justify-center cursor-pointer"
               >
                 <span>Iniciar Sesión</span>
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-gradient-to-r from-[#EBF1EA] via-[#FAF7F2] to-[#FDF4F0] border-2 border-[#5F927B]/30 rounded-3xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs mb-6">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-2xl bg-[#EBF1EA] border border-[#C5DDD0] flex items-center justify-center shrink-0 text-[#3E6855] mt-0.5 shadow-2xs">
+                <CheckCircle2 className="w-4 h-4" />
+              </div>
+              <div>
+                <h4 className="text-xs sm:text-sm font-bold text-stone-900 flex items-center gap-1.5">
+                  <span>Cuenta Sincronizada</span>
+                  <span className="text-[10px] bg-[#5F927B] text-white px-2 py-0.5 rounded-full font-extrabold uppercase shadow-2xs">
+                    Activa
+                  </span>
+                </h4>
+                <p className="text-xs text-stone-600 mt-0.5 max-w-2xl leading-relaxed">
+                  Conectado de forma segura. Tus datos de bienestar se están respaldando en la nube.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+              <button
+                onClick={() => onNavigate('profile')}
+                className="w-full sm:w-auto px-4 py-2 rounded-2xl bg-white hover:bg-stone-50 text-stone-700 text-xs font-bold border border-stone-200 transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <User className="w-3.5 h-3.5" />
+                <span>Ir al Perfil</span>
               </button>
             </div>
           </div>
@@ -431,7 +460,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
             </div>
             <div>
               {completedMissions.length === 0 ? (
-                <EmptyStat inlineMessage="0 de 8 retos — ¡Empieza el primero!" className="mb-2" />
+                <EmptyStat inlineMessage={`0 de ${Math.max(1, missions.length)} retos — ¡Empieza el primero!`} className="mb-2" />
               ) : (
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-3xl sm:text-4xl font-bold text-[#253D33] font-serif">
@@ -503,12 +532,12 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
               </div>
             </div>
             <div>
-              {fluxStreak === 0 ? (
+              {userStreak === 0 ? (
                 <EmptyStat inlineMessage="Aún sin racha — ¡Inicia un flujo hoy!" className="mb-2" />
               ) : (
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-3xl sm:text-4xl font-bold text-[#873418] font-serif">
-                    {fluxStreak}
+                    {userStreak}
                   </span>
                   <span className="text-xs font-semibold text-[#B54F2C]">
                     Puntos Flux

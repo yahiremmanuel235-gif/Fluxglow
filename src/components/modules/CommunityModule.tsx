@@ -1,3 +1,4 @@
+import { STORAGE_KEYS, getDynamicStorageKey } from '../../constants/storageKeys';
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Users, 
@@ -55,7 +56,7 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
   // Stored posts with fallback to clean Facebook-style initial posts
   const [posts, setPosts] = useState<CommunityPost[]>(() => {
     try {
-      const saved = localStorage.getItem('fluxglow_community_posts');
+      const saved = localStorage.getItem(STORAGE_KEYS.COMMUNITY_POSTS);
       if (saved) return JSON.parse(saved);
     } catch (e) {
       console.error(e);
@@ -71,7 +72,7 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
   // Registro de publicaciones a las que el usuario actual ya ha dado like
   const [likedPostIds, setLikedPostIds] = useState<Set<string>>(() => {
     try {
-      const saved = localStorage.getItem('fluxglow_liked_posts_guest');
+      const saved = localStorage.getItem(getDynamicStorageKey.likedPosts('guest'));
       if (saved) return new Set(JSON.parse(saved));
     } catch {}
     return new Set();
@@ -80,7 +81,7 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
   // User's joined groups (starts empty or with 1 sample group, editable)
   const [joinedGroupIds, setJoinedGroupIds] = useState<string[]>(() => {
     try {
-      const saved = localStorage.getItem('fluxglow_joined_groups');
+      const saved = localStorage.getItem(STORAGE_KEYS.JOINED_GROUPS);
       if (saved) return JSON.parse(saved);
     } catch (e) {
       console.error(e);
@@ -127,7 +128,7 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
         if (dbPosts && dbPosts.length > 0) {
           setPosts(dbPosts);
           try {
-            localStorage.setItem('fluxglow_community_posts', JSON.stringify(dbPosts));
+            localStorage.setItem(STORAGE_KEYS.COMMUNITY_POSTS, JSON.stringify(dbPosts));
           } catch (e) {}
         }
         setIsLoadingPosts(false);
@@ -150,7 +151,7 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
           if (prev.some((p) => p.id === newPost.id)) return prev;
           const updated = [newPost, ...prev];
           try {
-            localStorage.setItem('fluxglow_community_posts', JSON.stringify(updated));
+            localStorage.setItem(STORAGE_KEYS.COMMUNITY_POSTS, JSON.stringify(updated));
           } catch (e) {}
           return updated;
         });
@@ -181,7 +182,7 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
   useEffect(() => {
     if (!user) {
       try {
-        const guestLikes = localStorage.getItem('fluxglow_liked_posts_guest');
+        const guestLikes = localStorage.getItem(getDynamicStorageKey.likedPosts('guest'));
         if (guestLikes) setLikedPostIds(new Set(JSON.parse(guestLikes)));
       } catch {}
       return;
@@ -192,7 +193,7 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
       if (isMounted && Array.isArray(ids)) {
         setLikedPostIds(new Set(ids));
         try {
-          localStorage.setItem(`fluxglow_liked_posts_${user.id}`, JSON.stringify(ids));
+          localStorage.setItem(getDynamicStorageKey.likedPosts(user.id), JSON.stringify(ids));
         } catch {}
       }
     });
@@ -209,7 +210,7 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
       if (dbPosts && dbPosts.length > 0) {
         setPosts(dbPosts);
         try {
-          localStorage.setItem('fluxglow_community_posts', JSON.stringify(dbPosts));
+          localStorage.setItem(STORAGE_KEYS.COMMUNITY_POSTS, JSON.stringify(dbPosts));
         } catch (e) {}
         success('Feed actualizado', 'Mostrando las publicaciones más recientes de la comunidad.');
       } else {
@@ -232,7 +233,7 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
       const updated = joinedGroupIds.filter(id => id !== groupId);
       setJoinedGroupIds(updated);
       try {
-        localStorage.setItem('fluxglow_joined_groups', JSON.stringify(updated));
+        localStorage.setItem(STORAGE_KEYS.JOINED_GROUPS, JSON.stringify(updated));
       } catch (err) {
         console.error(err);
       }
@@ -241,7 +242,7 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
       const updated = [...joinedGroupIds, groupId];
       setJoinedGroupIds(updated);
       try {
-        localStorage.setItem('fluxglow_joined_groups', JSON.stringify(updated));
+        localStorage.setItem(STORAGE_KEYS.JOINED_GROUPS, JSON.stringify(updated));
       } catch (err) {
         console.error(err);
       }
@@ -294,7 +295,7 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
         if (prev.some((p) => p.id === newPost.id)) return prev;
         const updated = [newPost, ...prev];
         try {
-          localStorage.setItem('fluxglow_community_posts', JSON.stringify(updated));
+          localStorage.setItem(STORAGE_KEYS.COMMUNITY_POSTS, JSON.stringify(updated));
         } catch (err) {
           console.error(err);
         }
@@ -325,7 +326,7 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
       const next = new Set(prev);
       next.add(postId);
       try {
-        const storageKey = user ? `fluxglow_liked_posts_${user.id}` : 'fluxglow_liked_posts_guest';
+        const storageKey = user ? getDynamicStorageKey.likedPosts(user.id) : getDynamicStorageKey.likedPosts('guest');
         localStorage.setItem(storageKey, JSON.stringify(Array.from(next)));
       } catch {}
       return next;
@@ -343,7 +344,7 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
         setPosts((prev) => {
           const updated = prev.map((p) => (p.id === postId ? { ...p, likes: result.newLikes! } : p));
           try {
-            localStorage.setItem('fluxglow_community_posts', JSON.stringify(updated));
+            localStorage.setItem(STORAGE_KEYS.COMMUNITY_POSTS, JSON.stringify(updated));
           } catch {}
           return updated;
         });
@@ -357,7 +358,7 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
     const updated = posts.map(p => p.id === postId ? { ...p, hugs: p.hugs + 1 } : p);
     setPosts(updated);
     try {
-      localStorage.setItem('fluxglow_community_posts', JSON.stringify(updated));
+      localStorage.setItem(STORAGE_KEYS.COMMUNITY_POSTS, JSON.stringify(updated));
     } catch (err) {}
     confetti({ particleCount: 20, spread: 40 });
     success('Abrazo enviado', 'Has enviado un abrazo solidario a esta publicación.');
@@ -389,7 +390,7 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
 
     setPosts(updated);
     try {
-      localStorage.setItem('fluxglow_community_posts', JSON.stringify(updated));
+      localStorage.setItem(STORAGE_KEYS.COMMUNITY_POSTS, JSON.stringify(updated));
     } catch (err) {}
 
     setCommentInputs(prev => ({ ...prev, [postId]: '' }));

@@ -1,3 +1,4 @@
+import { STORAGE_KEYS, getDynamicStorageKey } from '../constants/storageKeys';
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from './useAuth';
@@ -46,7 +47,7 @@ export function useJournal() {
 
     if (user) {
       // 1. Usuario autenticado: Si existen entradas previas de invitado en localStorage, migrarlas a Supabase
-      const pendingGuestEntries = localStorage.getItem('fluxglow_journal_entries');
+      const pendingGuestEntries = localStorage.getItem(STORAGE_KEYS.JOURNAL_ENTRIES);
       if (pendingGuestEntries) {
         try {
           await migrateGuestDataToSupabase(user.id);
@@ -93,7 +94,7 @@ export function useJournal() {
       // 2. Modo Invitado / Exploración: Cargar desde localStorage
       setIsUsingLocalFallback(false);
       try {
-        const saved = localStorage.getItem('fluxglow_journal_entries');
+        const saved = localStorage.getItem(STORAGE_KEYS.JOURNAL_ENTRIES);
         if (saved) {
           const parsed = JSON.parse(saved);
           if (Array.isArray(parsed)) {
@@ -204,7 +205,7 @@ export function useJournal() {
         setEntries((prev) => {
           const updated = [newEntry, ...prev];
           try {
-            localStorage.setItem('fluxglow_journal_entries', JSON.stringify(updated));
+            localStorage.setItem(STORAGE_KEYS.JOURNAL_ENTRIES, JSON.stringify(updated));
           } catch {}
           return updated;
         });
@@ -246,7 +247,7 @@ export function useJournal() {
           if (user) {
             localStorage.setItem(`fluxglow_journal_${user.id}`, JSON.stringify(updated));
           }
-          localStorage.setItem('fluxglow_journal_entries', JSON.stringify(updated));
+          localStorage.setItem(STORAGE_KEYS.JOURNAL_ENTRIES, JSON.stringify(updated));
         } catch {}
         return updated;
       });

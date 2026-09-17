@@ -1,3 +1,4 @@
+import { STORAGE_KEYS, getDynamicStorageKey } from './constants/storageKeys';
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
@@ -142,7 +143,7 @@ export default function App() {
     fetchSupabaseCommunityPosts().then(dbPosts => {
       if (dbPosts && dbPosts.length > 0) {
         try {
-          localStorage.setItem('fluxglow_community_posts', JSON.stringify(dbPosts));
+          localStorage.setItem(STORAGE_KEYS.COMMUNITY_POSTS, JSON.stringify(dbPosts));
         } catch (e) {
           console.error(e);
         }
@@ -155,7 +156,7 @@ export default function App() {
   // Persistent user profile state connected across register, login & profile personalization
   const [userProfile, setUserProfile] = useState<UserProfileData>(() => {
     try {
-      const saved = localStorage.getItem('fluxglow_user_profile');
+      const saved = localStorage.getItem(STORAGE_KEYS.USER_PROFILE);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (!parsed.avatarUrl || parsed.avatarUrl.includes('unsplash.com') || parsed.avatarUrl === '') {
@@ -179,7 +180,7 @@ export default function App() {
 
   // Auto-launch onboarding check after skipping landing or on initial module entry
   const triggerOnboardingCheck = () => {
-    const asked = localStorage.getItem('fluxglow_first_time_asked');
+    const asked = localStorage.getItem(STORAGE_KEYS.FIRST_TIME_ASKED);
     if (!asked) {
       setShowOnboarding(true);
     }
@@ -206,7 +207,7 @@ export default function App() {
       setUserProfile(prev => {
         const next = { ...prev, ...updatedProfile, isLoggedIn: true };
         try {
-          localStorage.setItem('fluxglow_user_profile', JSON.stringify(next));
+          localStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(next));
         } catch (e) {
           console.error('Error saving profile:', e);
         }
@@ -220,7 +221,7 @@ export default function App() {
     setUserProfile(prev => {
       const next = { ...prev, ...updated };
       try {
-        localStorage.setItem('fluxglow_user_profile', JSON.stringify(next));
+        localStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(next));
       } catch (e) {
         console.error('Error updating profile:', e);
       }
@@ -249,7 +250,7 @@ export default function App() {
       isLoggedIn: false,
     });
     try {
-      localStorage.removeItem('fluxglow_user_profile');
+      localStorage.removeItem(STORAGE_KEYS.USER_PROFILE);
     } catch (e) {
       console.error('Error limpiando sesión en localStorage:', e);
     }

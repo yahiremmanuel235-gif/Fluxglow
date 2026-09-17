@@ -128,7 +128,7 @@ export const YouTubePlayerModal: React.FC<YouTubePlayerModalProps> = ({
               onClick={handleShare}
               className="p-2 rounded-full text-stone-300 hover:text-white bg-stone-800 hover:bg-stone-700 transition-colors cursor-pointer"
               title="Compartir"
-            >
+             aria-label="Compartir">
               <Share2 className="w-4 h-4" />
             </button>
 
@@ -136,7 +136,7 @@ export const YouTubePlayerModal: React.FC<YouTubePlayerModalProps> = ({
               onClick={onClose}
               className="p-2 rounded-full text-stone-400 hover:text-white bg-stone-800 hover:bg-stone-700 transition-colors cursor-pointer"
               title="Cerrar reproductor"
-            >
+             aria-label="Cerrar">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -319,7 +319,7 @@ export const YouTubePlayerModal: React.FC<YouTubePlayerModalProps> = ({
           <button
             onClick={onClose}
             className="text-stone-300 hover:text-white font-medium cursor-pointer"
-          >
+           aria-label="Cerrar">
             Cerrar
           </button>
         </div>

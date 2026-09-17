@@ -1,3 +1,4 @@
+import { STORAGE_KEYS, getDynamicStorageKey } from '../../constants/storageKeys';
 import React, { useState, useEffect } from 'react';
 import { 
   Sparkles, 
@@ -76,7 +77,7 @@ export const AlertModule: React.FC = () => {
   const { success, info } = useToast();
   const [journalEntries, setJournalEntries] = useState<any[]>(() => {
     try {
-      const saved = localStorage.getItem('fluxglow_journal_entries');
+      const saved = localStorage.getItem(STORAGE_KEYS.JOURNAL_ENTRIES);
       if (saved) {
         return JSON.parse(saved);
       }
@@ -97,12 +98,29 @@ export const AlertModule: React.FC = () => {
       estresado: 2, Estresado: 2, Abrumado: 2, triste: 2, Triste: 2,
       enojado: 1, Enojado: 1
     };
+
+    const recentEntries = journalEntries.slice(-5);
+    const hasHighIntensityNegative = recentEntries.some(e => {
+      const m = (e.mood || '').toLowerCase().replace(/^[^\w\s]+/, '').trim();
+      const isNeg = ['ansioso', 'triste', 'enojado', 'abrumado', 'inquieto', 'frustrado', 'cansado', 'desmotivado', 'tenso', 'estresado'].includes(m);
+      const intensity = typeof e.intensity === 'number' ? e.intensity : 5;
+      return isNeg && intensity >= 7;
+    });
+
     const recentScores = journalEntries.map(e => {
       const moodKey = e.mood || 'tranquilo';
       return MOOD_TO_VAL[moodKey] || 4;
     });
     const avgScore = recentScores.length > 0 ? (recentScores.reduce((a, b) => a + b, 0) / recentScores.length) : 4;
-    return Math.max(0, Math.min(100, Math.round(((5 - avgScore) / 4) * 100)));
+    let baseRisk = Math.max(0, Math.min(100, Math.round(((5 - avgScore) / 4) * 100)));
+    
+    if (hasHighIntensityNegative && baseRisk <= 25) {
+      baseRisk = 60;
+    } else if (hasHighIntensityNegative && baseRisk <= 50) {
+      baseRisk = 80;
+    }
+
+    return baseRisk;
   }, [journalEntries]);
 
   const selectedRiskLevel = React.useMemo(() => {
@@ -123,7 +141,7 @@ export const AlertModule: React.FC = () => {
   useEffect(() => {
     const handleJournalUpdate = () => {
       try {
-        const saved = localStorage.getItem('fluxglow_journal_entries');
+        const saved = localStorage.getItem(STORAGE_KEYS.JOURNAL_ENTRIES);
         if (saved) {
           setJournalEntries(JSON.parse(saved));
         }
@@ -637,7 +655,7 @@ export const AlertModule: React.FC = () => {
                 onClick={() => setShowDirectoryModal(false)} 
                 className="text-stone-400 hover:text-stone-700 p-1 rounded-lg cursor-pointer"
                 title="Cerrar (Esc)"
-              >
+               aria-label="Cerrar directorio">
                 <X className="w-5 h-5" />
               </button>
             </div>

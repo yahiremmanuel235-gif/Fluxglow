@@ -1,3 +1,4 @@
+import { STORAGE_KEYS, getDynamicStorageKey } from '../constants/storageKeys';
 import { supabase } from '../lib/supabaseClient';
 
 /**
@@ -18,7 +19,7 @@ export async function migrateGuestDataToSupabase(userId: string): Promise<{
 
   try {
     // 1. Migración de Entradas de Diario Local (Modo Invitado)
-    const rawJournal = localStorage.getItem('fluxglow_journal_entries');
+    const rawJournal = localStorage.getItem(STORAGE_KEYS.JOURNAL_ENTRIES);
     if (rawJournal) {
       try {
         const parsed = JSON.parse(rawJournal);
@@ -65,8 +66,8 @@ export async function migrateGuestDataToSupabase(userId: string): Promise<{
 
           // Respaldar y remover la clave huérfana de invitado para evitar duplicados
           try {
-            localStorage.setItem(`fluxglow_journal_migrated_${userId}`, rawJournal);
-            localStorage.removeItem('fluxglow_journal_entries');
+            localStorage.setItem(getDynamicStorageKey.journalMigrated(userId), rawJournal);
+            localStorage.removeItem(STORAGE_KEYS.JOURNAL_ENTRIES);
           } catch {}
 
           // Notificar a la UI
@@ -78,7 +79,7 @@ export async function migrateGuestDataToSupabase(userId: string): Promise<{
     }
 
     // 2. Migración de Misiones y Micro-Hábitos Completados en Modo Invitado
-    const rawMissions = localStorage.getItem('fluxglow_daily_missions');
+    const rawMissions = localStorage.getItem(STORAGE_KEYS.DAILY_MISSIONS);
     if (rawMissions) {
       try {
         const parsedMissions = JSON.parse(rawMissions);
@@ -111,8 +112,8 @@ export async function migrateGuestDataToSupabase(userId: string): Promise<{
 
           // Respaldar y limpiar la clave de misiones local de invitado
           try {
-            localStorage.setItem(`fluxglow_missions_migrated_${userId}`, rawMissions);
-            localStorage.removeItem('fluxglow_daily_missions');
+            localStorage.setItem(getDynamicStorageKey.missionsMigrated(userId), rawMissions);
+            localStorage.removeItem(STORAGE_KEYS.DAILY_MISSIONS);
           } catch {}
 
           // Notificar a la UI

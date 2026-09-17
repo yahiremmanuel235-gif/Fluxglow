@@ -1,3 +1,4 @@
+import { STORAGE_KEYS, getDynamicStorageKey } from '../../constants/storageKeys';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { 
@@ -876,7 +877,7 @@ INSTRUCCIONES:
                         saveSingleMission(newMissionRecord);
 
                         try {
-                          const sch = localStorage.getItem('fluxglow_mission_schedules');
+                          const sch = localStorage.getItem(STORAGE_KEYS.MISSION_SCHEDULES);
                           let parsedSch = sch ? JSON.parse(sch) : {};
                           const [year, month, day] = date.split('-').map(Number);
                           const [hours, minutes] = time.split(':').map(Number);
@@ -885,7 +886,7 @@ INSTRUCCIONES:
                           d.setHours(hours, minutes, 0, 0);
                           
                           parsedSch[newMissionRecord.id] = d.toISOString();
-                          localStorage.setItem('fluxglow_mission_schedules', JSON.stringify(parsedSch));
+                          localStorage.setItem(STORAGE_KEYS.MISSION_SCHEDULES, JSON.stringify(parsedSch));
                         } catch(e) {}
                         
                         setMissionStatuses({ ...missionStatuses, [schedulingMission.id]: { status: 'accepted', time, date } });

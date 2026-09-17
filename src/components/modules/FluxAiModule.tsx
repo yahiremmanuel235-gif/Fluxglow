@@ -1,3 +1,4 @@
+import { STORAGE_KEYS, getDynamicStorageKey } from '../../constants/storageKeys';
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Sparkles, 
@@ -54,7 +55,7 @@ interface ArchivedSession {
 export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     try {
-      const saved = localStorage.getItem('fluxglow_chat_messages');
+      const saved = localStorage.getItem(STORAGE_KEYS.CHAT_MESSAGES);
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
@@ -62,7 +63,7 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
   });
   const [archivedSessions, setArchivedSessions] = useState<ArchivedSession[]>(() => {
     try {
-      const saved = localStorage.getItem('fluxglow_chat_history_archive');
+      const saved = localStorage.getItem(STORAGE_KEYS.CHAT_HISTORY_ARCHIVE);
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
@@ -116,7 +117,7 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
   useEffect(() => {
     scrollToBottom();
     try {
-      localStorage.setItem('fluxglow_chat_messages', JSON.stringify(messages));
+      localStorage.setItem(STORAGE_KEYS.CHAT_MESSAGES, JSON.stringify(messages));
     } catch (e) {
       console.error('Error saving chat messages:', e);
     }
@@ -135,7 +136,7 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
         };
         const updated = [newSession, ...archivedSessions.filter(s => s.id !== newSession.id)].slice(0, 20);
         setArchivedSessions(updated);
-        localStorage.setItem('fluxglow_chat_history_archive', JSON.stringify(updated));
+        localStorage.setItem(STORAGE_KEYS.CHAT_HISTORY_ARCHIVE, JSON.stringify(updated));
       } catch (e) {
         console.error('Error archiving session:', e);
       }
@@ -152,7 +153,7 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
     } catch {}
 
     try {
-      localStorage.removeItem('fluxglow_chat_messages');
+      localStorage.removeItem(STORAGE_KEYS.CHAT_MESSAGES);
     } catch (e) {
       console.error(e);
     }
@@ -173,7 +174,7 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
         };
         const updated = [currentSession, ...archivedSessions.filter(s => s.id !== session.id && s.id !== currentSession.id)].slice(0, 20);
         setArchivedSessions(updated);
-        localStorage.setItem('fluxglow_chat_history_archive', JSON.stringify(updated));
+        localStorage.setItem(STORAGE_KEYS.CHAT_HISTORY_ARCHIVE, JSON.stringify(updated));
       } catch (e) {
         console.error(e);
       }
@@ -568,7 +569,7 @@ export const FluxAiModule: React.FC<FluxAiModuleProps> = ({ userProfile }) => {
                   onClick={handleExportChat}
                   className="p-1.5 rounded-full text-stone-500 hover:bg-[#FAF7F2] cursor-pointer transition-colors"
                   title="Descargar conversación"
-                >
+                 aria-label="Exportar chat">
                   <Download className="w-4 h-4" />
                 </button>
 

@@ -65,7 +65,7 @@ export const InstantPracticeModal: React.FC<InstantPracticeModalProps> = ({
             onClick={onClose}
             className="p-1.5 rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors cursor-pointer"
             aria-label="Cerrar práctica"
-          >
+           aria-label="Cerrar">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -316,7 +316,7 @@ const BreathingOasisEngine: React.FC = () => {
           onClick={handleReset}
           className="p-3 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-600 transition-colors cursor-pointer"
           title="Reiniciar"
-        >
+         aria-label="Reiniciar">
           <RotateCcw className="w-4 h-4" />
         </button>
 

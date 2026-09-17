@@ -1,6 +1,8 @@
+import { STORAGE_KEYS } from '../constants/storageKeys';
+
 export const getFluxStreak = (): number => {
   try {
-    const saved = localStorage.getItem('fluxglow_flux_streak');
+    const saved = localStorage.getItem(STORAGE_KEYS.FLUX_STREAK);
     return saved ? parseInt(saved, 10) : 0;
   } catch (e) {
     console.error(e);
@@ -12,7 +14,7 @@ export const incrementFluxStreak = (): number => {
   const current = getFluxStreak();
   const next = current + 1;
   try {
-    localStorage.setItem('fluxglow_flux_streak', next.toString());
+    localStorage.setItem(STORAGE_KEYS.FLUX_STREAK, next.toString());
     window.dispatchEvent(new CustomEvent('fluxglow_flux_streak_updated', { detail: next }));
   } catch (e) {
     console.error(e);
@@ -24,7 +26,7 @@ export const decrementFluxStreak = (points: number = 30): number => {
   const current = getFluxStreak();
   const next = Math.max(0, current - points);
   try {
-    localStorage.setItem('fluxglow_flux_streak', next.toString());
+    localStorage.setItem(STORAGE_KEYS.FLUX_STREAK, next.toString());
     window.dispatchEvent(new CustomEvent('fluxglow_flux_streak_updated', { detail: next }));
   } catch (e) {
     console.error(e);
@@ -33,16 +35,25 @@ export const decrementFluxStreak = (points: number = 30): number => {
 };
 
 export const getLastFluxDate = (): string | null => {
-  return localStorage.getItem('fluxglow_last_flux_date');
+  return localStorage.getItem(STORAGE_KEYS.LAST_FLUX_DATE);
 };
 
 export const setLastFluxDate = (): void => {
   const today = new Date().toISOString().split('T')[0];
-  localStorage.setItem('fluxglow_last_flux_date', today);
+  localStorage.setItem(STORAGE_KEYS.LAST_FLUX_DATE, today);
 };
 
 export const canStartFluxToday = (): boolean => {
   const today = new Date().toISOString().split('T')[0];
   const lastDate = getLastFluxDate();
   return lastDate !== today;
+};
+
+export const recordAppActivity = (): number => {
+  if (canStartFluxToday()) {
+    const newStreak = incrementFluxStreak();
+    setLastFluxDate();
+    return newStreak;
+  }
+  return getFluxStreak();
 };

@@ -1,3 +1,4 @@
+import { STORAGE_KEYS, getDynamicStorageKey } from '../../constants/storageKeys';
 import React, { useState, useEffect } from 'react';
 import { 
   Sparkles, 
@@ -82,7 +83,8 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
 }) => {
   const { success, info } = useToast();
   const [userName, setUserName] = useState(userProfile?.name || 'Usuario FluxGlow');
-  const [userEmail, setUserEmail] = useState(userProfile?.email || 'usuario@fluxglow.com');
+  const { user } = useAuth();
+  const [userEmail, setUserEmail] = useState(userProfile?.email || (user ? user.email : 'invitado@local.app'));
   const [memberSinceDate, setMemberSinceDate] = useState(userProfile?.memberSince || '28 de Agosto, 2026');
   
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -99,7 +101,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
   // Real Journal entries for emotional tracking
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>(() => {
     try {
-      const saved = localStorage.getItem('fluxglow_journal_entries');
+      const saved = localStorage.getItem(STORAGE_KEYS.JOURNAL_ENTRIES);
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
@@ -116,7 +118,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
   // Real Community interactions
   const [communityInteractionsCount, setCommunityInteractionsCount] = useState<number>(() => {
     try {
-      const postsSaved = localStorage.getItem('fluxglow_community_posts');
+      const postsSaved = localStorage.getItem(STORAGE_KEYS.COMMUNITY_POSTS);
       const posts = postsSaved ? JSON.parse(postsSaved) : [];
       const userPosts = posts.filter((p: any) => p.author?.includes('Tú') || p.author?.includes(userName));
       const actionsCount = parseInt(localStorage.getItem('fluxglow_community_actions_count') || '0', 10);
@@ -146,7 +148,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
     };
     const handleJournalUpdate = () => {
       try {
-        const saved = localStorage.getItem('fluxglow_journal_entries');
+        const saved = localStorage.getItem(STORAGE_KEYS.JOURNAL_ENTRIES);
         if (saved) setJournalEntries(JSON.parse(saved));
       } catch (e) {
         console.error(e);
@@ -364,7 +366,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
               <span>Configuración</span>
             </Button>
 
-            {onSignOut && (
+            {onSignOut && user && (
               <Button
                 id="profile-signout-btn"
                 onClick={onSignOut}
@@ -419,7 +421,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
             <div className="text-center sm:text-left">
               <span className="text-xs text-stone-500 block font-medium">Estado de Cuenta</span>
               <span className="text-xs font-bold text-[#3E6855] bg-[#EBF1EA] border border-[#C5DDD0] px-2.5 py-1 rounded-full inline-block mt-0.5 shadow-2xs">
-                🌱 Miembro Activo
+                {user ? '🌱 Miembro Activo' : '🔒 Modo Invitado'}
               </span>
             </div>
           </div>
@@ -957,7 +959,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
               Guardar Cambios
             </Button>
 
-            {onSignOut && (
+            {onSignOut && user && (
               <div className="pt-2">
                 <button
                   type="button"

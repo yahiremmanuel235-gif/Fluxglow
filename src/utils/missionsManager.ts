@@ -1,6 +1,7 @@
+import { STORAGE_KEYS, getDynamicStorageKey } from '../constants/storageKeys';
 import { UserDailyMissionRecord, GuideItem, GuideDailyMission } from '../types';
 
-const MISSIONS_STORAGE_KEY = 'fluxglow_daily_missions';
+const MISSIONS_STORAGE_KEY = STORAGE_KEYS.DAILY_MISSIONS;
 const STREAK_STORAGE_KEY = 'fluxglow_missions_streak';
 
 export const INITIAL_SEED_MISSIONS: UserDailyMissionRecord[] = [];
@@ -81,6 +82,7 @@ export function saveSingleMission(mission: UserDailyMissionRecord) {
   const missions = getStoredMissions();
   missions.unshift(mission);
   saveStoredMissions(missions);
+  window.dispatchEvent(new CustomEvent('fluxglow_mission_accepted', { detail: mission }));
 }
 
 export function activateAllMissionsFromGuide(guide: GuideItem): UserDailyMissionRecord[] {
@@ -145,7 +147,7 @@ export function completeDailyMission(recordId: string): { success: boolean; miss
   });
 
   saveStoredMissions(updated);
-  const streakDays = calculateMissionStreak(updated);
+  const streakDays = recordAppActivity();
 
   return {
     success: !!found,
@@ -154,59 +156,10 @@ export function completeDailyMission(recordId: string): { success: boolean; miss
   };
 }
 
+import { getFluxStreak, recordAppActivity } from './streakManager';
+
 export function calculateMissionStreak(missions: UserDailyMissionRecord[]): number {
-  if (!Array.isArray(missions)) return 0;
-  const completedMissions = missions.filter(m => m && m.status === 'completed' && m.completedAt);
-  if (completedMissions.length === 0) return 0;
-
-  // Group valid completed dates (YYYY-MM-DD)
-  const validDates: string[] = [];
-  completedMissions.forEach(m => {
-    try {
-      if (m.completedAt) {
-        const d = new Date(m.completedAt);
-        if (!isNaN(d.getTime())) {
-          validDates.push(d.toISOString().split('T')[0]);
-        }
-      }
-    } catch {
-      // ignore invalid dates safely
-    }
-  });
-
-  if (validDates.length === 0) return 0;
-
-  const daysSet = new Set(validDates);
-  const todayStr = new Date().toISOString().split('T')[0];
-  const yesterdayDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const yesterdayStr = yesterdayDate.toISOString().split('T')[0];
-
-  let streak = 0;
-  let checkDate = new Date();
-
-  // If completed today or yesterday, count backwards
-  if (daysSet.has(todayStr)) {
-    streak = 1;
-    checkDate.setDate(checkDate.getDate() - 1);
-  } else if (daysSet.has(yesterdayStr)) {
-    streak = 1;
-    checkDate = yesterdayDate;
-    checkDate.setDate(checkDate.getDate() - 1);
-  } else {
-    return 0;
-  }
-
-  while (true) {
-    const dStr = checkDate.toISOString().split('T')[0];
-    if (daysSet.has(dStr)) {
-      streak++;
-      checkDate.setDate(checkDate.getDate() - 1);
-    } else {
-      break;
-    }
-  }
-
-  return streak;
+  return getFluxStreak();
 }
 
 export function scheduleMission(recordId: string, scheduledTimeStr: string): boolean {

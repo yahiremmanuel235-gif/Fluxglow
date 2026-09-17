@@ -1,3 +1,4 @@
+import { STORAGE_KEYS, getDynamicStorageKey } from '../../constants/storageKeys';
 import React, { useState } from 'react';
 import { 
   X, 
@@ -88,8 +89,8 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   };
 
   const handleComplete = () => {
-    localStorage.setItem('fluxglow_onboarding_completed', 'true');
-    localStorage.setItem('fluxglow_first_time_asked', 'true');
+    localStorage.setItem(STORAGE_KEYS.ONBOARDING_COMPLETED, 'true');
+    localStorage.setItem(STORAGE_KEYS.FIRST_TIME_ASKED, 'true');
     
     confetti({
       particleCount: 90,
@@ -101,8 +102,8 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
   };
 
   const handleJumpToSection = (view: ViewMode) => {
-    localStorage.setItem('fluxglow_onboarding_completed', 'true');
-    localStorage.setItem('fluxglow_first_time_asked', 'true');
+    localStorage.setItem(STORAGE_KEYS.ONBOARDING_COMPLETED, 'true');
+    localStorage.setItem(STORAGE_KEYS.FIRST_TIME_ASKED, 'true');
     onClose();
     if (onNavigate) {
       onNavigate(view);

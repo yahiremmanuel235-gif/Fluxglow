@@ -1,3 +1,5 @@
+import { STORAGE_KEYS, getDynamicStorageKey } from '../../constants/storageKeys';
+import { isPositiveEmotion } from '../../utils/emotionUtils';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { 
@@ -7,7 +9,8 @@ import {
   Square, Heart, BookmarkCheck, Play, ArrowLeft, Quote, Flame, Activity, Timer, Wind, ChevronRight, Plus, X
 } from 'lucide-react';
 import { useJournal } from '../../hooks/useJournal';
-import { incrementFluxStreak, getFluxStreak, setLastFluxDate, canStartFluxToday } from '../../utils/streakManager';
+import { incrementFluxStreak, setLastFluxDate, canStartFluxToday } from '../../utils/streakManager';
+import { useStreak } from '../../hooks/useStreak';
 import { useToast } from '../common/Toast';
 import confetti from 'canvas-confetti';
 import { DEMO_GUIDES_CATALOG, AI_DEMO_NOTICE_TEXT } from '../../data/guidesData';
@@ -80,6 +83,7 @@ const INSPIRATIONAL_QUOTES: Record<string, EmotionQuote> = {
       export const FluxFlowModule: React.FC<{ onNavigate: (view: ViewMode) => void }> = ({ onNavigate }) => {
   const { createEntry } = useJournal();
   const { success, warning } = useToast();
+  const { userStreak } = useStreak();
   
   const [currentStep, setCurrentStep] = useState(1);
 
@@ -162,13 +166,13 @@ const INSPIRATIONAL_QUOTES: Record<string, EmotionQuote> = {
     if (activeGuide) {
       let readGuides: string[] = [];
       try {
-        const saved = localStorage.getItem('fluxglow_read_guides');
+        const saved = localStorage.getItem(STORAGE_KEYS.READ_GUIDES);
         if (saved) readGuides = JSON.parse(saved);
       } catch (e) {}
       
       if (!readGuides.includes(activeGuide.id)) {
         readGuides.push(activeGuide.id);
-        localStorage.setItem('fluxglow_read_guides', JSON.stringify(readGuides));
+        localStorage.setItem(STORAGE_KEYS.READ_GUIDES, JSON.stringify(readGuides));
       }
       
       // Save accepted missions with their date and time
@@ -296,6 +300,8 @@ const INSPIRATIONAL_QUOTES: Record<string, EmotionQuote> = {
                       ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                       : intensity <= 7
                       ? 'bg-amber-50 text-amber-700 border-amber-200'
+                      : isPositiveEmotion(selectedMood)
+                      ? 'bg-[#FDF4F0] text-[#E87A52] border-[#F7D3C3]'
                       : 'bg-rose-50 text-rose-700 border-rose-200'
                   }`}>
                     {intensity <= 3 ? 'Leve' : intensity <= 7 ? 'Moderado' : 'Intenso'} • {intensity}/10
@@ -461,7 +467,7 @@ const INSPIRATIONAL_QUOTES: Record<string, EmotionQuote> = {
                     
                     // Add schedule
                     try {
-                      const sch = localStorage.getItem('fluxglow_mission_schedules');
+                      const sch = localStorage.getItem(STORAGE_KEYS.MISSION_SCHEDULES);
                       let parsedSch = sch ? JSON.parse(sch) : {};
                       const [year, month, day] = customMissionData.date.split('-').map(Number);
                       const [hours, minutes] = customMissionData.time.split(':').map(Number);
@@ -470,7 +476,7 @@ const INSPIRATIONAL_QUOTES: Record<string, EmotionQuote> = {
                       d.setHours(hours, minutes, 0, 0);
                       
                       parsedSch[newMission.id] = d.toISOString();
-                      localStorage.setItem('fluxglow_mission_schedules', JSON.stringify(parsedSch));
+                      localStorage.setItem(STORAGE_KEYS.MISSION_SCHEDULES, JSON.stringify(parsedSch));
                     } catch(e) {}
 
                     success('¡Misión creada!', 'Se ha programado con éxito.');
@@ -690,7 +696,7 @@ const INSPIRATIONAL_QUOTES: Record<string, EmotionQuote> = {
                     
                     // Add schedule
                     try {
-                      const sch = localStorage.getItem('fluxglow_mission_schedules');
+                      const sch = localStorage.getItem(STORAGE_KEYS.MISSION_SCHEDULES);
                       let parsedSch = sch ? JSON.parse(sch) : {};
                       const [year, month, day] = customMissionData.date.split('-').map(Number);
                       const [hours, minutes] = customMissionData.time.split(':').map(Number);
@@ -699,7 +705,7 @@ const INSPIRATIONAL_QUOTES: Record<string, EmotionQuote> = {
                       d.setHours(hours, minutes, 0, 0);
                       
                       parsedSch[newMission.id] = d.toISOString();
-                      localStorage.setItem('fluxglow_mission_schedules', JSON.stringify(parsedSch));
+                      localStorage.setItem(STORAGE_KEYS.MISSION_SCHEDULES, JSON.stringify(parsedSch));
                     } catch(e) {}
 
                     success('¡Misión creada!', 'Se ha programado con éxito.');
@@ -1002,7 +1008,7 @@ const INSPIRATIONAL_QUOTES: Record<string, EmotionQuote> = {
                     
                     // Add schedule
                     try {
-                      const sch = localStorage.getItem('fluxglow_mission_schedules');
+                      const sch = localStorage.getItem(STORAGE_KEYS.MISSION_SCHEDULES);
                       let parsedSch = sch ? JSON.parse(sch) : {};
                       const [year, month, day] = customMissionData.date.split('-').map(Number);
                       const [hours, minutes] = customMissionData.time.split(':').map(Number);
@@ -1011,7 +1017,7 @@ const INSPIRATIONAL_QUOTES: Record<string, EmotionQuote> = {
                       d.setHours(hours, minutes, 0, 0);
                       
                       parsedSch[newMission.id] = d.toISOString();
-                      localStorage.setItem('fluxglow_mission_schedules', JSON.stringify(parsedSch));
+                      localStorage.setItem(STORAGE_KEYS.MISSION_SCHEDULES, JSON.stringify(parsedSch));
                     } catch(e) {}
 
                     success('¡Misión creada!', 'Se ha programado con éxito.');
@@ -1046,7 +1052,7 @@ const INSPIRATIONAL_QUOTES: Record<string, EmotionQuote> = {
                 </div>
                 <div className="text-left">
                   <p className="text-xs font-bold text-stone-500 uppercase tracking-wider">Racha Flux Global</p>
-                  <p className="text-3xl font-black text-stone-900">{getFluxStreak()} <span className="text-sm font-bold text-stone-500">Puntos</span></p>
+                  <p className="text-3xl font-black text-stone-900">{userStreak} <span className="text-sm font-bold text-stone-500">Puntos</span></p>
                 </div>
               </div>
 
@@ -1058,7 +1064,7 @@ const INSPIRATIONAL_QUOTES: Record<string, EmotionQuote> = {
                   </h3>
                   <p className="text-sm sm:text-base text-stone-700 leading-relaxed">
                     Hoy iniciaste el flujo registrando tu estado como <strong className="capitalize">{selectedMood}</strong> con una intensidad {intensity}/10. 
-                    {intensity > 7 ? ' Es un nivel de intensidad donde priorizar el descanso y el desahogo consciente es clave.' : ' Mantener tu racha Flux en niveles estables demuestra una sólida autorregulación. Continúa con este equilibrio explorando la comunidad o charlando libremente con Flux AI.'}
+                    {intensity > 7 ? (isPositiveEmotion(selectedMood) ? ' Una emoción positiva con esta intensidad es un gran recurso. Aprovéchala para la creatividad, compartir con otros o avanzar en tus proyectos.' : ' Es un nivel de intensidad donde priorizar el descanso y el desahogo consciente es clave.') : ' Mantener tu racha Flux en niveles estables demuestra una sólida autorregulación. Continúa con este equilibrio explorando la comunidad o charlando libremente con Flux AI.'}
                   </p>
                 </div>
               )}
