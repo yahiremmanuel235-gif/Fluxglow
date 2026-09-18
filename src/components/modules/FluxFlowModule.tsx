@@ -173,6 +173,10 @@ const INSPIRATIONAL_QUOTES: Record<string, EmotionQuote> = {
       if (!readGuides.includes(activeGuide.id)) {
         readGuides.push(activeGuide.id);
         localStorage.setItem(STORAGE_KEYS.READ_GUIDES, JSON.stringify(readGuides));
+        window.dispatchEvent(new CustomEvent('fluxglow_read_guides_updated', { detail: readGuides }));
+        try {
+          localStorage.setItem('fluxglow_user_has_read_first_guide', 'true');
+        } catch (e) {}
       }
       
       // Save accepted missions with their date and time

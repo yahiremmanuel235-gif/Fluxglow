@@ -62,6 +62,7 @@ import { activateMissionFromGuide,
   completeDailyMission, 
   getStoredMissions 
 } from '../../utils/missionsManager';
+import { getStoredReadGuides, saveStoredReadGuides } from '../../hooks/useLearningProgress';
 import { EmptyStat } from '../common/EmptyStat';
 import { formatFluxDate } from '../../utils/dateUtils';
 import { GuideItem, 
@@ -164,25 +165,25 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
   const [favorites, setFavorites] = useState<{ [id: string]: boolean }>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.GUIDE_FAVORITES);
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Limpiar el par dummy antiguo de demo si el usuario nunca guardó favoritos
+        const keys = Object.keys(parsed || {});
+        if (keys.length === 2 && parsed['guide-stress-1'] && parsed['guide-anxiety-2'] && !localStorage.getItem('fluxglow_user_favorited_guide')) {
+          localStorage.removeItem(STORAGE_KEYS.GUIDE_FAVORITES);
+          return {};
+        }
+        return parsed;
+      }
     } catch (e) {
       console.error(e);
     }
-    return {
-      'guide-stress-1': true,
-      'guide-anxiety-2': true,
-    };
+    return {};
   });
 
   // Read guides persistent history
   const [readGuides, setReadGuides] = useState<string[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEYS.READ_GUIDES);
-      if (saved) return JSON.parse(saved);
-    } catch (e) {
-      console.error(e);
-    }
-    return ['guide-stress-1']; // Initial default for demo feel
+    return getStoredReadGuides();
   });
 
   // Guide ratings state
@@ -319,6 +320,9 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
   // Save favorites with localStorage sync
   const toggleFavorite = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    try {
+      localStorage.setItem('fluxglow_user_favorited_guide', 'true');
+    } catch {}
     setFavorites(prev => {
       const next = { ...prev, [id]: !prev[id] };
       try {
@@ -501,8 +505,9 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
     if (!readGuides.includes(guide.id)) {
       const updated = [...readGuides, guide.id];
       setReadGuides(updated);
+      saveStoredReadGuides(updated);
       try {
-        localStorage.setItem(STORAGE_KEYS.READ_GUIDES, JSON.stringify(updated));
+        localStorage.setItem('fluxglow_user_has_read_first_guide', 'true');
       } catch (e) {
         console.error(e);
       }

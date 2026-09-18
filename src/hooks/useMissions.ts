@@ -94,20 +94,29 @@ export const DEFAULT_CATALOG_MISSIONS: UserDailyMissionRecord[] = [
 export function useMissions(userProfile?: UserProfileData, onUpdateProfile?: (updated: Partial<UserProfileData>) => void) {
   const { user, authLoading } = useAuth();
   const [missions, setMissions] = useState<UserDailyMissionRecord[]>(() => {
-    const stored = getStoredMissions();
-    return stored.length > 0 ? stored : DEFAULT_CATALOG_MISSIONS;
+    return getStoredMissions();
   });
   const [loading, setLoading] = useState<boolean>(true);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isUsingLocalFallback, setIsUsingLocalFallback] = useState<boolean>(false);
-  const [userPoints, setUserPoints] = useState<number>(userProfile?.points || 0);
+  const [userPoints, setUserPoints] = useState<number>(() => {
+    const pts = userProfile?.points ?? 0;
+    const completedCount = getStoredMissions().filter(m => m.status === 'completed').length;
+    if (pts === 120 && completedCount === 0) return 0;
+    return pts;
+  });
   const [userLevel, setUserLevel] = useState<number>(userProfile?.level || 1);
 
   // Mantener sincronizado el perfil si cambia desde afuera
   useEffect(() => {
     if (userProfile?.points !== undefined) {
-      setUserPoints(userProfile.points);
+      const completedCount = getStoredMissions().filter(m => m.status === 'completed').length;
+      if (userProfile.points === 120 && completedCount === 0) {
+        setUserPoints(0);
+      } else {
+        setUserPoints(userProfile.points);
+      }
     }
     if (userProfile?.level !== undefined) {
       setUserLevel(userProfile.level);
@@ -149,13 +158,9 @@ export function useMissions(userProfile?: UserProfileData, onUpdateProfile?: (up
           console.warn('Aviso: Tabla missions no disponible o vacía en Supabase. Usando catálogo predeterminado.', e);
         }
 
-        // Si no hay misiones en la tabla remota, combinar catálogo predeterminado con las activadas localmente
+        // Si no hay misiones en la tabla remota, usar únicamente las activadas localmente
         if (baseMissions.length === 0) {
-          const stored = getStoredMissions();
-          const mergedSet = new Map<string, UserDailyMissionRecord>();
-          DEFAULT_CATALOG_MISSIONS.forEach(m => mergedSet.set(m.missionId, m));
-          stored.forEach(m => mergedSet.set(m.missionId, m));
-          baseMissions = Array.from(mergedSet.values());
+          baseMissions = getStoredMissions();
         }
 
         // B. Consultar el progreso del usuario en 'user_missions' filtrando por user_id
@@ -218,12 +223,7 @@ export function useMissions(userProfile?: UserProfileData, onUpdateProfile?: (up
         // 2. MODO INVITADO: Cargar desde localStorage
         setIsUsingLocalFallback(false);
         const stored = getStoredMissions();
-        if (stored.length > 0) {
-          setMissions(stored);
-        } else {
-          setMissions(DEFAULT_CATALOG_MISSIONS);
-          saveStoredMissions(DEFAULT_CATALOG_MISSIONS);
-        }
+        setMissions(stored);
       }
     } catch (err: any) {
       console.error('Error general en fetchMissionsData:', err);

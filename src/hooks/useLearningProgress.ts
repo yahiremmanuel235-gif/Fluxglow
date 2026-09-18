@@ -3,7 +3,7 @@ import { STORAGE_KEYS } from '../constants/storageKeys';
 import { DEMO_GUIDES_CATALOG } from '../data/guidesData';
 import { useMissions } from './useMissions';
 
-const DEFAULT_INITIAL_READ_GUIDES = ['guide-stress-1'];
+const DEFAULT_INITIAL_READ_GUIDES: string[] = [];
 
 export function getStoredReadGuides(): string[] {
   try {
@@ -11,6 +11,11 @@ export function getStoredReadGuides(): string[] {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {
+        // Limpiar el valor inicial legacy de demostración si el usuario nunca interactuó
+        if (parsed.length === 1 && parsed[0] === 'guide-stress-1' && !localStorage.getItem('fluxglow_user_has_read_first_guide')) {
+          localStorage.removeItem(STORAGE_KEYS.READ_GUIDES);
+          return [];
+        }
         return parsed;
       }
     }
@@ -72,6 +77,9 @@ export function useLearningProgress() {
   }, [completedGuidesCount, totalCatalogGuides]);
 
   const markGuideAsRead = useCallback((guideId: string) => {
+    try {
+      localStorage.setItem('fluxglow_user_has_read_first_guide', 'true');
+    } catch {}
     setReadGuides((prev) => {
       if (prev.includes(guideId)) return prev;
       const updated = [...prev, guideId];

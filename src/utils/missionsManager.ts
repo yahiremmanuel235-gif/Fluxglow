@@ -6,13 +6,33 @@ const STREAK_STORAGE_KEY = 'fluxglow_missions_streak';
 
 export const INITIAL_SEED_MISSIONS: UserDailyMissionRecord[] = [];
 
+const LEGACY_DEFAULT_MISSION_IDS = new Set([
+  'mission-stress-1',
+  'mission-stress-2',
+  'mission-anxiety-1',
+  'mission-anxiety-2',
+  'mission-sleep-1',
+  'mission-focus-1'
+]);
+
 export function getStoredMissions(): UserDailyMissionRecord[] {
   try {
     const raw = localStorage.getItem(MISSIONS_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {
-        return parsed.filter(item => item && typeof item === 'object');
+        const list = parsed.filter(item => item && typeof item === 'object');
+        // Si el almacenamiento solo contenía las 6 misiones por defecto heredadas de la demo previa y todas están pendientes:
+        const isLegacySeedOnly = list.length > 0 && 
+          list.length <= 6 && 
+          list.every(m => LEGACY_DEFAULT_MISSION_IDS.has(m.missionId || m.id) && m.status === 'pending');
+
+        if (isLegacySeedOnly) {
+          localStorage.removeItem(MISSIONS_STORAGE_KEY);
+          return [];
+        }
+
+        return list;
       }
     }
   } catch (e) {

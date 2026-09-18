@@ -461,7 +461,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
             </div>
             <div>
               {completedMissions.length === 0 ? (
-                <EmptyStat inlineMessage={`0 de ${Math.max(1, missions.length)} retos — ¡Empieza el primero!`} className="mb-2" />
+                <EmptyStat inlineMessage={missions.length === 0 ? "0 retos activos — ¡Activa uno!" : `0 de ${missions.length} retos — ¡Empieza el primero!`} className="mb-2" />
               ) : (
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-3xl sm:text-4xl font-bold text-[#253D33] font-serif">

@@ -8,6 +8,8 @@ export const DEFAULT_USER_PROFILE: UserProfileData = {
   ageGroup: '19 - 24 años',
   memberSince: '28 de Agosto, 2026',
   avatarUrl: '/user.png',
+  points: 0,
+  level: 1,
   goals: [
     { id: 'stress', label: 'Gestión del Estrés', checked: true },
     { id: 'mindfulness', label: 'Atención Plena', checked: true },
@@ -31,6 +33,10 @@ export function useProfile() {
         }
         if (parsed.email === 'yahiremmanuel235@gmail.com') {
           parsed.email = 'usuario@fluxglow.com';
+        }
+        // Sanitize legacy 120 demo points
+        if (parsed.points === 120) {
+          parsed.points = 0;
         }
         return { ...DEFAULT_USER_PROFILE, ...parsed };
       }

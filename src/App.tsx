@@ -38,7 +38,7 @@ const DEFAULT_USER_PROFILE: UserProfileData = {
     { id: 'growth', label: 'Crecimiento Personal', checked: true },
   ],
   isLoggedIn: false,
-  points: 120,
+  points: 0,
   level: 1,
 };
 
@@ -91,7 +91,7 @@ export default function App() {
             ageGroup: data.age_group || prev.ageGroup,
             goals: data.goals || prev.goals,
             avatarUrl: data.avatar_url || prev.avatarUrl || '/user.png',
-            points: typeof data.points === 'number' ? data.points : (prev.points ?? 120),
+            points: typeof data.points === 'number' ? data.points : (prev.points ?? 0),
             level: typeof data.level === 'number' ? data.level : (prev.level ?? 1),
             isLoggedIn: true,
           }));
