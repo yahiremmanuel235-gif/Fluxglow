@@ -397,7 +397,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
                 }}
                 disabled={!canFlux}
                 title={!canFlux ? "Ya completaste tu Flux hoy. Vuelve mañana." : "¡Pulsa para iniciar tu flujo diario de bienestar!"}
-                className={`flex-1 sm:flex-none px-4 py-2.5 min-h-[44px] rounded-2xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 group ${
+                className={`flex-1 sm:flex-none px-5 py-2.5 min-h-[44px] rounded-2xl font-bold transition-all flex items-center justify-center gap-2.5 group ${
                   canFlux 
                     ? 'flux-btn-active-glow bg-white cursor-pointer hover:bg-white/95' 
                     : 'bg-stone-200 text-stone-400 cursor-not-allowed shadow-xs'
@@ -406,32 +406,24 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
                 <img 
                   src="/assets/icons/flux.png" 
                   alt="Flux" 
-                  className={`w-4 h-4 object-contain transition-transform ${
+                  className={`w-5 h-5 object-contain transition-transform ${
                     canFlux ? 'group-hover:scale-110' : 'grayscale opacity-60'
                   }`} 
                 />
                 {canFlux ? (
-                  <span className="title-gradient font-extrabold tracking-wide text-xs sm:text-sm">
+                  <span className="title-gradient font-extrabold tracking-wide text-sm sm:text-base">
                     Iniciar Flux
                   </span>
                 ) : (
-                  <span className="text-stone-400 font-bold">
+                  <span className="text-stone-400 font-bold text-sm sm:text-base">
                     Flux Completado
                   </span>
-                )}
-                {canFlux && (
-                  <div className="flex items-center justify-center ml-0.5 shrink-0">
-                    <span 
-                      className="w-2 h-2 rounded-full bg-[#E87A52] flux-orange-dot-glow"
-                      aria-hidden="true"
-                    />
-                  </div>
                 )}
               </button>
               <button
                 id="hero-quick-missions-btn"
                 onClick={() => onNavigate('missions')}
-                className="flex-1 sm:flex-none px-4 py-2.5 min-h-[44px] rounded-2xl bg-[#E87A52] hover:bg-[#D4653E] text-white text-xs sm:text-sm font-bold shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer group"
+                className="flex-1 sm:flex-none px-5 py-2.5 min-h-[44px] rounded-2xl bg-[#E87A52] hover:bg-[#D4653E] text-white text-xs sm:text-sm font-bold shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer group"
               >
                 <img src="/assets/icons/medal.png" alt="Misiones" className="w-4 h-4 object-contain brightness-0 invert group-hover:scale-105 transition-transform" />
                 <span>Ver Misiones</span>
