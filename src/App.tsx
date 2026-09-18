@@ -178,21 +178,10 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [location.pathname]);
 
-  // Auto-launch onboarding check after skipping landing or on initial module entry
-  const triggerOnboardingCheck = () => {
-    const asked = localStorage.getItem(STORAGE_KEYS.FIRST_TIME_ASKED);
-    if (!asked) {
-      setShowOnboarding(true);
-    }
-  };
-
   const handleNavigate = (view: ViewMode) => {
     if (view === 'landing') {
       navigate('/');
     } else {
-      if (location.pathname === '/') {
-        triggerOnboardingCheck();
-      }
       navigate(`/${view}`);
     }
   };

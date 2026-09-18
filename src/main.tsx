@@ -6,9 +6,15 @@ import App from './App.tsx';
 import { ToastProvider } from './components/common/Toast.tsx';
 import './index.css';
 
+// Mark onboarding and first-time prompts as permanently dismissed so no initial tutorial pops up
+try {
+  localStorage.setItem(STORAGE_KEYS.FIRST_TIME_ASKED, 'true');
+  localStorage.setItem(STORAGE_KEYS.ONBOARDING_COMPLETED, 'true');
+} catch (e) {}
+
 // Clean legacy preview interaction data once to guarantee fresh initial state
 try {
-  const PREVIEW_CLEAN_KEY = 'fluxglow_preview_cleaned_v2';
+  const PREVIEW_CLEAN_KEY = 'fluxglow_preview_cleaned_v3';
   if (!localStorage.getItem(PREVIEW_CLEAN_KEY)) {
     localStorage.removeItem(STORAGE_KEYS.DAILY_MISSIONS);
     localStorage.removeItem('fluxglow_missions_streak');
@@ -16,9 +22,8 @@ try {
     localStorage.removeItem(STORAGE_KEYS.CHAT_HISTORY_ARCHIVE);
     localStorage.removeItem(STORAGE_KEYS.JOURNAL_ENTRIES);
     localStorage.removeItem(STORAGE_KEYS.USER_PROFILE);
-    localStorage.removeItem(STORAGE_KEYS.FIRST_TIME_ASKED);
-    localStorage.removeItem(STORAGE_KEYS.ONBOARDING_COMPLETED);
-    localStorage.removeItem(STORAGE_KEYS.GUIDE_TUTORIAL_SEEN);
+    localStorage.setItem(STORAGE_KEYS.FIRST_TIME_ASKED, 'true');
+    localStorage.setItem(STORAGE_KEYS.ONBOARDING_COMPLETED, 'true');
     localStorage.setItem(PREVIEW_CLEAN_KEY, 'true');
   }
 } catch (e) {
