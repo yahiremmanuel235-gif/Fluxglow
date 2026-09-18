@@ -1,5 +1,6 @@
 import { STORAGE_KEYS, getDynamicStorageKey } from '../../constants/storageKeys';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useAuth } from '../../hooks/useAuth';
 import { 
   Sparkles, 
   Settings, 
@@ -246,10 +247,39 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
     intensity: `${e.intensity}/10`
   }));
 
-  const chartData = journalEntries.slice(0, 7).reverse().map(e => ({
-    date: e.date.slice(5),
-    intensidad: e.intensity
-  }));
+  // Unique chronological days for the chart, avoiding duplicate X-axis dates
+  const chartData = useMemo(() => {
+    if (!journalEntries || journalEntries.length === 0) return [];
+    const MONTHS_SHORT = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const dayMap = new Map<string, { dateObj: Date; intensities: number[] }>();
+
+    journalEntries.forEach(e => {
+      if (!e || !e.date) return;
+      const d = new Date(e.date);
+      if (isNaN(d.getTime())) return;
+      const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const existing = dayMap.get(dateKey);
+      if (existing) {
+        existing.intensities.push(e.intensity);
+      } else {
+        dayMap.set(dateKey, { dateObj: d, intensities: [e.intensity] });
+      }
+    });
+
+    const sorted = Array.from(dayMap.values())
+      .sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime())
+      .slice(-7);
+
+    return sorted.map(item => {
+      const day = item.dateObj.getDate();
+      const month = MONTHS_SHORT[item.dateObj.getMonth()];
+      const avgInt = Math.round(item.intensities.reduce((a, b) => a + b, 0) / item.intensities.length);
+      return {
+        date: `${day} ${month}`,
+        intensidad: avgInt
+      };
+    });
+  }, [journalEntries]);
 
   // Dynamic Badges Hub with the 4 official achievement badges
   const achievements = [
@@ -260,7 +290,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
       badgeImage: '/assets/Extra/Racha.png',
       current: activeStreak,
       target: 3,
-      unlocked: activeStreak >= 1 
+      unlocked: activeStreak >= 3 
     },
     { 
       id: 'mastery', 
@@ -269,7 +299,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
       badgeImage: '/assets/badges/badge-mastery.png',
       current: journalEntries.length,
       target: 5,
-      unlocked: journalEntries.length >= 1 
+      unlocked: journalEntries.length >= 5 
     },
     { 
       id: 'community', 
@@ -287,7 +317,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
       badgeImage: '/assets/badges/badge-explorer.png',
       current: completedMissionsCount,
       target: 3,
-      unlocked: completedMissionsCount >= 1 
+      unlocked: completedMissionsCount >= 3 
     },
   ];
 
@@ -766,7 +796,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
               {/* Achievements Checklist with Real Progress Bars */}
               <div className="space-y-3 max-h-[460px] overflow-y-auto pr-1">
                 {filteredAchievements.map((ach) => {
-                  const percent = Math.min(100, Math.round((ach.current / ach.target) * 100));
+                  const percent = ach.unlocked ? 100 : Math.min(100, Math.round((ach.current / ach.target) * 100));
                   return (
                     <div 
                       key={ach.id}

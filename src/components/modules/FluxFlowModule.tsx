@@ -1037,8 +1037,8 @@ const INSPIRATIONAL_QUOTES: Record<string, EmotionQuote> = {
           <div className="max-w-3xl mx-auto animate-in zoom-in-95 duration-500 mt-10">
             <div className="bg-gradient-to-r from-white via-[#FBF9F5] to-white rounded-3xl border-2 border-[#E87A52]/30 shadow-md p-8 sm:p-12 text-center">
               
-              <div className="w-24 h-24 mx-auto bg-gradient-to-br from-amber-400 to-amber-600 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-amber-500/20">
-                <Sparkles className="w-12 h-12 text-white fill-white" />
+              <div className="w-24 h-24 mx-auto bg-[#FAF7F2] rounded-full flex items-center justify-center mb-6 shadow-lg border-2 border-[#5F927B]/30 p-3">
+                <img src="/Logo.png" alt="FluxGlow" className="w-16 h-16 object-contain" />
               </div>
 
               <h2 className="text-3xl sm:text-5xl font-black font-serif text-stone-900 mb-4 leading-tight">

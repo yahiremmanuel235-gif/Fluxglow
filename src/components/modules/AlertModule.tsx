@@ -345,7 +345,7 @@ export const AlertModule: React.FC = () => {
                   }`}
                 >
                   <span 
-                    className="w-3.5 h-3.5 rounded-full shrink-0 mt-0.5 shadow-xs" 
+                    className="w-5 h-5 rounded-full shrink-0 mt-0.5 shadow-xs ring-2 ring-white" 
                     style={{ backgroundColor: lvl.dotColor }}
                   ></span>
                   <div className="flex-1 min-w-0">
@@ -511,18 +511,18 @@ export const AlertModule: React.FC = () => {
                 Contacto de emergencia
               </span>
 
-              {/* Psychologist Avatar & Info */}
+              {/* Emergency Contact & Info */}
               <div className="w-16 h-16 rounded-full overflow-hidden mx-auto mb-2 border-2 border-brand-sage-500 shadow-2xs bg-brand-sand-100 flex items-center justify-center">
                 <img
                   src="/user.png"
-                  alt="Dra. María López"
+                  alt="Especialista de Guardia"
                   className="w-full h-full object-cover"
                 />
               </div>
 
-              <span className="text-[11px] text-stone-500 font-semibold block">Psicóloga de Guardia</span>
-              <h3 className="font-bold text-stone-900 text-sm">Dra. María López</h3>
-              <p className="text-[11px] text-stone-600 mb-4">Salud Mental & Contención • El Salvador</p>
+              <span className="text-[11px] text-stone-500 font-semibold block">Soporte y Orientación</span>
+              <h3 className="font-bold text-stone-900 text-sm">Línea de Apoyo Emocional</h3>
+              <p className="text-[11px] text-stone-600 mb-4">Especialistas en Contención & Salud Mental</p>
 
               {/* Contact Button */}
               <Button
@@ -600,13 +600,13 @@ export const AlertModule: React.FC = () => {
             <div className="w-20 h-20 rounded-full overflow-hidden mx-auto mb-3 border-4 border-brand-sage-500 bg-brand-sand-100 flex items-center justify-center">
               <img
                 src="/user.png"
-                alt="Dra. María López"
+                alt="Línea de Apoyo Emocional"
                 className="w-full h-full object-cover"
               />
             </div>
 
-            <h3 className="font-serif text-xl font-bold text-stone-900">Dra. María López</h3>
-            <p className="text-xs text-stone-500 mb-4">Cédula Prof. SV-9482 • Psicología Clínica y Cognitiva</p>
+            <h3 className="font-serif text-xl font-bold text-stone-900">Línea de Apoyo Emocional</h3>
+            <p className="text-xs text-stone-500 mb-4">Especialistas de Guardia • Contención Psicológica y Emocional</p>
 
             <div className="space-y-2.5 mb-6">
               <a

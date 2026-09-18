@@ -39,9 +39,11 @@ import { useToast } from '../common/Toast';
 import { Button } from '../common/Button';
 import { EmptyStat } from '../common/EmptyStat';
 import { formatFluxDate } from '../../utils/dateUtils';
+import { calculateWellbeingScore } from '../../utils/emotionUtils';
 import { useJournal } from '../../hooks/useJournal';
 import { useMissions } from '../../hooks/useMissions';
 import { useStreak } from '../../hooks/useStreak';
+import { useLearningProgress } from '../../hooks/useLearningProgress';
 import { UserDailyMissionRecord, ViewMode, JournalEntry, MoodType } from '../../types';
 import { MOCK_JOURNAL_ENTRIES } from '../../data/mockData';
 import { 
@@ -133,6 +135,7 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
   const { entries: journalEntries, loading: isLoadingJournal } = useJournal();
   const { missions, toggleCompleteMission } = useMissions();
   const { userStreak } = useStreak();
+  const { completedGuidesCount, totalCompleted } = useLearningProgress();
   const [missionFilter, setMissionFilter] = useState<'all' | 'pending' | 'completed'>('all');
 
   useEffect(() => {
@@ -165,17 +168,22 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
     return true;
   });
 
-  // 1. Monthly Learning Growth Data
+  // 1. Monthly Learning Growth Data (Dynamically rolling 6 months up to current month)
   const learningMonthlyData = useMemo(() => {
-    return [
-      { month: 'Ene', guias: 0 },
-      { month: 'Feb', guias: 0 },
-      { month: 'Mar', guias: 0 },
-      { month: 'Abr', guias: 0 },
-      { month: 'May', guias: 0 },
-      { month: 'Jun', guias: completedMissionsCount },
-    ];
-  }, [completedMissionsCount]);
+    const MONTH_LABELS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const now = new Date();
+    const currentMonthIdx = now.getMonth();
+    const months = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), currentMonthIdx - i, 1);
+      const isCurrent = i === 0;
+      months.push({
+        month: MONTH_LABELS[d.getMonth()],
+        guias: isCurrent ? totalCompleted : 0
+      });
+    }
+    return months;
+  }, [totalCompleted]);
 
   // 2. Correlation between Triggers/Tags and Moods
   const triggerCorrelations = useMemo(() => {
@@ -270,36 +278,69 @@ export const AnalyticsModule: React.FC<AnalyticsModuleProps> = ({ onNavigate }) 
       }));
   }, [journalEntries]);
 
-  // 4. Dynamic 30-Day Emotional Path (derived strictly from real journal entries)
+  // 4. Dynamic 30-Day Emotional Path (derived strictly from real journal entries grouped by unique day)
   const monthlyMoodPath = useMemo(() => {
     if (!Array.isArray(journalEntries) || journalEntries.length === 0) {
       return [];
     }
 
-    const points = journalEntries
-      .filter(e => e && e.date)
-      .map((entry, idx) => {
-        const d = new Date(entry.date);
-        const dayNum = isNaN(d.getDate()) ? (idx + 1) : d.getDate();
-        const dateFormatted = !isNaN(d.getDate()) 
-          ? `${dayNum < 10 ? '0' + dayNum : dayNum} Jun`
-          : entry.date;
-        const moodKey = entry.mood || 'tranquilo';
-        const entryVal = MOOD_TO_VAL[moodKey] || 4;
-        const entryMood = MOOD_TO_LABEL[moodKey] || 'Tranquilidad';
-        const entryNote = entry.notes ? entry.notes.slice(0, 35) + '...' : 'Registro en diario';
+    const MONTHS_SHORT = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
-        return {
-          day: dayNum,
-          val: entryVal,
-          mood: entryMood,
-          date: dateFormatted,
-          note: entryNote
-        };
-      })
-      .sort((a, b) => a.day - b.day);
+    // Group entries by calendar day (YYYY-MM-DD) to prevent duplicate X-axis points (e.g. 13-13 or 09-14/09-14)
+    const dayMap = new Map<string, {
+      dateObj: Date;
+      vals: number[];
+      moods: string[];
+      notes: string[];
+    }>();
 
-    return points;
+    journalEntries.forEach(entry => {
+      if (!entry || !entry.date) return;
+      const d = new Date(entry.date);
+      if (isNaN(d.getTime())) return;
+      const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      
+      const moodKey = (entry.mood || 'tranquilo').toLowerCase();
+      const val = MOOD_TO_VAL[moodKey] || 4;
+      const note = entry.notes ? entry.notes.slice(0, 35) + '...' : 'Registro en diario';
+
+      const existing = dayMap.get(dateKey);
+      if (existing) {
+        existing.vals.push(val);
+        existing.moods.push(entry.mood);
+        if (entry.notes) existing.notes.push(note);
+      } else {
+        dayMap.set(dateKey, {
+          dateObj: d,
+          vals: [val],
+          moods: [entry.mood],
+          notes: entry.notes ? [note] : []
+        });
+      }
+    });
+
+    // Sort chronologically by timestamp
+    const sortedDays = Array.from(dayMap.entries())
+      .sort((a, b) => a[1].dateObj.getTime() - b[1].dateObj.getTime())
+      .slice(-30);
+
+    return sortedDays.map(([dateKey, info]) => {
+      const d = info.dateObj;
+      const dayNum = d.getDate();
+      const mName = MONTHS_SHORT[d.getMonth()];
+      const avgVal = Math.round((info.vals.reduce((a, b) => a + b, 0) / info.vals.length) * 10) / 10;
+      const latestMood = info.moods[info.moods.length - 1] || 'tranquilo';
+      const entryMood = MOOD_TO_LABEL[latestMood.toLowerCase()] || 'Tranquilidad';
+      const entryNote = info.notes.length > 0 ? info.notes[info.notes.length - 1] : 'Registro en diario';
+
+      return {
+        day: `${dayNum} ${mName}`,
+        val: avgVal,
+        mood: entryMood,
+        date: dateKey,
+        note: entryNote
+      };
+    });
   }, [journalEntries]);
 
   // Emotional summary indicator
@@ -675,13 +716,15 @@ Generado con FluxGlow • Cuidado emocional consciente`;
                     Aprendizaje y Conocimiento
                   </h2>
                   <div className="flex items-baseline gap-2 mt-2">
-                    <span className="text-4xl font-extrabold text-stone-900">{completedMissionsCount}</span>
+                    <span className="text-4xl font-extrabold text-stone-900">{totalCompleted}</span>
                     <span className="text-xs sm:text-sm font-semibold text-stone-600">
                       Guías y retos completados
                     </span>
                   </div>
                   <p className="text-xs text-[#3E6855] font-bold mt-0.5">
-                    {completedMissionsCount === 0 ? 'Comienza tu primera guía o reto hoy' : `+${completedMissionsCount * 10}% Completado en este periodo`}
+                    {totalCompleted === 0 
+                      ? 'Comienza tu primera guía o reto hoy' 
+                      : `${completedGuidesCount} ${completedGuidesCount === 1 ? 'guía leída' : 'guías leídas'} • ${completedMissionsCount} ${completedMissionsCount === 1 ? 'reto completado' : 'retos completados'}`}
                   </p>
                 </div>
 

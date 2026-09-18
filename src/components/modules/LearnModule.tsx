@@ -622,7 +622,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
     });
   }, [searchQuery, selectedCategory, selectedFormat]);
 
-  const totalResultsCount = mergedGuides.length + filteredMedia.length + filteredPractices.length + COMPLETE_COURSES_CATALOG.length;
+  const totalResultsCount = (mergedGuides.length + COMPLETE_COURSES_CATALOG.length) + filteredMedia.length + filteredPractices.length + PSYCHOLOGICAL_TESTS.length;
   const isAnyFilterActive = searchQuery.trim() !== '' || selectedCategory !== 'todos' || selectedFormat !== 'todos' || activeTab !== 'todas';
 
   const handleResetFilters = () => {
@@ -1082,7 +1082,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-xl sm:text-2xl font-bold font-serif text-stone-900 flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-brand-terracotta-500" />
-                <span>Guías y Artículos Prácticos (Lecturas de 5 min):</span>
+                <span>Guías y Artículos Prácticos (Lecturas de 5 a 10 min):</span>
                 <span className="text-xs font-semibold text-[#3E6855] bg-[#EBF1EA] border border-[#C5DDD0] px-2.5 py-0.5 rounded-full">
                   {mergedGuides.length} guías
                 </span>
@@ -1824,6 +1824,26 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
               </div>
             )}
 
+            {/* PROMINENT BUTTON: HE TERMINADO DE LEER LA GUÍA */}
+            <div className="my-10 p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-[#f2ece1] to-[#e8f1ec] border border-[#548c71]/40 text-center shadow-sm">
+              <h3 className="font-serif text-2xl sm:text-3xl font-bold text-stone-900 mb-2">
+                ¿Has asimilado los conceptos de esta guía?
+              </h3>
+              <p className="text-stone-600 text-xs sm:text-sm max-w-lg mx-auto mb-6">
+                Haz clic a continuación para registrar la lectura completa y activar tus <strong>3 misiones prácticas</strong> en tu plan diario para ejercitarlas durante tu jornada.
+              </p>
+
+              <button
+                id="finish-reading-guide-btn"
+                onClick={() => handleFinishReading(activeGuide)}
+                className="bg-[#548c71] hover:bg-[#43705a] active:scale-98 text-white px-8 sm:px-10 py-4 rounded-full font-bold text-base sm:text-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-3 mx-auto cursor-pointer"
+              >
+                <CheckCircle2 className="w-5 h-5" />
+                <span>He terminado de leer la guía</span>
+                <Sparkles className="w-5 h-5 text-amber-300" />
+              </button>
+            </div>
+
             {/* RATING WIDGET: ¿TE SIRVIÓ ESTA GUÍA? */}
             <div className="mb-10 p-5 rounded-3xl bg-white border border-stone-200 shadow-2xs text-center">
               <span className="text-xs font-bold uppercase tracking-wider text-stone-500 block mb-2">
@@ -1857,26 +1877,6 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                   <span>👎 Podría mejorar</span>
                 </button>
               </div>
-            </div>
-
-            {/* PROMINENT BUTTON: HE TERMINADO DE LEER LA GUÍA */}
-            <div className="my-10 p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-[#f2ece1] to-[#e8f1ec] border border-[#548c71]/40 text-center shadow-sm">
-              <h3 className="font-serif text-2xl sm:text-3xl font-bold text-stone-900 mb-2">
-                ¿Has asimilado los conceptos de esta guía?
-              </h3>
-              <p className="text-stone-600 text-xs sm:text-sm max-w-lg mx-auto mb-6">
-                Haz clic a continuación para registrar la lectura completa y activar tus <strong>3 misiones prácticas</strong> en tu plan diario para ejercitarlas durante tu jornada.
-              </p>
-
-              <button
-                id="finish-reading-guide-btn"
-                onClick={() => handleFinishReading(activeGuide)}
-                className="bg-[#548c71] hover:bg-[#43705a] active:scale-98 text-white px-8 sm:px-10 py-4 rounded-full font-bold text-base sm:text-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-3 mx-auto cursor-pointer"
-              >
-                <CheckCircle2 className="w-5 h-5" />
-                <span>He terminado de leer la guía</span>
-                <Sparkles className="w-5 h-5 text-amber-300" />
-              </button>
             </div>
 
             

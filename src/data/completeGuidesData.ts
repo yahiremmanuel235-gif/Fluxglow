@@ -87,9 +87,9 @@ export const COMPLETE_COURSES_CATALOG: CompleteCourse[] = [
             question: '¿Qué función principal cumple la amígdala cerebral en los momentos de ansiedad?',
             options: [
               'Actuar como un detector de amenazas y activar la respuesta física de alarma y supervivencia',
-              'Memorizar listas de palabras y fechas históricas',
-              'Procesar exclusivamente las imágenes de colores brillantes',
-              'Controlar únicamente el movimiento de las manos'
+              'Almacenar recuerdos declarativos y conocimientos teóricos a largo plazo',
+              'Regular la digestión basal y la secreción de jugos gástricos',
+              'Coordinar de forma voluntaria el equilibrio postural motriz fino'
             ],
             correctAnswerIndex: 0,
             explanation: 'La amígdala detecta cualquier señal de incertidumbre o peligro y pone en marcha la cascada de adrenalina y cortisol en el cuerpo.'
@@ -100,8 +100,8 @@ export const COMPLETE_COURSES_CATALOG: CompleteCourse[] = [
             options: [
               'Porque estimula el nervio vago y le indica al corazón que disminuya sus pulsaciones',
               'Porque incrementa la cantidad de adrenalina en los músculos',
-              'Porque obliga a la mente a resolver problemas matemáticos',
-              'Porque produce cansancio extremo de inmediato'
+              'Porque hiperventila los pulmones para saturar los tejidos de oxígeno',
+              'Porque bloquea la producción de acetilcolina en los nódulos cardíacos'
             ],
             correctAnswerIndex: 0,
             explanation: 'Al exhalar más lento que al inhalar, se activa la rama parasimpática a través del nervio vago, desacelerando el ritmo cardíaco.'
@@ -112,8 +112,8 @@ export const COMPLETE_COURSES_CATALOG: CompleteCourse[] = [
             options: [
               'Exigirte con enfado dejar de pensar de inmediato',
               'Enviar señales corporales de seguridad, como soltar la mandíbula y respirar despacio',
-              'Mirar fijamente la pantalla del teléfono móvil con volumen alto',
-              'Contener la respiración durante un minuto'
+              'Forzar a la mente a repasar detalladamente todas las tareas pendientes',
+              'Aumentar la tensión isométrica muscular de forma prolongada'
             ],
             correctAnswerIndex: 1,
             explanation: 'El cuerpo es la vía de acceso más rápida: cuando relajas los músculos y respiras lento, el cerebro comprende que el peligro no es inminente.'
@@ -210,9 +210,9 @@ Conceptos explicados:
             question: '¿En qué consiste el patrón del Suspiro Fisiológico descubierto en Stanford?',
             options: [
               'Una doble inhalación por la nariz (una profunda y un sorbo extra al final) seguida de una exhalación larga por la boca',
-              'Aguantar la respiración durante un minuto entero sin soltar el aire',
-              'Respirar únicamente por la boca de manera acelerada',
-              'Exhalar con fuerza golpeando el pecho'
+              'Una respiración clavicular corta con retenciones de aire espasmódicas',
+              'Una serie rápida de inhalaciones superficiales exclusivamente por la boca',
+              'Un ciclo de respiración cuadrada forzada de 8 segundos por fase'
             ],
             correctAnswerIndex: 0,
             explanation: 'El Suspiro Fisiológico utiliza una doble inhalación nasal para reabrir los alvéolos pulmonares y una exhalación prolongada para desacelerar las pulsaciones.'
@@ -234,9 +234,9 @@ Conceptos explicados:
             question: '¿Por qué es preferible la respiración diafragmática sobre la respiración con el pecho superior?',
             options: [
               'Porque la respiración diafragmática estimula el descanso y reduce las señales de alarma continua en el cerebro',
-              'Porque la respiración con el pecho gasta menos energía',
-              'Porque no tiene ninguna diferencia biológica',
-              'Porque ayuda a correr más rápido en emergencias'
+              'Porque la respiración diafragmática aumenta artificialmente la frecuencia cardíaca',
+              'Porque la respiración con el pecho consume menos energía en situaciones sedentarias',
+              'Porque no existe ninguna diferencia biológica entre ambas formas de ventilación'
             ],
             correctAnswerIndex: 0,
             explanation: 'La respiración diafragmática permite un intercambio de gases óptimo y evita la tensión crónica en cuello y hombros.'
@@ -325,9 +325,9 @@ Conceptos explicados:
             question: '¿Cuál es el objetivo principal del anclaje sensorial o Grounding?',
             options: [
               'Forzar a la mente a procesar estímulos del mundo exterior físico para romper el bucle de pensamientos ansiosos',
-              'Aprender a memorizar listas de números rápidamente',
-              'Dormirse de inmediato en cualquier lugar',
-              'Aumentar la adrenalina para resolver tareas'
+              'Aprender a suprimir de raíz cualquier emoción desagradable',
+              'Inducir un estado de hipnosis pasiva para desconectarse de la realidad',
+              'Aumentar la adrenalina para resolver tareas intelectuales bajo presión'
             ],
             correctAnswerIndex: 0,
             explanation: 'Al procesar activamente los 5 sentidos, el cerebro desvía su atención de las amenazas imaginadas hacia el entorno real presente.'
@@ -337,9 +337,9 @@ Conceptos explicados:
             question: 'En la secuencia 5-4-3-2-1, ¿con qué sentido se comienza?',
             options: [
               'Con 5 cosas que puedas VER (la vista)',
-              'Con 5 cosas que puedas saborear',
-              'Con 5 cosas que puedas oler',
-              'Con 5 ejercicios físicos intensos'
+              'Con 5 cosas que puedas saborear con atención plena',
+              'Con 5 aromas distintivos que puedas identificar',
+              'Con 5 movimientos articulares de alta intensidad'
             ],
             correctAnswerIndex: 0,
             explanation: 'La secuencia inicia con la vista, identificando 5 objetos o detalles visuales específicos a tu alrededor.'
@@ -350,8 +350,8 @@ Conceptos explicados:
             options: [
               'No, puedes realizarlo en silencio y con total discreción en un aula, oficina o transporte',
               'Sí, es obligatorio decir cada objeto en voz alta para que funcione',
-              'Solo funciona si estás en una habitación completamente a oscuras',
-              'Requiere usar equipo médico especial'
+              'Solo es efectivo si se realiza en completo aislamiento y silencio absoluto',
+              'Requiere utilizar sensores de biofeedback médico para ser válido'
             ],
             correctAnswerIndex: 0,
             explanation: 'El anclaje sensorial se puede ejecutar de forma 100% mental y discreta sin que nadie a tu alrededor lo note.'
@@ -436,9 +436,9 @@ Conceptos explicados:
             question: '¿Qué error de razonamiento comete con frecuencia la mente ansiosa?',
             options: [
               'Confundir lo que es meramente posible con lo que es altamente probable en la realidad',
-              'Pensar con demasiada lógica matemática',
-              'Olvidar por completo cómo hablar con los demás',
-              'No tener ninguna imaginación'
+              'Analizar las situaciones con exceso de rigor estadístico e imparcialidad',
+              'Ignorar por completo cualquier recuerdo autobiográfico del pasado',
+              'Atribuir siempre intenciones benevolentes a personas desconocidas'
             ],
             correctAnswerIndex: 0,
             explanation: 'La ansiedad agranda la probabilidad de sucesos negativos y minimiza nuestra capacidad real de afrontarlos.'
@@ -448,9 +448,9 @@ Conceptos explicados:
             question: '¿Cuál es el propósito de la primera pregunta filtro en el reencuadre cognitivo?',
             options: [
               'Buscar evidencia objetiva y comprobable frente al pensamiento en lugar de guiarse solo por el miedo',
-              'Culpar a los demás por lo que sentimos',
-              'Intentar huir de la situación de inmediato',
-              'Ignorar todas las responsabilidades del día'
+              'Repetir afirmaciones positivas genéricas sin contrastar la premisa',
+              'Intentar suprimir el pensamiento para analizarlo horas después',
+              'Aceptar la preocupación como un presagio intuitivo irrefutable'
             ],
             correctAnswerIndex: 0,
             explanation: 'Examinar los datos reales desarma las suposiciones infundadas creadas por el estado de alerta.'
@@ -546,9 +546,9 @@ Conceptos explicados:
             question: '¿Qué ocurre psicológicamente cuando intentas prohibirte a la fuerza pensar en una preocupación?',
             options: [
               'Ocurre el efecto rebote irónico y el pensamiento regresa con mayor insistencia y frecuencia',
-              'El pensamiento se borra de la memoria para siempre',
-              'Mejora la agilidad mental al instante',
-              'Se elimina la necesidad de dormir'
+              'El pensamiento se desvanece de la memoria a largo plazo',
+              'La corteza prefrontal adquiere resistencia biológica automática',
+              'El nivel de alerta se disipa de inmediato sin necesidad de descanso'
             ],
             correctAnswerIndex: 0,
             explanation: 'Intentar suprimir activamente pensamientos genera un monitoreo inconsciente que los vuelve más persistentes.'
@@ -558,9 +558,9 @@ Conceptos explicados:
             question: '¿En qué consiste el método del "Worry Time"?',
             options: [
               'Asignar un bloque de 10 a 15 minutos en el día para revisar y escribir preocupaciones, postergándolas con calma hasta esa hora',
-              'Preocuparse sin descanso las 24 horas del día',
-              'Ignorar todas las responsabilidades y obligaciones',
-              'Pedirle a otra persona que resuelva todas nuestras dudas'
+              'Preocuparse de forma continua cada vez que surge una duda para no olvidarla',
+              'Ignorar cualquier problema financiero o laboral hasta que se resuelva solo',
+              'Buscar constantemente reafirmación en otras personas para calmar la inquietud'
             ],
             correctAnswerIndex: 0,
             explanation: 'Al posponer conscientemente la preocupación para un horario predeterminado, la mente libera atención durante el resto del día.'
@@ -570,9 +570,9 @@ Conceptos explicados:
             question: '¿Por qué se recomienda no programar el Worry Time justo antes de ir a dormir?',
             options: [
               'Para evitar activar el sistema de alerta y permitir que el cuerpo entre en modo descanso',
-              'Porque la luz de las lámparas se apaga a esa hora',
-              'Porque es obligatorio hacerlo en la madrugada',
-              'No hay ninguna razón médica'
+              'Porque la mente solo puede procesar razonamientos lógicos antes del mediodía',
+              'Porque los niveles de melatonina bloquean la capacidad de escribir',
+              'Porque la memoria de trabajo no funciona después de las 20:00 h'
             ],
             correctAnswerIndex: 0,
             explanation: 'Revisar preocupaciones antes de dormir eleva el cortisol e interfiere con el inicio natural del sueño profundo.'
@@ -657,9 +657,9 @@ Conceptos explicados:
             question: '¿Por qué se aconseja evitar revisar redes sociales o noticias en los primeros 20 minutos al despertar?',
             options: [
               'Porque dispara cortisol y reactividad emocional antes de que el cerebro alcance un estado de vigilia sereno',
-              'Porque la pantalla pierde brillo por las mañanas',
-              'Porque se gasta la batería más rápido',
-              'No tiene ningún impacto en la salud mental'
+              'Porque las ondas cerebrales matutinas son incompatibles con la luz azul',
+              'Porque el hipocampo borra los recuerdos de la noche anterior al ver pantallas',
+              'Porque reduce la temperatura corporal central de manera drástica'
             ],
             correctAnswerIndex: 0,
             explanation: 'Revisar estímulos estresantes al despertar coloca al cerebro en un modo reactivo de defensa desde el inicio de la jornada.'
@@ -669,9 +669,9 @@ Conceptos explicados:
             question: '¿Qué beneficio aporta recibir luz natural en los ojos durante la mañana?',
             options: [
               'Sincroniza el ritmo circadiano, eleva la energía diurna y facilita la producción nocturna de melatonina',
-              'Hace que no necesites comer en todo el día',
-              'Cura cualquier resfriado al instante',
-              'Ninguno comprobable'
+              'Elimina la necesidad calórica del desayuno durante la primera mitad del día',
+              'Aumenta los niveles de dopamina hasta inhibir los receptores de cansancio',
+              'Solo aporta beneficios si se realiza con exposición solar de más de 3 horas'
             ],
             correctAnswerIndex: 0,
             explanation: 'Los fotorreceptores retinianos ajustan el reloj biológico central gracias a la luz solar matutina.'
@@ -681,9 +681,9 @@ Conceptos explicados:
             question: '¿Por qué la cafeína puede intensificar la sensación de ansiedad?',
             options: [
               'Porque estimula la liberación de adrenalina e incrementa las palpitaciones, imitando los síntomas físicos de la alarma',
-              'Porque induce el sueño profundo de inmediato',
-              'Porque baja la temperatura corporal drásticamente',
-              'Porque disminuye la memoria a corto plazo'
+              'Porque neutraliza de forma inmediata los receptores de GABA en la corteza frontal',
+              'Porque reduce drásticamente el flujo sanguíneo hacia los órganos sensoriales',
+              'Porque descompone las reservas de glucosa almacenadas en los músculos esqueléticos'
             ],
             correctAnswerIndex: 0,
             explanation: 'El exceso de cafeína activa físicamente el sistema nervioso simpático, lo que la mente puede malinterpretar como peligro.'
@@ -767,9 +767,9 @@ Conceptos explicados:
             question: '¿Cuál es el primer paso del protocolo de las 3 C en un momento de ansiedad?',
             options: [
               'Cuerpo: regular la respiración y soltar la tensión física antes de intentar razonar',
-              'Pensar en todas las metas del próximo año',
-              'Criticarte duramente por sentirte mal',
-              'Aislarte completamente en silencio'
+              'Cognición: debatir internamente los pensamientos antes de calmar la respiración',
+              'Catarsis: desahogar la frustración de forma verbal inmediata con otras personas',
+              'Control: obligarse a resolver todos los problemas futuros antes de descansar'
             ],
             correctAnswerIndex: 0,
             explanation: 'Primero estabilizamos la fisiología del cuerpo para que la corteza cerebral pueda recuperar la claridad lógica.'
@@ -779,9 +779,9 @@ Conceptos explicados:
             question: 'Tener un día con nerviosismo o inquietud después de completar la guía significa que:',
             options: [
               'Es un proceso humano normal; la clave no es eliminar las emociones, sino saber cómo acompañarte cuando aparecen',
-              'La guía no sirvió para nada y hay que rendirse',
-              'Has perdido todo el progreso que lograste',
-              'Debes aislarte de todo el mundo'
+              'Significa que las técnicas somáticas aprendidas han perdido efectividad',
+              'Indica una regresión biológica irreversible que invalida la práctica previa',
+              'Demuestra que el sistema nervioso no es capaz de desarrollar resiliencia'
             ],
             correctAnswerIndex: 0,
             explanation: 'La regulación emocional es una práctica continua. Los altibajos son normales y ahora cuentas con herramientas prácticas para gestionarlos.'
@@ -791,9 +791,9 @@ Conceptos explicados:
             question: '¿Qué función cumple tu botiquín emocional personalizado?',
             options: [
               'Tener a la mano un conjunto claro de técnicas probadas para autorregularte sin entrar en parálisis',
-              'Contener medicamentos de emergencia',
-              'Evitar sentir cualquier emoción humana',
-              'Hacer que nunca más tengamos responsabilidades'
+              'Sustituir por completo el acompañamiento psicológico o médico profesional',
+              'Predecir con exactitud matemática el momento exacto de la próxima crisis',
+              'Garantizar la ausencia absoluta de cualquier emoción desagradable futura'
             ],
             correctAnswerIndex: 0,
             explanation: 'Tener un protocolo predefinido reduce la incertidumbre y te permite responder con confianza ante momentos de estrés.'
@@ -899,9 +899,9 @@ Conceptos explicados:
             question: '¿Aproximadamente cuánto dura un ciclo ultradiano de concentración óptima según la neurociencia?',
             options: [
               'Aproximadamente 90 minutos de foco seguidos de una necesidad natural de recuperación',
-              '12 horas continuas sin parar',
-              '3 minutos en total',
-              '5 días seguidos'
+              '4 a 6 horas ininterrumpidas de máxima concentración cognitiva',
+              'Intervalos rígidos de 20 minutos como límite biológico inmutable',
+              'Ciclos de 8 horas lineales sin variación en la curva de atención'
             ],
             correctAnswerIndex: 0,
             explanation: 'Los ciclos ultradianos marcan fluctuaciones de energía de 90 a 120 minutos en el cerebro humano.'
@@ -911,9 +911,9 @@ Conceptos explicados:
             question: '¿Qué es el descanso en el modelo de productividad consciente?',
             options: [
               'Un requisito biológico indispensable para la salud mental y la calidad del trabajo',
-              'Una pérdida de tiempo que hay que evitar siempre',
-              'Un premio exclusivo para cuando todo esté 100% terminado',
-              'Algo innecesario si tomas suficiente café'
+              'Una recompensa pasiva permitida únicamente cuando todas las metas estén cumplidas',
+              'Una estrategia opcional que no influye en la tasa de errores cognitivos',
+              'Una pérdida de tiempo que los profesionales disciplinados deben minimizar'
             ],
             correctAnswerIndex: 0,
             explanation: 'El descanso restaura los neurotransmisores de la atención y previene el agotamiento crónico (burnout).'
@@ -923,9 +923,9 @@ Conceptos explicados:
             question: '¿Cuál de las siguientes actividades representa una verdadera pausa restaurativa?',
             options: [
               'Caminar unos minutos, tomar agua o mirar al horizonte lejos de las pantallas',
-              'Revisar frenéticamente redes sociales o noticias de última hora',
-              'Abrir 10 correos nuevos de trabajo en el teléfono',
-              'Discutir con alguien en internet'
+              'Cambiar a otra tarea laboral compleja de alta exigencia numérica',
+              'Consumir podcasts informativos a doble velocidad en el teléfono',
+              'Revisar notificaciones y mensajes pendientes de forma acelerada'
             ],
             correctAnswerIndex: 0,
             explanation: 'Descansar la vista y desconectar de los estímulos digitales permite que el cerebro recupere frescura cognitiva.'
@@ -1008,9 +1008,9 @@ Conceptos explicados:
             question: '¿Cuál es la causa psicológica más frecuente detrás de la procrastinación?',
             options: [
               'Una respuesta de evitación emocional ante la sensación de abrumo o miedo al error',
-              'Falta total de inteligencia',
-              'Demasiada energía física',
-              'Genética irreversible'
+              'Una deficiencia estricta de memoria operativa y velocidad de procesamiento',
+              'Un rasgo genético inmutable que impide la organización del tiempo',
+              'Un exceso de energía física que dispersa la atención hacia estímulos placenteros'
             ],
             correctAnswerIndex: 0,
             explanation: 'Procrastinar es un intento de la mente de evitar la incomodidad emocional que proyecta sobre una tarea.'
@@ -1020,9 +1020,9 @@ Conceptos explicados:
             question: '¿En qué consiste la regla de los 2 minutos?',
             options: [
               'Comprometerte a realizar únicamente el micro-paso inicial durante 120 segundos para romper la inercia',
-              'Terminar todos los trabajos de tu vida en 2 minutos',
-              'Dormir 2 minutos cada hora',
-              'Esperar 2 minutos antes de contestar mensajes'
+              'Planificar una agenda exhaustiva dividida en bloques matemáticos de 2 minutos',
+              'Pospone cualquier tarea difícil por 2 minutos para ver si desaparece la urgencia',
+              'Calcular el coste económico por minuto de cada actividad de tu jornada'
             ],
             correctAnswerIndex: 0,
             explanation: 'Reducir el umbral de entrada al mínimo elimina la resistencia mental inicial.'
@@ -1032,9 +1032,9 @@ Conceptos explicados:
             question: 'Un ejemplo de micro-paso de fricción cero es:',
             options: [
               'Abrir el archivo y escribir una sola oración o título',
-              'Leer 10 libros enteros en una sola noche',
-              'Organizar toda tu casa sin pestañear',
-              'Aprender un idioma completo en la mañana'
+              'Diseñar un plan de trabajo de 5 fases antes de iniciar la primera acción',
+              'Comprometerte a completar el 100% del proyecto en una sola sesión',
+              'Esperar a sentir máxima inspiración y energía antes de sentarte a trabajar'
             ],
             correctAnswerIndex: 0,
             explanation: 'Un micro-paso debe ser tan pequeño y accesible que no genere excusas ni resistencia.'

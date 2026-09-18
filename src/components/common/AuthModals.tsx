@@ -296,7 +296,7 @@ export const AuthModals: React.FC<AuthModalProps> = ({
           id="auth-modal-close-btn"
           onClick={onClose}
           className="absolute top-4 right-4 z-10 p-2 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-600 transition-colors"
-         aria-label="Cerrar" aria-label="Cerrar modal de autenticación">
+          aria-label="Cerrar modal de autenticación">
           <X className="w-5 h-5" />
         </button>
 

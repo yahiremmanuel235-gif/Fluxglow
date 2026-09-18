@@ -96,6 +96,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
   } = useMissions(userProfile, onUpdateProfile);
 
   const { userStreak } = useStreak();
+  const [fluxStreak, setFluxStreak] = useState(getFluxStreak());
   const [canFlux, setCanFlux] = useState(canStartFluxToday());
 
   React.useEffect(() => {
@@ -398,7 +399,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
                 title={!canFlux ? "Ya completaste tu Flux hoy. Vuelve mañana." : ""}
                 className={`flex-1 sm:flex-none px-4 py-2.5 min-h-[44px] rounded-2xl text-xs sm:text-sm font-bold shadow-xs transition-all flex items-center justify-center gap-2 group ${canFlux ? 'bg-gradient-to-r from-[#5F927B] to-[#3E6855] hover:opacity-90 text-white cursor-pointer' : 'bg-stone-200 text-stone-400 cursor-not-allowed'}`}
               >
-                <Zap className={`w-4 h-4 object-contain fill-current transition-transform ${canFlux ? 'text-brand-gold-300 group-hover:scale-110' : 'text-stone-400'}`} />
+                <img src="/Logo2.png" alt="Flux" className={`w-4 h-4 object-contain transition-transform ${canFlux ? 'group-hover:scale-110' : 'grayscale opacity-60'}`} />
                 <span>{canFlux ? 'Iniciar Flux' : 'Flux Completado'}</span>
               </button>
               <button

@@ -64,8 +64,7 @@ export const InstantPracticeModal: React.FC<InstantPracticeModalProps> = ({
           <button
             onClick={onClose}
             className="p-1.5 rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors cursor-pointer"
-            aria-label="Cerrar práctica"
-           aria-label="Cerrar">
+            aria-label="Cerrar práctica">
             <X className="w-5 h-5" />
           </button>
         </div>
