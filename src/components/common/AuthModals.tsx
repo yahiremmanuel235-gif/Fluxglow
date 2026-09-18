@@ -311,7 +311,7 @@ export const AuthModals: React.FC<AuthModalProps> = ({
           </h3>
           <p className="text-xs sm:text-sm text-stone-600 mt-1 max-w-sm mx-auto">
             {mode === 'login'
-              ? 'Accede a tu diario emocional, análisis predictivo y asistente Flux AI.'
+              ? 'Accede a tu diario emocional, análisis preventivo y asistente Flux AI.'
               : 'Únete a FluxGlow de forma gratuita, confidencial y personalizada.'}
           </p>
 

@@ -393,7 +393,7 @@ export default function App() {
                 transition={{ duration: 0.15, ease: 'easeOut' }}
                 className="w-full h-full"
               >
-                <ErrorBoundary fallbackTitle="Inconveniente en el Análisis Predictivo">
+                <ErrorBoundary fallbackTitle="Inconveniente en el Análisis Preventivo">
                   <AnalyticsModule onNavigate={handleNavigate} />
                 </ErrorBoundary>
               </motion.div>

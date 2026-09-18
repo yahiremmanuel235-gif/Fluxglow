@@ -536,15 +536,15 @@ Generado con FluxGlow • Cuidado emocional consciente`;
           </div>
         </div>
 
-        {/* Big Display Title: Análisis Predictivo */}
+        {/* Big Display Title: Análisis Preventivo */}
         <div className="text-center my-6 px-2 overflow-visible">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#EBF1EA] border border-[#C5DDD0] text-xs font-bold text-[#3E6855] mb-2 shadow-2xs">
-            <img src="/assets/icons/nav-analytics.png" alt="Predictivo" className="w-3.5 h-3.5 object-contain" />
+            <img src="/assets/icons/nav-analytics.png" alt="Preventivo" className="w-3.5 h-3.5 object-contain" />
             <span>Inteligencia de Datos Clínicos</span>
           </div>
           <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-normal leading-normal overflow-visible">
             <span className="bg-gradient-to-r from-[#3E6855] via-[#5F927B] to-[#E87A52] bg-clip-text text-transparent">
-              Análisis Predictivo
+              Análisis Preventivo
             </span>
           </h1>
           <p className="text-stone-600 text-xs sm:text-sm mt-1">Métricas de evolución cognitiva, correlación de factores detonantes y modelos de estabilidad</p>

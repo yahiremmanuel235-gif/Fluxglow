@@ -319,7 +319,7 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
           </div>
         )}
 
-        {/* Big Display Title: Registro Emocional */}
+        {/* Big Display Title: Diario Emocional */}
         <div className="text-center my-6 px-2 overflow-visible">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#EBF1EA] border border-[#C5DDD0] text-xs font-bold text-[#3E6855] mb-2 shadow-2xs">
             <img src="/assets/icons/nav-journal.png" alt="Diario" className="w-3.5 h-3.5 object-contain" />
@@ -327,7 +327,7 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
           </div>
           <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-normal leading-normal overflow-visible">
             <span className="bg-gradient-to-r from-[#3E6855] via-[#5F927B] to-[#E87A52] bg-clip-text text-transparent">
-              Registro Emocional
+              Diario Emocional
             </span>
           </h1>
           <p className="text-stone-600 text-xs sm:text-sm mt-2 max-w-md mx-auto">

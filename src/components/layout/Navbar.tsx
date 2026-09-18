@@ -120,11 +120,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   ];
 
   // Secondary tabs under "Más Opciones":
-  // Análisis Predictivo, y Alerta Emocional
+  // Análisis Preventivo, y Alerta Emocional
   const moreOptionsTabs: { id: ViewMode; label: string; icon: React.ReactNode; badge?: string }[] = [
     { 
       id: 'analytics', 
-      label: 'Análisis Predictivo', 
+      label: 'Análisis Preventivo', 
       icon: <img src="/assets/icons/nav-analytics.png" alt="Análisis" className="w-4 h-4 shrink-0 object-contain" /> 
     },
     { 

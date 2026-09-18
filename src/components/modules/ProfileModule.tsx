@@ -625,10 +625,10 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
               </div>
             </div>
 
-            {/* CARD 3: Registro Emocional (Table + Chart Split) */}
+            {/* CARD 3: Diario Emocional (Table + Chart Split) */}
             <div className="bg-white rounded-3xl border border-brand-sand-300 shadow-2xs p-6 sm:p-7">
               <h2 className="text-xl font-bold text-stone-900 mb-5 font-serif">
-                Registro Emocional Reciente
+                Diario Emocional Reciente
               </h2>
 
               {recentTableEntries.length === 0 ? (

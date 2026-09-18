@@ -619,7 +619,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
               <div className="w-9 h-9 rounded-xl bg-[#FDF4F0] border border-[#F7D3C3] flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
                 <img src="/assets/icons/nav-analytics.png" alt="Análisis" className="w-4.5 h-4.5 object-contain" />
               </div>
-              <h4 className="text-xs font-bold text-[#B54F2C]">Análisis Predictivo</h4>
+              <h4 className="text-xs font-bold text-[#B54F2C]">Análisis Preventivo</h4>
               <p className="text-[10px] text-stone-500 mt-0.5">Detección de patrones</p>
             </button>
 

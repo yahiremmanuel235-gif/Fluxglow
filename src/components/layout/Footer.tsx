@@ -119,7 +119,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, variant = 'full' }) 
                   className="hover:text-[#8DB596] transition-colors text-left flex items-center gap-2 cursor-pointer"
                 >
                   <img src="/assets/icons/nav-analytics.png" alt="Análisis" className="w-4 h-4 object-contain shrink-0" />
-                  <span>#3 Análisis Predictivo Avanzado</span>
+                  <span>#3 Análisis Preventivo Avanzado</span>
                 </button>
               </li>
               <li>
