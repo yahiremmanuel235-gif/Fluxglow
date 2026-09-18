@@ -293,7 +293,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
                   </span>
                 </h4>
                 <p className="text-xs text-stone-600 mt-0.5 max-w-2xl leading-relaxed">
-                  Guardado en este navegador — Crea una cuenta para sincronizar en la nube y acceder desde cualquier dispositivo.
+                  Crea una cuenta para sincronizar en la nube y acceder desde cualquier dispositivo.
                 </p>
               </div>
             </div>
