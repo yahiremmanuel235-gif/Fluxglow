@@ -387,7 +387,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
             </div>
 
             {/* Quick action buttons with brand colors and local icons */}
-            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 shrink-0 w-full md:w-auto">
+            <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 shrink-0 w-full md:w-auto">
               <button
                 id="hero-quick-journal-btn"
                 onClick={() => {
@@ -397,25 +397,25 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
                 }}
                 disabled={!canFlux}
                 title={!canFlux ? "Ya completaste tu Flux hoy. Vuelve mañana." : "¡Pulsa para iniciar tu flujo diario de bienestar!"}
-                className={`flex-1 sm:flex-none px-5 py-2.5 min-h-[44px] rounded-2xl font-bold transition-all flex items-center justify-center gap-2.5 group ${
+                className={`h-11 sm:h-12 px-5 rounded-full font-bold transition-all flex items-center justify-center gap-2.5 group select-none ${
                   canFlux 
                     ? 'flux-btn-active-glow bg-white cursor-pointer hover:bg-white/95' 
-                    : 'bg-stone-200 text-stone-400 cursor-not-allowed shadow-xs'
+                    : 'bg-stone-200 text-stone-400 cursor-not-allowed border-2 border-transparent shadow-none'
                 }`}
               >
                 <img 
                   src="/assets/icons/flux.png" 
                   alt="Flux" 
                   className={`w-5 h-5 object-contain transition-transform ${
-                    canFlux ? 'group-hover:scale-110' : 'grayscale opacity-60'
+                    canFlux ? 'group-hover:scale-110' : 'grayscale opacity-50'
                   }`} 
                 />
                 {canFlux ? (
-                  <span className="title-gradient font-extrabold tracking-wide text-sm sm:text-base">
+                  <span className="text-[#2D493C] font-extrabold tracking-wide text-xs sm:text-sm whitespace-nowrap">
                     Iniciar Flux
                   </span>
                 ) : (
-                  <span className="text-stone-400 font-bold text-sm sm:text-base">
+                  <span className="text-stone-400 font-bold text-xs sm:text-sm whitespace-nowrap">
                     Flux Completado
                   </span>
                 )}
@@ -423,7 +423,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
               <button
                 id="hero-quick-missions-btn"
                 onClick={() => onNavigate('missions')}
-                className="flex-1 sm:flex-none px-5 py-2.5 min-h-[44px] rounded-2xl bg-[#E87A52] hover:bg-[#D4653E] text-white text-xs sm:text-sm font-bold shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer group"
+                className="h-11 sm:h-12 px-5 rounded-full bg-[#E87A52] hover:bg-[#D4653E] border-2 border-transparent text-white text-xs sm:text-sm font-bold shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer group whitespace-nowrap"
               >
                 <img src="/assets/icons/medal.png" alt="Misiones" className="w-4 h-4 object-contain brightness-0 invert group-hover:scale-105 transition-transform" />
                 <span>Ver Misiones</span>
