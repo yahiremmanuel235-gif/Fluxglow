@@ -387,7 +387,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
             </div>
 
             {/* Quick action buttons with brand colors and local icons */}
-            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 shrink-0 w-full md:w-auto">
+            <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 shrink-0 w-full md:w-auto">
               <button
                 id="hero-quick-journal-btn"
                 onClick={() => {
@@ -396,11 +396,25 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
                   }
                 }}
                 disabled={!canFlux}
-                title={!canFlux ? "Ya completaste tu Flux hoy. Vuelve mañana." : ""}
-                className={`flex-1 sm:flex-none px-4 py-2.5 min-h-[44px] rounded-2xl text-xs sm:text-sm font-bold shadow-xs transition-all flex items-center justify-center gap-2 group ${canFlux ? 'bg-gradient-to-r from-[#5F927B] to-[#3E6855] hover:opacity-90 text-white cursor-pointer' : 'bg-stone-200 text-stone-400 cursor-not-allowed'}`}
+                title={!canFlux ? "Ya completaste tu Flux hoy. Vuelve mañana." : "¡Pulsa para iniciar tu flujo diario de bienestar!"}
+                className={`relative flex-1 sm:flex-none px-4 py-2.5 min-h-[44px] rounded-2xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 group ${
+                  canFlux 
+                    ? 'flux-btn-active-glow bg-gradient-to-r from-[#5F927B] via-[#4F806A] to-[#3E6855] text-white cursor-pointer' 
+                    : 'bg-stone-200 text-stone-400 cursor-not-allowed border border-stone-300/60 shadow-none'
+                }`}
               >
-                <img src="/Logo2.png" alt="Flux" className={`w-4 h-4 object-contain transition-transform ${canFlux ? 'group-hover:scale-110' : 'grayscale opacity-60'}`} />
-                <span>{canFlux ? 'Iniciar Flux' : 'Flux Completado'}</span>
+                <img 
+                  src="/assets/icons/flux.png" 
+                  alt="Flux" 
+                  className={`w-5 h-5 object-contain transition-transform ${canFlux ? 'group-hover:scale-115 drop-shadow-xs' : 'grayscale opacity-50'}`} 
+                />
+                <span className="tracking-wide">{canFlux ? 'Iniciar Flux' : 'Flux Completado'}</span>
+                {canFlux && (
+                  <span className="relative flex h-2 w-2 ml-0.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#E87A52] opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-[#E87A52]"></span>
+                  </span>
+                )}
               </button>
               <button
                 id="hero-quick-missions-btn"
