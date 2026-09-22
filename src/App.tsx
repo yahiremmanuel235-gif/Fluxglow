@@ -24,6 +24,7 @@ const CommunityModule = React.lazy(() => import('./components/modules/CommunityM
 const MissionsModule = React.lazy(() => import('./components/modules/MissionsModule').then(m => ({ default: m.MissionsModule })));
 const DashboardModule = React.lazy(() => import('./components/modules/DashboardModule').then(m => ({ default: m.DashboardModule })));
 const FluxFlowModule = React.lazy(() => import('./components/modules/FluxFlowModule').then(m => ({ default: m.FluxFlowModule })));
+const AdminPanel = React.lazy(() => import('./components/modules/AdminPanel').then(m => ({ default: m.AdminPanel })));
 
 const DEFAULT_USER_PROFILE: UserProfileData = {
   name: 'Usuario FluxGlow',
@@ -85,6 +86,7 @@ export default function App() {
         }
 
         if (data) {
+          const resolvedRole = data.role || user.user_metadata?.role || (user.email?.toLowerCase().includes('admin') ? 'admin' : (prev.role || 'user'));
           setUserProfile(prev => ({
             ...prev,
             name: data.name || user.user_metadata?.name || user.email?.split('@')[0] || 'Miembro de FluxGlow',
@@ -93,24 +95,28 @@ export default function App() {
             avatarUrl: data.avatar_url || prev.avatarUrl || '/user.png',
             points: typeof data.points === 'number' ? data.points : (prev.points ?? 0),
             level: typeof data.level === 'number' ? data.level : (prev.level ?? 1),
+            role: resolvedRole,
             isLoggedIn: true,
           }));
         } else {
           // Si el perfil aún no existe en profiles (ej. confirmación diferida de correo),
           // intentamos crearlo de manera transparente y proveemos fallback seguro
           const fallbackName = user.user_metadata?.name || user.email?.split('@')[0] || 'Miembro de FluxGlow';
+          const fallbackRole = user.user_metadata?.role || (user.email?.toLowerCase().includes('admin') ? 'admin' : 'user');
           try {
             await supabase.from('profiles').upsert({
               id: user.id,
               name: fallbackName,
               age_group: user.user_metadata?.age_group || '19 - 24 años',
-              goals: user.user_metadata?.goals || 'Gestión del Estrés, Atención Plena'
+              goals: user.user_metadata?.goals || 'Gestión del Estrés, Atención Plena',
+              role: fallbackRole
             }, { onConflict: 'id' });
           } catch {}
 
           setUserProfile(prev => ({
             ...prev,
             name: prev.name && prev.name !== 'Invitado' ? prev.name : fallbackName,
+            role: fallbackRole,
             isLoggedIn: true,
           }));
         }
@@ -261,6 +267,7 @@ export default function App() {
             onSignOut={handleSignOut}
             userPoints={userProfile.points}
             userLevel={userProfile.level}
+            isAdmin={userProfile.role === 'admin'}
           />
         </>
       )}
@@ -322,6 +329,7 @@ export default function App() {
               </motion.div>
             } />
 
+            {/* Rutas de Aprendizaje / Explora (compatibilidad dual /learn y /explora, además de /explora/:slug) */}
             <Route path="/learn" element={
               <motion.div
                 initial={{ opacity: 0, y: 4 }}
@@ -339,6 +347,40 @@ export default function App() {
               </motion.div>
             } />
 
+            <Route path="/explora" element={
+              <motion.div
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+                className="w-full h-full"
+              >
+                <ErrorBoundary fallbackTitle="Inconveniente en Explora y Aprende">
+                  <LearnModule 
+                    onNavigate={handleNavigate} 
+                    initialGuideId={activeGuideId} 
+                  />
+                </ErrorBoundary>
+              </motion.div>
+            } />
+
+            <Route path="/explora/:slug" element={
+              <motion.div
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+                className="w-full h-full"
+              >
+                <ErrorBoundary fallbackTitle="Inconveniente cargando la Guía">
+                  <LearnModule 
+                    onNavigate={handleNavigate} 
+                  />
+                </ErrorBoundary>
+              </motion.div>
+            } />
+
+            {/* Diario Emocional (compatibilidad /journal y /diario) */}
             <Route path="/journal" element={
               <motion.div
                 initial={{ opacity: 0, y: 4 }}
@@ -355,7 +397,43 @@ export default function App() {
               </motion.div>
             } />
 
+            <Route path="/diario" element={
+              <motion.div
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+                className="w-full h-full"
+              >
+                <ErrorBoundary fallbackTitle="Inconveniente en el Diario Emocional">
+                  <JournalModule 
+                    onNavigate={handleNavigate} 
+                  />
+                </ErrorBoundary>
+              </motion.div>
+            } />
+
+            {/* Misiones Diarias (compatibilidad /missions y /misiones) */}
             <Route path="/missions" element={
+              <motion.div
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+                className="w-full h-full"
+              >
+                <ErrorBoundary fallbackTitle="Inconveniente en el Panel de Misiones">
+                  <MissionsModule 
+                    onNavigate={handleNavigate} 
+                    onOpenGuideById={handleOpenGuideById} 
+                    userProfile={userProfile}
+                    onUpdateProfile={handleUpdateProfile}
+                  />
+                </ErrorBoundary>
+              </motion.div>
+            } />
+
+            <Route path="/misiones" element={
               <motion.div
                 initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -388,7 +466,22 @@ export default function App() {
               </motion.div>
             } />
 
+            {/* Flux AI (compatibilidad /ai y /flux-ai) */}
             <Route path="/ai" element={
+              <motion.div
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+                className="w-full h-full"
+              >
+                <ErrorBoundary fallbackTitle="Inconveniente en Flux AI">
+                  <FluxAiModule userProfile={userProfile} />
+                </ErrorBoundary>
+              </motion.div>
+            } />
+
+            <Route path="/flux-ai" element={
               <motion.div
                 initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -416,6 +509,7 @@ export default function App() {
               </motion.div>
             } />
 
+            {/* Perfil (compatibilidad /profile y /perfil) */}
             <Route path="/profile" element={
               <motion.div
                 initial={{ opacity: 0, y: 4 }}
@@ -435,6 +529,26 @@ export default function App() {
               </motion.div>
             } />
 
+            <Route path="/perfil" element={
+              <motion.div
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+                className="w-full h-full"
+              >
+                <ErrorBoundary fallbackTitle="Inconveniente en el Perfil">
+                  <ProfileModule 
+                    userProfile={userProfile} 
+                    onUpdateProfile={handleUpdateProfile} 
+                    onNavigate={handleNavigate}
+                    onSignOut={handleSignOut}
+                  />
+                </ErrorBoundary>
+              </motion.div>
+            } />
+
+            {/* Comunidad (compatibilidad /community y /comunidad) */}
             <Route path="/community" element={
               <motion.div
                 initial={{ opacity: 0, y: 4 }}
@@ -447,6 +561,58 @@ export default function App() {
                   <CommunityModule userProfile={userProfile} />
                 </ErrorBoundary>
               </motion.div>
+            } />
+
+            <Route path="/comunidad" element={
+              <motion.div
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+                className="w-full h-full"
+              >
+                <ErrorBoundary fallbackTitle="Inconveniente en la Comunidad">
+                  <CommunityModule userProfile={userProfile} />
+                </ErrorBoundary>
+              </motion.div>
+            } />
+
+            {/* Panel de Administración (Solo usuarios con rol === 'admin') */}
+            <Route path="/admin" element={
+              userProfile.role === 'admin' ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.15, ease: 'easeOut' }}
+                  className="w-full h-full"
+                >
+                  <ErrorBoundary fallbackTitle="Inconveniente en el Panel Admin">
+                    <AdminPanel 
+                      userProfile={userProfile} 
+                      onNavigate={handleNavigate} 
+                    />
+                  </ErrorBoundary>
+                </motion.div>
+              ) : (
+                <div className="w-full px-4 sm:px-6 md:px-10 py-16 text-center max-w-lg mx-auto">
+                  <div className="w-16 h-16 bg-red-100 text-red-600 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-sm">
+                    <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  </div>
+                  <h2 className="text-xl font-black text-stone-900 mb-2">Acceso Restringido</h2>
+                  <p className="text-sm text-stone-600 mb-6">
+                    Esta sección está reservada exclusivamente para administradores con el rol <code className="bg-stone-100 text-stone-800 px-2 py-0.5 rounded text-xs font-mono font-bold">admin</code>.
+                  </p>
+                  <button
+                    onClick={() => handleNavigate('dashboard')}
+                    className="px-6 py-2.5 rounded-full bg-[#5F927B] text-white text-xs font-bold shadow-md hover:bg-[#4d7864] transition-colors cursor-pointer"
+                  >
+                    Volver al Centro de Control
+                  </button>
+                </div>
+              )
             } />
 
             {/* Ruta de captura (404) que redirige al inicio para evitar pantalla blanca */}

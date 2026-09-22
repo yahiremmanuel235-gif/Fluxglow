@@ -2,13 +2,20 @@ export type ViewMode =
   | 'landing'
   | 'dashboard'
   | 'learn'
+  | 'explora'
   | 'missions'
+  | 'misiones'
   | 'journal'
+  | 'diario'
   | 'analytics'
   | 'ai'
+  | 'flux-ai'
   | 'alert'
   | 'profile'
-  | 'community';
+  | 'perfil'
+  | 'community'
+  | 'comunidad'
+  | 'admin';
 
 export type MoodType = 
   | 'Feliz'
@@ -92,6 +99,7 @@ export interface GuideDailyMission {
 
 export interface GuideItem {
   id: string;
+  slug?: string;
   badge: string;
   title: string;
   image: string;
@@ -253,6 +261,7 @@ export interface UserProfileData {
   isLoggedIn?: boolean;
   points?: number;
   level?: number;
+  role?: 'admin' | 'user' | string;
 }
 
 export interface UserProfile {

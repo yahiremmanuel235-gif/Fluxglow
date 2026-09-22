@@ -310,8 +310,8 @@ export const MissionsModule: React.FC<MissionsModuleProps> = ({
   };
 
   return (
-    <div className="w-full bg-flux-brand-bath min-h-screen pb-24 pt-4 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-[1280px] mx-auto">
+    <div className="w-full bg-flux-brand-bath min-h-screen pb-24 pt-4 px-4 sm:px-6 md:px-10">
+      <div className="w-full">
         
         {/* Top Header Row with Brand Logo, Connection Status & Back/Explore */}
         <div className="flex flex-wrap items-center justify-between gap-3 py-2 border-b border-[#5F927B]/20 mb-4">

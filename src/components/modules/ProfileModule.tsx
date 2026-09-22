@@ -41,8 +41,13 @@ import {
   Crown,
   Rocket,
   Feather,
-  Users
+  Users,
+  Lock,
+  KeyRound,
+  Eye,
+  EyeOff
 } from 'lucide-react';
+import { supabase } from '../../lib/supabaseClient';
 import { 
   ResponsiveContainer, 
   LineChart, 
@@ -82,7 +87,7 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
   onNavigate,
   onSignOut
 }) => {
-  const { success, info } = useToast();
+  const { success, info, error: toastError, warning } = useToast();
   const [userName, setUserName] = useState(userProfile?.name || 'Usuario FluxGlow');
   const { user } = useAuth();
   const [userEmail, setUserEmail] = useState(userProfile?.email || (user ? user.email : 'invitado@local.app'));
@@ -91,6 +96,14 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [tempName, setTempName] = useState(userName);
   const [tempEmail, setTempEmail] = useState(userEmail);
+
+  // Form State: Cambiar Contraseña
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [passwordChangeSuccess, setPasswordChangeSuccess] = useState(false);
   
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [customAvatarInput, setCustomAvatarInput] = useState('');
@@ -232,6 +245,70 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
     setIsEditingProfile(false);
   };
 
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // 1. Validaciones previas
+    if (!newPassword) {
+      warning('Contraseña requerida', 'Por favor ingresa tu nueva contraseña.');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toastError(
+        'Contraseña muy corta',
+        'La nueva contraseña debe tener al menos 6 caracteres según los requisitos de seguridad.'
+      );
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toastError(
+        'Las contraseñas no coinciden',
+        'Por favor verifica que la confirmación sea exactamente igual a la nueva contraseña.'
+      );
+      return;
+    }
+
+    // 2. Ejecución con Supabase Auth
+    setIsUpdatingPassword(true);
+    setPasswordChangeSuccess(false);
+
+    try {
+      const { data, error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) {
+        toastError('Error al cambiar contraseña', error.message || 'No se pudo actualizar la contraseña.');
+        return;
+      }
+
+      // Éxito
+      success(
+        '¡Contraseña actualizada!',
+        'Tu contraseña ha sido cambiada de forma segura mediante Supabase Auth.'
+      );
+      setPasswordChangeSuccess(true);
+      setNewPassword('');
+      setConfirmPassword('');
+      setShowNewPassword(false);
+      setShowConfirmPassword(false);
+
+      // Limpiar mensaje de éxito tras unos segundos
+      setTimeout(() => {
+        setPasswordChangeSuccess(false);
+      }, 5000);
+    } catch (err: any) {
+      toastError(
+        'Error inesperado',
+        err?.message || 'Ocurrió un problema de comunicación al actualizar la contraseña.'
+      );
+    } finally {
+      setIsUpdatingPassword(false);
+    }
+  };
+
   const handleSelectAvatar = (url: string) => {
     onUpdateProfile?.({ avatarUrl: url });
     setShowAvatarModal(false);
@@ -361,8 +438,8 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
   const currentAvatar = userProfile?.avatarUrl || '/assets/icons/nav-profile.png';
 
   return (
-    <div className="w-full bg-flux-brand-bath min-h-screen pb-20 pt-4 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-[1360px] mx-auto">
+    <div className="w-full bg-flux-brand-bath min-h-screen pb-20 pt-4 px-4 sm:px-6 md:px-10">
+      <div className="w-full">
 
         {/* Top Header with Brand Logo & Account Settings Button */}
         <div className="flex items-center justify-between py-2 border-b border-[#5F927B]/20 mb-4">
@@ -449,10 +526,17 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
               </span>
             </div>
             <div className="text-center sm:text-left">
-              <span className="text-xs text-stone-500 block font-medium">Estado de Cuenta</span>
-              <span className="text-xs font-bold text-[#3E6855] bg-[#EBF1EA] border border-[#C5DDD0] px-2.5 py-1 rounded-full inline-block mt-0.5 shadow-2xs">
-                {user ? '🌱 Miembro Activo' : '🔒 Modo Invitado'}
-              </span>
+              <span className="text-xs text-stone-500 block font-medium">Estado y Rol</span>
+              <div className="flex items-center gap-1.5 mt-0.5 justify-center sm:justify-start">
+                <span className="text-xs font-bold text-[#3E6855] bg-[#EBF1EA] border border-[#C5DDD0] px-2.5 py-1 rounded-full shadow-2xs">
+                  {user ? '🌱 Miembro Activo' : '🔒 Modo Invitado'}
+                </span>
+                {userProfile?.role === 'admin' && (
+                  <span className="text-xs font-bold text-white bg-stone-900 border border-stone-800 px-2.5 py-1 rounded-full shadow-2xs flex items-center gap-1">
+                    🛡️ Admin
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -585,6 +669,139 @@ export const ProfileModule: React.FC<ProfileModuleProps> = ({
                 </div>
 
               </div>
+            </div>
+
+            {/* CARD: Seguridad y Cambio de Contraseña (Supabase Auth) */}
+            <div className="bg-white rounded-3xl border border-brand-sand-300 shadow-2xs p-6 sm:p-7">
+              <div className="flex items-center justify-between mb-4 pb-3 border-b border-brand-sand-200">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-2xl bg-[#EBF1EA] border border-[#C5DDD0] flex items-center justify-center text-[#3E6855]">
+                    <Lock className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg sm:text-xl font-bold text-stone-900 font-serif">
+                      Seguridad y Contraseña
+                    </h2>
+                    <p className="text-xs text-stone-500">
+                      Actualiza tus credenciales de acceso de forma segura con Supabase Auth
+                    </p>
+                  </div>
+                </div>
+                <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-stone-100 text-stone-600 text-xs font-semibold">
+                  <KeyRound className="w-3.5 h-3.5 text-[#5F927B]" />
+                  <span>Cifrado SSL / Auth</span>
+                </div>
+              </div>
+
+              {passwordChangeSuccess && (
+                <div className="mb-5 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-start gap-3 animate-in fade-in duration-300">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                  <div className="text-xs text-emerald-800">
+                    <p className="font-bold">¡Contraseña cambiada exitosamente!</p>
+                    <p className="mt-0.5 text-emerald-700">Tu nueva clave ya está activa y sincronizada en el sistema.</p>
+                  </div>
+                </div>
+              )}
+
+              <form onSubmit={handleChangePassword} className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Nueva Contraseña */}
+                  <div>
+                    <label className="block text-xs font-bold text-stone-800 mb-1.5 flex items-center justify-between">
+                      <span>Nueva Contraseña</span>
+                      <span className="text-[10px] font-normal text-stone-500">Mín. 6 caracteres</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showNewPassword ? 'text' : 'password'}
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="••••••••"
+                        autoComplete="new-password"
+                        className="w-full bg-brand-sand-50 border border-brand-sand-300 rounded-2xl px-3.5 py-2.5 pr-10 text-xs sm:text-sm text-stone-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#5F927B] focus:bg-white transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 p-1 cursor-pointer"
+                        title={showNewPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
+                      >
+                        {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Confirmar Contraseña */}
+                  <div>
+                    <label className="block text-xs font-bold text-stone-800 mb-1.5 flex items-center justify-between">
+                      <span>Confirmar Contraseña</span>
+                      {confirmPassword && (
+                        <span className={`text-[10px] font-semibold ${newPassword === confirmPassword ? 'text-emerald-600' : 'text-rose-500'}`}>
+                          {newPassword === confirmPassword ? '✓ Coinciden' : '✗ No coinciden'}
+                        </span>
+                      )}
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="••••••••"
+                        autoComplete="new-password"
+                        className="w-full bg-brand-sand-50 border border-brand-sand-300 rounded-2xl px-3.5 py-2.5 pr-10 text-xs sm:text-sm text-stone-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#5F927B] focus:bg-white transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 p-1 cursor-pointer"
+                        title={showConfirmPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
+                      >
+                        {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Requisitos visuales */}
+                <div className="bg-[#FAF8F5] border border-brand-sand-200 rounded-2xl p-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] text-stone-600">
+                  <span className="font-semibold text-stone-700 flex items-center gap-1">
+                    <ShieldCheck className="w-3.5 h-3.5 text-[#5F927B]" />
+                    Requisitos mínimos:
+                  </span>
+                  <span className={`flex items-center gap-1 ${newPassword.length >= 6 ? 'text-emerald-700 font-semibold' : 'text-stone-500'}`}>
+                    {newPassword.length >= 6 ? '✓' : '•'} Al menos 6 caracteres
+                  </span>
+                  <span className={`flex items-center gap-1 ${newPassword && confirmPassword && newPassword === confirmPassword ? 'text-emerald-700 font-semibold' : 'text-stone-500'}`}>
+                    {newPassword && confirmPassword && newPassword === confirmPassword ? '✓' : '•'} Coincidencia exacta
+                  </span>
+                </div>
+
+                {/* Acciones */}
+                <div className="flex items-center justify-end gap-3 pt-2">
+                  {(newPassword || confirmPassword) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNewPassword('');
+                        setConfirmPassword('');
+                      }}
+                      className="px-4 py-2 text-xs font-semibold text-stone-500 hover:text-stone-800 transition-colors cursor-pointer"
+                    >
+                      Limpiar
+                    </button>
+                  )}
+
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    size="sm"
+                    disabled={isUpdatingPassword || !newPassword || !confirmPassword}
+                    leftIcon={<Lock className="w-3.5 h-3.5" />}
+                  >
+                    {isUpdatingPassword ? 'Actualizando contraseña...' : 'Actualizar Contraseña'}
+                  </Button>
+                </div>
+              </form>
             </div>
 
             {/* CARD 2: Objetivos Personales */}

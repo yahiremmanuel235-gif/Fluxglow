@@ -6,7 +6,8 @@ import {
   X, 
   LogOut, 
   LayoutDashboard,
-  ChevronDown
+  ChevronDown,
+  ShieldCheck
 } from 'lucide-react';
 import { FluxGlowLogo } from '../common/FluxGlowLogo';
 import { getPendingMissionsCount } from '../../utils/missionsManager';
@@ -21,6 +22,7 @@ interface NavbarProps {
   onSignOut?: () => void;
   userPoints?: number;
   userLevel?: number;
+  isAdmin?: boolean;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ 
@@ -31,7 +33,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   isLoggedIn = false,
   onSignOut,
   userPoints,
-  userLevel
+  userLevel,
+  isAdmin = false
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
@@ -155,7 +158,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Top Brand Color Bath Accent Line (Sage Green & Terracotta Orange) */}
       <div className="h-1 w-full bg-gradient-to-r from-[#5F927B] via-[#E87A52] to-[#5F927B]" />
 
-      <div className="max-w-[1440px] mx-auto px-3 sm:px-6">
+      <div className="w-full px-4 sm:px-6 md:px-10">
         <div className="flex items-center justify-between h-16 gap-2">
           
           {/* Logo on Left */}
@@ -282,8 +285,23 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           </nav>
 
-          {/* Right helper tools: Profile + SignOut button + Mobile Menu Toggle */}
+          {/* Right helper tools: Admin (if role === admin) + Profile + SignOut button + Mobile Menu Toggle */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 pl-1">
+            {isAdmin && (
+              <NavLink
+                to="/admin"
+                title="Panel de Administración"
+                className={({ isActive }) => `flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer shadow-2xs border ${
+                  isActive
+                    ? 'border-[#5F927B] bg-[#5F927B] text-white'
+                    : 'border-stone-800 bg-stone-900 text-stone-200 hover:text-white hover:bg-stone-800'
+                }`}
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-[#5F927B]" />
+                <span className="hidden md:inline">Admin</span>
+              </NavLink>
+            )}
+
             <NavLink
               to="/profile"
               title="Mi Perfil"
@@ -345,6 +363,27 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+            {isAdmin && (
+              <NavLink
+                to="/admin"
+                id="mobile-nav-admin"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setMoreMenuOpen(false);
+                }}
+                className={({ isActive }) => `relative flex items-center justify-between px-3.5 py-3 min-h-[44px] rounded-xl text-sm font-semibold transition-all cursor-pointer bg-stone-900 text-white ${
+                  isActive ? 'ring-2 ring-[#5F927B]' : ''
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <ShieldCheck className="w-4 h-4 text-[#5F927B]" />
+                  <span>Panel de Administración</span>
+                </div>
+                <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-[#5F927B] text-white">
+                  ADMIN
+                </span>
+              </NavLink>
+            )}
             {allDrawerLinks.map((link) => (
               <NavLink
                 to={`/${link.id}`}

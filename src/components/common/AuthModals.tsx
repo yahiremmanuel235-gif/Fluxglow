@@ -174,6 +174,7 @@ export const AuthModals: React.FC<AuthModalProps> = ({
           goals: formattedGoals,
           isLoggedIn: true,
           avatarUrl: '/user.png',
+          role: email.toLowerCase().includes('admin') ? 'admin' : 'user',
         };
 
         setSubmitted(true);
@@ -250,6 +251,7 @@ export const AuthModals: React.FC<AuthModalProps> = ({
           goals: resolvedProfile?.goals || data.user.user_metadata?.goals || currentUser?.goals,
           isLoggedIn: true,
           avatarUrl: resolvedProfile?.avatar_url || '/user.png',
+          role: (resolvedProfile?.role || data.user.user_metadata?.role || (email.toLowerCase().includes('admin') ? 'admin' : 'user')),
         };
 
         setSubmitted(true);

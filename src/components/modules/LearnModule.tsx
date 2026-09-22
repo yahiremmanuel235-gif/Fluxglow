@@ -1,7 +1,9 @@
 import { STORAGE_KEYS, getDynamicStorageKey } from '../../constants/storageKeys';
 import { getFluxStreak, recordAppActivity } from '../../utils/streakManager';
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { createPortal } from 'react-dom';
+import { fetchSupabaseGuides, generateSlug } from '../../services/supabaseService';
 import { Search, 
   Sparkles, 
   Heart, 
@@ -95,6 +97,9 @@ interface LearnModuleProps {
 
 export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGuideId }) => {
   const { warning, success, info } = useToast();
+  const navigate = useNavigate();
+  const { slug: routeSlug } = useParams<{ slug?: string }>();
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('todos');
   const [selectedFormat, setSelectedFormat] = useState<string>('todos');
@@ -102,17 +107,59 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
   const [showFiltersModal, setShowFiltersModal] = useState(false);
   const [showCategoriesModal, setShowCategoriesModal] = useState(false);
   
+  // Dynamic Supabase guides + local custom guides
+  const [dynamicGuides, setDynamicGuides] = useState<GuideItem[]>(() => {
+    try {
+      const local = localStorage.getItem('fluxglow_custom_guides');
+      return local ? JSON.parse(local) : [];
+    } catch {
+      return [];
+    }
+  });
+
   // Tutorial modal state
   const [showGuideTutorial, setShowGuideTutorial] = useState(false);
 
   // Active reading full screen modal
   const [activeGuide, setActiveGuide] = useState<GuideItem | null>(() => {
-    if (initialGuideId) {
-      const found = DEMO_GUIDES_CATALOG.find(g => g.id === initialGuideId);
+    const targetKey = routeSlug || initialGuideId;
+    if (targetKey) {
+      const allStatic = [...DEMO_GUIDES_CATALOG, ...POPULAR_GUIDES_CATALOG];
+      const found = allStatic.find(g => (g.slug && g.slug === targetKey) || g.id === targetKey || generateSlug(g.title) === targetKey);
       return found || null;
     }
     return null;
   });
+
+  // Fetch Supabase guides on mount and resolve route slug if present
+  useEffect(() => {
+    fetchSupabaseGuides().then(guides => {
+      if (guides && guides.length > 0) {
+        setDynamicGuides(prev => {
+          const combined = [...guides];
+          prev.forEach(p => {
+            if (!combined.some(c => c.id === p.id)) combined.push(p);
+          });
+          return combined;
+        });
+      }
+    }).catch(err => console.warn('Aviso cargando guías de Supabase:', err));
+  }, []);
+
+  // Sync route slug with activeGuide
+  useEffect(() => {
+    const targetKey = routeSlug || initialGuideId;
+    if (targetKey) {
+      const allGuides = [...dynamicGuides, ...DEMO_GUIDES_CATALOG, ...POPULAR_GUIDES_CATALOG];
+      const found = allGuides.find(g => (g.slug && g.slug === targetKey) || g.id === targetKey || generateSlug(g.title) === targetKey);
+      if (found) {
+        setActiveGuide(found);
+      }
+    } else if (!initialGuideId && !routeSlug && activeGuide) {
+      // If user navigated back via browser history
+      setActiveGuide(null);
+    }
+  }, [routeSlug, initialGuideId, dynamicGuides]);
 
   // State for the 3 missions unlocked upon finishing reading
   const [unlockedMissions, setUnlockedMissions] = useState<UserDailyMissionRecord[] | null>(null);
@@ -372,12 +419,23 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
     setActiveGuide(guide);
     recordLearningActivity();
     
+    // Navigate to its dedicated dynamic route
+    const guideSlug = guide.slug || generateSlug(guide.title);
+    navigate(`/explora/${guideSlug}`, { replace: false });
+    
     // Check if first time opening a guide to display the quick tutorial
     const tutorialSeen = localStorage.getItem(STORAGE_KEYS.GUIDE_TUTORIAL_SEEN);
     if (!tutorialSeen) {
       setShowGuideTutorial(true);
       localStorage.setItem(STORAGE_KEYS.GUIDE_TUTORIAL_SEEN, 'true');
     }
+  };
+
+  const handleCloseGuide = () => {
+    stopGuideAudio();
+    setActiveGuide(null);
+    setUnlockedMissions(null);
+    navigate('/explora');
   };
 
   // Mark guide section reading progress
@@ -592,7 +650,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
   }, [searchQuery, selectedCategory, selectedFormat]);
 
   const mergedGuides = useMemo(() => {
-    const all = [...DEMO_GUIDES_CATALOG, ...POPULAR_GUIDES_CATALOG];
+    const all = [...dynamicGuides, ...DEMO_GUIDES_CATALOG, ...POPULAR_GUIDES_CATALOG];
     const seen = new Set<string>();
     const unique = all.filter(g => {
       if (seen.has(g.id)) return false;
@@ -600,7 +658,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
       return true;
     });
     return unique.filter(matchesSearchAndCategory);
-  }, [searchQuery, selectedCategory]);
+  }, [searchQuery, selectedCategory, dynamicGuides]);
 
   const filteredRecommended = useMemo(() => {
     if (selectedFormat === 'videos' || selectedFormat === 'podcasts' || selectedFormat === 'practicas' || selectedFormat === 'tests') {
@@ -687,8 +745,8 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
   const completionPercentage = Math.round((completedGuidesCount / totalCatalogGuides) * 100) || 0;
 
   return (
-    <div className="w-full bg-flux-brand-bath min-h-screen pb-20 pt-4 px-4 sm:px-6 lg:px-8 overflow-x-hidden">
-      <div className="max-w-[1360px] mx-auto">
+    <div className="w-full bg-flux-brand-bath min-h-screen pb-20 pt-4 px-4 sm:px-6 md:px-10 overflow-x-hidden">
+      <div className="w-full">
         
         {/* Top Header Row with Pill Buttons & Center Logo */}
         <div className="flex items-center justify-between py-2 border-b border-[#5F927B]/20 mb-4">
@@ -972,7 +1030,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(340px,1fr))] gap-6">
             {COMPLETE_COURSES_CATALOG.map((course) => {
               // Calculate user's saved course progress
               let completedDaysCount = 0;
@@ -1094,7 +1152,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-6">
               {mergedGuides.map((guide, idx) => {
                 const isFav = favorites[guide.id];
                 const isRead = readGuides.includes(guide.id);
@@ -1551,11 +1609,7 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
               </button>
 
               <button
-                onClick={() => {
-                  stopGuideAudio();
-                  setActiveGuide(null);
-                  setUnlockedMissions(null);
-                }}
+                onClick={handleCloseGuide}
                 className="p-2 text-stone-400 hover:text-stone-800 bg-white border border-stone-200 hover:bg-stone-100 rounded-full transition-colors cursor-pointer"
                 title="Cerrar pantalla completa"
               >

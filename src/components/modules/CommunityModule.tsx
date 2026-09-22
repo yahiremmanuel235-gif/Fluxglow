@@ -425,8 +425,8 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
   }, [posts, activeFeedFilter, joinedGroupIds]);
 
   return (
-    <div className="w-full bg-flux-brand-bath min-h-screen pb-20 pt-4 px-3 sm:px-6 lg:px-8">
-      <div className="max-w-[1360px] mx-auto">
+    <div className="w-full bg-flux-brand-bath min-h-screen pb-20 pt-4 px-3 sm:px-6 md:px-10">
+      <div className="w-full">
 
         {/* Top Header Row with Logo */}
         <div className="flex items-center justify-between py-2 border-b border-[#5F927B]/20 mb-6">

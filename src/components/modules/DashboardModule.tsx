@@ -244,8 +244,8 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
   const userName = userProfile?.name || user?.user_metadata?.name || 'Explorador';
 
   return (
-    <div className="w-full bg-flux-brand-bath min-h-screen pb-24 pt-4 px-4 sm:px-6 lg:px-8 text-stone-800 overflow-x-hidden">
-      <div className="max-w-[1280px] mx-auto space-y-6">
+    <div className="w-full bg-flux-brand-bath min-h-screen pb-24 pt-4 px-4 sm:px-6 md:px-10 text-stone-800 overflow-x-hidden">
+      <div className="w-full space-y-6">
 
         {/* 1. TOP BAR HEADER: Marca y Accesos directos */}
         <div className="flex flex-wrap items-center justify-between gap-3 py-2 border-b border-[#5F927B]/20">
@@ -433,7 +433,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
         </div>
 
         {/* 4. REAL PROGRESS METRIC CARDS (Bathed in Sage Green and Terracotta Orange) */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-4 sm:gap-6">
           
           {/* Tarjeta 1: Entradas este mes (Sage Green Theme) */}
           <div 
@@ -596,7 +596,7 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
           </div>
 
           {!isModulesCollapsed && (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4">
             <button
               onClick={() => onNavigate('learn')}
               className="p-4 rounded-2xl bg-white hover:bg-[#F2F7F4] border-2 border-[#5F927B]/25 hover:border-[#5F927B] transition-all text-left group cursor-pointer shadow-2xs hover:shadow-xs hover:-translate-y-0.5"

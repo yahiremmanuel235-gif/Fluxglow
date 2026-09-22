@@ -255,8 +255,8 @@ export const JournalModule: React.FC<JournalModuleProps> = ({ onEntryCreated, on
   const activeEmojiItem = emojiMoods.find(m => m.id === selectedMood) || emojiMoods[4];
 
   return (
-    <div className="w-full bg-flux-brand-bath min-h-screen pb-24 pt-4 px-4 sm:px-6 lg:px-8 overflow-x-hidden">
-      <div className="max-w-[1280px] mx-auto">
+    <div className="w-full bg-flux-brand-bath min-h-screen pb-24 pt-4 px-4 sm:px-6 md:px-10 overflow-x-hidden">
+      <div className="w-full">
 
         {/* Top Header Row with Brand Logo */}
         <div className="flex items-center justify-between py-2 border-b border-[#5F927B]/20 mb-4">

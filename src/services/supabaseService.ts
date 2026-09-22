@@ -282,3 +282,271 @@ export function mapSupabaseJournalEntry(row: any): JournalEntry {
     aiFeedback: row.ai_feedback || row.aiFeedback || 'Registro guardado y sincronizado en tiempo real.'
   };
 }
+
+/**
+ * Convierte un título en un slug amigable para URLs
+ */
+export function generateSlug(title: string): string {
+  return title
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Quitar tildes
+    .replace(/[^a-z0-9\s-]/g, '') // Quitar caracteres especiales
+    .trim()
+    .replace(/\s+/g, '-') // Espacios a guiones
+    .replace(/-+/g, '-'); // Guiones dobles
+}
+
+/**
+ * Consulta todas las guías dinámicas almacenadas en Supabase (tabla `guides`)
+ * con sus respectivas secciones en `guide_sections`.
+ */
+export async function fetchSupabaseGuides(): Promise<any[]> {
+  try {
+    const { data, error } = await supabase
+      .from('guides')
+      .select(`
+        *,
+        guide_sections (*)
+      `)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.warn('Aviso al consultar guías en Supabase:', error.message);
+      return [];
+    }
+
+    if (!data) return [];
+
+    return data.map((row: any) => {
+      const sections = Array.isArray(row.guide_sections) 
+        ? row.guide_sections.sort((a: any, b: any) => (a.order_index ?? 0) - (b.order_index ?? 0))
+        : [];
+
+      const explainedContent = sections.map((s: any) => ({
+        heading: s.title || s.heading || '',
+        text: s.content || s.text || '',
+        bulletPoints: Array.isArray(s.bullet_points) ? s.bullet_points : []
+      }));
+
+      return {
+        id: String(row.id),
+        slug: row.slug || generateSlug(row.title),
+        badge: row.badge || row.category || 'Bienestar',
+        title: row.title,
+        image: row.image_url || row.image || 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&auto=format&fit=crop&q=80',
+        category: row.category || 'General',
+        author: row.author || 'FluxGlow Editorial',
+        readTime: row.read_time || '5 min',
+        isDemoContent: false,
+        simpleSummary: row.description || row.simple_summary || '',
+        explainedContent: explainedContent.length > 0 ? explainedContent : (row.explained_content || []),
+        glossary: row.glossary || [],
+        extraTips: row.extra_tips || [],
+        dailyMissions: row.daily_missions || []
+      };
+    });
+  } catch (err: any) {
+    console.error('Error recuperando guías de Supabase:', err?.message || err);
+    return [];
+  }
+}
+
+/**
+ * Consulta una guía específica por su `slug` o `id` desde Supabase
+ */
+export async function fetchSupabaseGuideBySlug(slug: string): Promise<any | null> {
+  try {
+    const { data, error } = await supabase
+      .from('guides')
+      .select(`
+        *,
+        guide_sections (*)
+      `)
+      .or(`slug.eq.${slug},id.eq.${slug}`)
+      .maybeSingle();
+
+    if (error) {
+      console.warn('Aviso consultando guía por slug:', error.message);
+      return null;
+    }
+
+    if (!data) return null;
+
+    const sections = Array.isArray(data.guide_sections)
+      ? data.guide_sections.sort((a: any, b: any) => (a.order_index ?? 0) - (b.order_index ?? 0))
+      : [];
+
+    const explainedContent = sections.map((s: any) => ({
+      heading: s.title || s.heading || '',
+      text: s.content || s.text || '',
+      bulletPoints: Array.isArray(s.bullet_points) ? s.bullet_points : []
+    }));
+
+    return {
+      id: String(data.id),
+      slug: data.slug || generateSlug(data.title),
+      badge: data.badge || data.category || 'Bienestar',
+      title: data.title,
+      image: data.image_url || data.image || 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&auto=format&fit=crop&q=80',
+      category: data.category || 'General',
+      author: data.author || 'FluxGlow Editorial',
+      readTime: data.read_time || '5 min',
+      isDemoContent: false,
+      simpleSummary: data.description || data.simple_summary || '',
+      explainedContent: explainedContent.length > 0 ? explainedContent : (data.explained_content || []),
+      glossary: data.glossary || [],
+      extraTips: data.extra_tips || [],
+      dailyMissions: data.daily_missions || []
+    };
+  } catch (err) {
+    console.error('Error al obtener guía por slug:', err);
+    return null;
+  }
+}
+
+/**
+ * Inserta una nueva guía con sus secciones en Supabase (solo administradores)
+ */
+export async function createSupabaseGuide(guideData: {
+  title: string;
+  slug: string;
+  category: string;
+  badge?: string;
+  readTime: string;
+  imageUrl: string;
+  description: string;
+  author?: string;
+  sections: { heading: string; text: string; bulletPoints?: string[] }[];
+}): Promise<{ success: boolean; data?: any; error?: string }> {
+  try {
+    // 1. Insertar guía principal
+    const { data: guideRow, error: guideError } = await supabase
+      .from('guides')
+      .insert({
+        title: guideData.title,
+        slug: guideData.slug,
+        category: guideData.category,
+        badge: guideData.badge || guideData.category,
+        read_time: guideData.readTime,
+        image_url: guideData.imageUrl,
+        description: guideData.description,
+        author: guideData.author || 'FluxGlow Editorial'
+      })
+      .select('*')
+      .single();
+
+    if (guideError) {
+      console.warn('Error al insertar en guides:', guideError.message);
+      // Fallback: Si no tiene tabla o política bloquea, retornar error claro
+      return { success: false, error: guideError.message };
+    }
+
+    // 2. Insertar secciones si se proveyeron
+    if (guideData.sections && guideData.sections.length > 0 && guideRow) {
+      const sectionRows = guideData.sections.map((s, idx) => ({
+        guide_id: guideRow.id,
+        title: s.heading,
+        content: s.text,
+        bullet_points: s.bulletPoints || [],
+        order_index: idx
+      }));
+
+      const { error: secError } = await supabase
+        .from('guide_sections')
+        .insert(sectionRows);
+
+      if (secError) {
+        console.warn('Aviso insertando guide_sections:', secError.message);
+      }
+    }
+
+    return { success: true, data: guideRow };
+  } catch (err: any) {
+    return { success: false, error: err?.message || 'Error inesperado creando la guía' };
+  }
+}
+
+/**
+ * Elimina una guía en Supabase
+ */
+export async function deleteSupabaseGuide(guideId: string): Promise<boolean> {
+  try {
+    // Eliminar primero secciones
+    await supabase.from('guide_sections').delete().eq('guide_id', guideId);
+    const { error } = await supabase.from('guides').delete().eq('id', guideId);
+    return !error;
+  } catch (err) {
+    console.error('Error eliminando guía:', err);
+    return false;
+  }
+}
+
+/**
+ * Sube una imagen de portada al bucket 'guides-covers' en Supabase Storage
+ */
+export async function uploadGuideCoverImage(file: File): Promise<string | null> {
+  try {
+    const fileExt = file.name.split('.').pop() || 'jpg';
+    const fileName = `cover-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+    const filePath = `covers/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('guides-covers')
+      .upload(filePath, file, { cacheControl: '3600', upsert: true });
+
+    if (uploadError) {
+      console.warn('Aviso subiendo a guides-covers:', uploadError.message);
+      return null;
+    }
+
+    const { data } = supabase.storage.from('guides-covers').getPublicUrl(filePath);
+    return data?.publicUrl || null;
+  } catch (err) {
+    console.warn('Error subiendo imagen a storage:', err);
+    return null;
+  }
+}
+
+/**
+ * Funciones de Moderación Admin en Comunidad
+ */
+export async function adminDeleteCommunityPost(postId: string): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('community_posts')
+      .delete()
+      .eq('id', postId);
+
+    if (error) {
+      console.warn('Aviso eliminando publicación de comunidad:', error.message);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('Error admin eliminando publicación:', err);
+    return false;
+  }
+}
+
+export async function adminBanUser(userId: string, reason?: string): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        is_banned: true,
+        banned_reason: reason || 'Infracción de las normas de la comunidad',
+        banned_at: new Date().toISOString()
+      })
+      .eq('id', userId);
+
+    if (error) {
+      console.warn('Aviso baneando usuario en profiles:', error.message);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('Error suspendiendo usuario:', err);
+    return false;
+  }
+}
