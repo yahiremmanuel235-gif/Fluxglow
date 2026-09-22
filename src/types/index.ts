@@ -97,6 +97,78 @@ export interface GuideDailyMission {
   xp: number;
 }
 
+export interface GuideAuthor {
+  name: string;
+  role: string;
+  avatarUrl?: string;
+}
+
+export interface GuideReference {
+  title: string;
+  url?: string;
+  author?: string;
+  year?: string;
+}
+
+export type GuideBlockType =
+  | 'text'
+  | 'image'
+  | 'callout'
+  | 'quiz'
+  | 'reflection'
+  | 'timer'
+  | 'event_trigger'
+  | 'conditional'
+  | 'mission';
+
+export interface GuideBlockOption {
+  id: string;
+  text: string;
+  isCorrect: boolean;
+  feedback?: string;
+}
+
+export interface GuideBlock {
+  id: string;
+  type: GuideBlockType;
+  // A. Contenido y Formato
+  level?: 'h1' | 'h2' | 'h3' | 'paragraph';
+  content?: string;
+  listType?: 'none' | 'bullet' | 'numbered';
+  listItems?: string[];
+  imageUrl?: string;
+  imageCaption?: string;
+  calloutTitle?: string;
+  calloutText?: string;
+  calloutTheme?: 'sage' | 'terracotta' | 'sand' | 'lavender';
+  calloutIcon?: string;
+  // B. Interacción y Evaluación
+  question?: string;
+  options?: GuideBlockOption[];
+  explanation?: string;
+  prompt?: string;
+  placeholder?: string;
+  durationMinutes?: number; // 1, 2, 3 min
+  timerTitle?: string;
+  timerDescription?: string;
+  timerTechnique?: 'box_breathing' | '4_7_8' | 'free_mindfulness';
+  // C. Eventos, Control y Lógica
+  triggerLabel?: string;
+  unlockTarget?: string;
+  rewardXp?: number;
+  conditionA_label?: string;
+  conditionA_content?: string;
+  conditionB_label?: string;
+  conditionB_content?: string;
+  missions?: {
+    id: string;
+    title: string;
+    description: string;
+    xp: number;
+    timeEstimate?: string;
+  }[];
+}
+
 export interface GuideItem {
   id: string;
   slug?: string;
@@ -115,6 +187,11 @@ export interface GuideItem {
   extraTips: string[];
   dailyMissions: GuideDailyMission[];
   content?: string[]; // Legacy fallback
+  guideType?: 'quick' | 'weekly';
+  authors?: GuideAuthor[];
+  reviewedBy?: string;
+  references?: GuideReference[];
+  blocks?: GuideBlock[];
 }
 
 export interface UserDailyMissionRecord {

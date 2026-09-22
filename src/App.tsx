@@ -86,18 +86,20 @@ export default function App() {
         }
 
         if (data) {
-          const resolvedRole = data.role || user.user_metadata?.role || (user.email?.toLowerCase().includes('admin') ? 'admin' : (prev.role || 'user'));
-          setUserProfile(prev => ({
-            ...prev,
-            name: data.name || user.user_metadata?.name || user.email?.split('@')[0] || 'Miembro de FluxGlow',
-            ageGroup: data.age_group || prev.ageGroup,
-            goals: data.goals || prev.goals,
-            avatarUrl: data.avatar_url || prev.avatarUrl || '/user.png',
-            points: typeof data.points === 'number' ? data.points : (prev.points ?? 0),
-            level: typeof data.level === 'number' ? data.level : (prev.level ?? 1),
-            role: resolvedRole,
-            isLoggedIn: true,
-          }));
+          setUserProfile(prev => {
+            const resolvedRole = data.role || user.user_metadata?.role || (user.email?.toLowerCase().includes('admin') ? 'admin' : (prev.role || 'user'));
+            return {
+              ...prev,
+              name: data.name || user.user_metadata?.name || user.email?.split('@')[0] || 'Miembro de FluxGlow',
+              ageGroup: data.age_group || prev.ageGroup,
+              goals: data.goals || prev.goals,
+              avatarUrl: data.avatar_url || prev.avatarUrl || '/user.png',
+              points: typeof data.points === 'number' ? data.points : (prev.points ?? 0),
+              level: typeof data.level === 'number' ? data.level : (prev.level ?? 1),
+              role: resolvedRole,
+              isLoggedIn: true,
+            };
+          });
         } else {
           // Si el perfil aún no existe en profiles (ej. confirmación diferida de correo),
           // intentamos crearlo de manera transparente y proveemos fallback seguro
@@ -342,6 +344,7 @@ export default function App() {
                   <LearnModule 
                     onNavigate={handleNavigate} 
                     initialGuideId={activeGuideId} 
+                    userProfile={userProfile}
                   />
                 </ErrorBoundary>
               </motion.div>
@@ -359,6 +362,7 @@ export default function App() {
                   <LearnModule 
                     onNavigate={handleNavigate} 
                     initialGuideId={activeGuideId} 
+                    userProfile={userProfile}
                   />
                 </ErrorBoundary>
               </motion.div>
@@ -375,6 +379,7 @@ export default function App() {
                 <ErrorBoundary fallbackTitle="Inconveniente cargando la Guía">
                   <LearnModule 
                     onNavigate={handleNavigate} 
+                    userProfile={userProfile}
                   />
                 </ErrorBoundary>
               </motion.div>

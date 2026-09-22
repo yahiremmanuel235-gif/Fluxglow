@@ -1,5 +1,79 @@
 import { supabase } from '../lib/supabaseClient';
-import { CommunityPost, JournalEntry, MoodType } from '../types';
+import { CommunityPost, JournalEntry, MoodType, GuideItem, GuideBlock, GuideAuthor, GuideReference, GuideDailyMission } from '../types';
+
+/**
+ * Codifica metadatos enriquecidos de la guía (autores, bloques, referencias, tipo, misiones, glosario, tips)
+ */
+export function encodeGuideMeta(guide: {
+  description: string;
+  guideType?: 'quick' | 'weekly';
+  authors?: GuideAuthor[];
+  reviewedBy?: string;
+  references?: GuideReference[];
+  blocks?: GuideBlock[];
+  dailyMissions?: GuideDailyMission[];
+  glossary?: { term: string; definition: string }[];
+  extraTips?: string[];
+}): string {
+  const metaObj = {
+    __flux_meta__: true,
+    summary: guide.description || '',
+    guideType: guide.guideType || 'quick',
+    authors: guide.authors || [],
+    reviewedBy: guide.reviewedBy || '',
+    references: guide.references || [],
+    blocks: guide.blocks || [],
+    dailyMissions: guide.dailyMissions || [],
+    glossary: guide.glossary || [],
+    extraTips: guide.extraTips || []
+  };
+  return JSON.stringify(metaObj);
+}
+
+/**
+ * Decodifica metadatos enriquecidos de la guía si están almacenados en formato JSON
+ */
+export function decodeGuideMeta(rawDescription: string): {
+  simpleSummary: string;
+  guideType: 'quick' | 'weekly';
+  authors?: GuideAuthor[];
+  reviewedBy?: string;
+  references?: GuideReference[];
+  blocks?: GuideBlock[];
+  dailyMissions?: GuideDailyMission[];
+  glossary?: { term: string; definition: string }[];
+  extraTips?: string[];
+} {
+  if (typeof rawDescription === 'string' && rawDescription.trim().startsWith('{') && rawDescription.includes('__flux_meta__')) {
+    try {
+      const parsed = JSON.parse(rawDescription);
+      if (parsed && parsed.__flux_meta__) {
+        return {
+          simpleSummary: parsed.summary || '',
+          guideType: parsed.guideType || 'quick',
+          authors: parsed.authors || [],
+          reviewedBy: parsed.reviewedBy || '',
+          references: parsed.references || [],
+          blocks: parsed.blocks || [],
+          dailyMissions: parsed.dailyMissions || [],
+          glossary: parsed.glossary || [],
+          extraTips: parsed.extraTips || []
+        };
+      }
+    } catch {}
+  }
+  return {
+    simpleSummary: rawDescription || '',
+    guideType: 'quick',
+    authors: [],
+    reviewedBy: '',
+    references: [],
+    blocks: [],
+    dailyMissions: [],
+    glossary: [],
+    extraTips: []
+  };
+}
 
 /**
  * Convierte un timestamp a una representación legible en español ('Hace 5 min', 'Hace 2 h', etc.)
@@ -329,6 +403,8 @@ export async function fetchSupabaseGuides(): Promise<any[]> {
         bulletPoints: Array.isArray(s.bullet_points) ? s.bullet_points : []
       }));
 
+      const decoded = decodeGuideMeta(row.description || row.simple_summary || '');
+
       return {
         id: String(row.id),
         slug: row.slug || generateSlug(row.title),
@@ -339,11 +415,16 @@ export async function fetchSupabaseGuides(): Promise<any[]> {
         author: row.author || 'FluxGlow Editorial',
         readTime: row.read_time || '5 min',
         isDemoContent: false,
-        simpleSummary: row.description || row.simple_summary || '',
+        simpleSummary: decoded.simpleSummary,
         explainedContent: explainedContent.length > 0 ? explainedContent : (row.explained_content || []),
-        glossary: row.glossary || [],
-        extraTips: row.extra_tips || [],
-        dailyMissions: row.daily_missions || []
+        glossary: (decoded.glossary && decoded.glossary.length > 0) ? decoded.glossary : (row.glossary || []),
+        extraTips: (decoded.extraTips && decoded.extraTips.length > 0) ? decoded.extraTips : (row.extra_tips || []),
+        dailyMissions: (decoded.dailyMissions && decoded.dailyMissions.length > 0) ? decoded.dailyMissions : (row.daily_missions || []),
+        guideType: decoded.guideType || row.guide_type || 'quick',
+        authors: decoded.authors && decoded.authors.length > 0 ? decoded.authors : (row.authors || []),
+        reviewedBy: decoded.reviewedBy || row.reviewed_by || '',
+        references: decoded.references && decoded.references.length > 0 ? decoded.references : (row.references || []),
+        blocks: decoded.blocks && decoded.blocks.length > 0 ? decoded.blocks : (row.blocks || [])
       };
     });
   } catch (err: any) {
@@ -383,6 +464,8 @@ export async function fetchSupabaseGuideBySlug(slug: string): Promise<any | null
       bulletPoints: Array.isArray(s.bullet_points) ? s.bullet_points : []
     }));
 
+    const decoded = decodeGuideMeta(data.description || data.simple_summary || '');
+
     return {
       id: String(data.id),
       slug: data.slug || generateSlug(data.title),
@@ -393,11 +476,16 @@ export async function fetchSupabaseGuideBySlug(slug: string): Promise<any | null
       author: data.author || 'FluxGlow Editorial',
       readTime: data.read_time || '5 min',
       isDemoContent: false,
-      simpleSummary: data.description || data.simple_summary || '',
+      simpleSummary: decoded.simpleSummary,
       explainedContent: explainedContent.length > 0 ? explainedContent : (data.explained_content || []),
-      glossary: data.glossary || [],
-      extraTips: data.extra_tips || [],
-      dailyMissions: data.daily_missions || []
+      glossary: (decoded.glossary && decoded.glossary.length > 0) ? decoded.glossary : (data.glossary || []),
+      extraTips: (decoded.extraTips && decoded.extraTips.length > 0) ? decoded.extraTips : (data.extra_tips || []),
+      dailyMissions: (decoded.dailyMissions && decoded.dailyMissions.length > 0) ? decoded.dailyMissions : (data.daily_missions || []),
+      guideType: decoded.guideType || data.guide_type || 'quick',
+      authors: decoded.authors && decoded.authors.length > 0 ? decoded.authors : (data.authors || []),
+      reviewedBy: decoded.reviewedBy || data.reviewed_by || '',
+      references: decoded.references && decoded.references.length > 0 ? decoded.references : (data.references || []),
+      blocks: decoded.blocks && decoded.blocks.length > 0 ? decoded.blocks : (data.blocks || [])
     };
   } catch (err) {
     console.error('Error al obtener guía por slug:', err);
@@ -406,7 +494,184 @@ export async function fetchSupabaseGuideBySlug(slug: string): Promise<any | null
 }
 
 /**
- * Inserta una nueva guía con sus secciones en Supabase (solo administradores)
+ * Guarda o actualiza una guía con su estructura completa de bloques en Supabase y localmente
+ */
+export async function saveOrUpdateSupabaseGuide(guideData: {
+  id?: string;
+  title: string;
+  slug: string;
+  category: string;
+  badge?: string;
+  readTime: string;
+  imageUrl: string;
+  description: string;
+  author?: string;
+  guideType?: 'quick' | 'weekly';
+  authors?: GuideAuthor[];
+  reviewedBy?: string;
+  references?: GuideReference[];
+  blocks?: GuideBlock[];
+  dailyMissions?: GuideDailyMission[];
+  glossary?: { term: string; definition: string }[];
+  extraTips?: string[];
+  sections?: { heading: string; text: string; bulletPoints?: string[] }[];
+}): Promise<{ success: boolean; data?: any; error?: string }> {
+  try {
+    const encodedDescription = encodeGuideMeta({
+      description: guideData.description,
+      guideType: guideData.guideType,
+      authors: guideData.authors,
+      reviewedBy: guideData.reviewedBy,
+      references: guideData.references,
+      blocks: guideData.blocks,
+      dailyMissions: guideData.dailyMissions,
+      glossary: guideData.glossary,
+      extraTips: guideData.extraTips
+    });
+
+    const isUpdating = Boolean(guideData.id && !guideData.id.startsWith('local-'));
+    let guideRow: any = null;
+
+    if (isUpdating && guideData.id) {
+      const { data, error } = await supabase
+        .from('guides')
+        .update({
+          title: guideData.title,
+          slug: guideData.slug,
+          category: guideData.category,
+          badge: guideData.badge || guideData.category,
+          read_time: guideData.readTime,
+          image_url: guideData.imageUrl,
+          description: encodedDescription,
+          author: guideData.author || (guideData.authors?.[0]?.name) || 'FluxGlow Editorial'
+        })
+        .eq('id', guideData.id)
+        .select('*')
+        .single();
+
+      if (!error && data) {
+        guideRow = data;
+        await supabase.from('guide_sections').delete().eq('guide_id', guideData.id);
+      }
+    }
+
+    if (!guideRow) {
+      const { data, error } = await supabase
+        .from('guides')
+        .insert({
+          title: guideData.title,
+          slug: guideData.slug,
+          category: guideData.category,
+          badge: guideData.badge || guideData.category,
+          read_time: guideData.readTime,
+          image_url: guideData.imageUrl,
+          description: encodedDescription,
+          author: guideData.author || (guideData.authors?.[0]?.name) || 'FluxGlow Editorial'
+        })
+        .select('*')
+        .single();
+
+      if (!error && data) {
+        guideRow = data;
+      }
+    }
+
+    // Secciones a insertar en Supabase
+    let sectionRowsToInsert = guideData.sections || [];
+    if (sectionRowsToInsert.length === 0 && guideData.blocks && guideData.blocks.length > 0) {
+      sectionRowsToInsert = guideData.blocks
+        .filter(b => b.type === 'text' || b.type === 'callout')
+        .map(b => ({
+          heading: b.content?.slice(0, 50) || b.calloutTitle || 'Sección',
+          text: b.content || b.calloutText || '',
+          bulletPoints: b.listItems || []
+        }));
+    }
+
+    if (guideRow && sectionRowsToInsert.length > 0) {
+      const dbSections = sectionRowsToInsert.map((s, idx) => ({
+        guide_id: guideRow.id,
+        title: s.heading,
+        content: s.text,
+        bullet_points: s.bulletPoints || [],
+        order_index: idx
+      }));
+      await supabase.from('guide_sections').insert(dbSections);
+    }
+
+    // Persistir las 3 misiones en Supabase (columna unlocked_missions o tabla missions)
+    if (guideRow && guideData.dailyMissions && guideData.dailyMissions.length > 0) {
+      try {
+        // 1. Intentar actualizar columna JSONB unlocked_missions en la tabla guides
+        await supabase
+          .from('guides')
+          .update({ unlocked_missions: guideData.dailyMissions })
+          .eq('id', guideRow.id);
+      } catch (colErr) {
+        console.warn('Aviso: columna unlocked_missions en guides omitida:', colErr);
+      }
+
+      try {
+        // 2. Intentar guardar en la tabla missions vinculada a guide_id
+        const missionRows = guideData.dailyMissions.map((m, idx) => ({
+          guide_id: guideRow.id,
+          title: m.title,
+          description: m.description,
+          time_estimate: m.timeEstimate || '5 min',
+          xp: m.xp || 30,
+          order_index: idx
+        }));
+        await supabase.from('missions').insert(missionRows);
+      } catch (tblErr) {
+        console.warn('Aviso: inserción en tabla missions omitida (respaldada en metadata):', tblErr);
+      }
+    }
+
+    // Guardar / Sincronizar en localStorage como respaldo seguro instantáneo
+    const finalId = guideRow ? String(guideRow.id) : (guideData.id || `local-guide-${Date.now()}`);
+    const finalGuideObject: GuideItem = {
+      id: finalId,
+      slug: guideData.slug,
+      badge: guideData.badge || guideData.category,
+      title: guideData.title,
+      image: guideData.imageUrl,
+      category: guideData.category,
+      author: guideData.author || (guideData.authors?.[0]?.name) || 'FluxGlow Editorial',
+      readTime: guideData.readTime,
+      isDemoContent: false,
+      simpleSummary: guideData.description,
+      explainedContent: sectionRowsToInsert,
+      glossary: guideData.glossary || [],
+      extraTips: guideData.extraTips || [],
+      dailyMissions: guideData.dailyMissions || [],
+      guideType: guideData.guideType || 'quick',
+      authors: guideData.authors || [],
+      reviewedBy: guideData.reviewedBy || '',
+      references: guideData.references || [],
+      blocks: guideData.blocks || []
+    };
+
+    try {
+      const local = localStorage.getItem('fluxglow_custom_guides');
+      const list: GuideItem[] = local ? JSON.parse(local) : [];
+      const existingIdx = list.findIndex(g => g.id === finalId || g.slug === guideData.slug);
+      if (existingIdx >= 0) {
+        list[existingIdx] = finalGuideObject;
+      } else {
+        list.unshift(finalGuideObject);
+      }
+      localStorage.setItem('fluxglow_custom_guides', JSON.stringify(list));
+    } catch {}
+
+    return { success: true, data: finalGuideObject };
+  } catch (err: any) {
+    console.error('Error guardando guía:', err);
+    return { success: false, error: err?.message || 'Error inesperado' };
+  }
+}
+
+/**
+ * Inserta una nueva guía con sus secciones en Supabase (solo administradores) - Compatibilidad
  */
 export async function createSupabaseGuide(guideData: {
   title: string;
@@ -419,52 +684,7 @@ export async function createSupabaseGuide(guideData: {
   author?: string;
   sections: { heading: string; text: string; bulletPoints?: string[] }[];
 }): Promise<{ success: boolean; data?: any; error?: string }> {
-  try {
-    // 1. Insertar guía principal
-    const { data: guideRow, error: guideError } = await supabase
-      .from('guides')
-      .insert({
-        title: guideData.title,
-        slug: guideData.slug,
-        category: guideData.category,
-        badge: guideData.badge || guideData.category,
-        read_time: guideData.readTime,
-        image_url: guideData.imageUrl,
-        description: guideData.description,
-        author: guideData.author || 'FluxGlow Editorial'
-      })
-      .select('*')
-      .single();
-
-    if (guideError) {
-      console.warn('Error al insertar en guides:', guideError.message);
-      // Fallback: Si no tiene tabla o política bloquea, retornar error claro
-      return { success: false, error: guideError.message };
-    }
-
-    // 2. Insertar secciones si se proveyeron
-    if (guideData.sections && guideData.sections.length > 0 && guideRow) {
-      const sectionRows = guideData.sections.map((s, idx) => ({
-        guide_id: guideRow.id,
-        title: s.heading,
-        content: s.text,
-        bullet_points: s.bulletPoints || [],
-        order_index: idx
-      }));
-
-      const { error: secError } = await supabase
-        .from('guide_sections')
-        .insert(sectionRows);
-
-      if (secError) {
-        console.warn('Aviso insertando guide_sections:', secError.message);
-      }
-    }
-
-    return { success: true, data: guideRow };
-  } catch (err: any) {
-    return { success: false, error: err?.message || 'Error inesperado creando la guía' };
-  }
+  return saveOrUpdateSupabaseGuide(guideData);
 }
 
 /**
@@ -472,10 +692,21 @@ export async function createSupabaseGuide(guideData: {
  */
 export async function deleteSupabaseGuide(guideId: string): Promise<boolean> {
   try {
-    // Eliminar primero secciones
+    // 1. Eliminar de Supabase
     await supabase.from('guide_sections').delete().eq('guide_id', guideId);
-    const { error } = await supabase.from('guides').delete().eq('id', guideId);
-    return !error;
+    await supabase.from('guides').delete().eq('id', guideId);
+
+    // 2. Eliminar del almacenamiento local sincronizado
+    try {
+      const local = localStorage.getItem('fluxglow_custom_guides');
+      if (local) {
+        const parsed = JSON.parse(local);
+        const filtered = parsed.filter((g: any) => g.id !== guideId && g.slug !== guideId);
+        localStorage.setItem('fluxglow_custom_guides', JSON.stringify(filtered));
+      }
+    } catch {}
+
+    return true;
   } catch (err) {
     console.error('Error eliminando guía:', err);
     return false;

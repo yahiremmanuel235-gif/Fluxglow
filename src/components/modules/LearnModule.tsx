@@ -43,7 +43,9 @@ import { Search,
   ExternalLink,
   Tv,
   BadgeCheck,
-  Plus
+  Plus,
+  Edit3,
+  Trash2
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useToast } from '../common/Toast';
@@ -59,6 +61,10 @@ import { INSTANT_PRACTICES_CATALOG } from '../../data/instantPracticesData';
 import { COMPLETE_COURSES_CATALOG } from '../../data/completeGuidesData';
 import { CompleteCoursePlayerModal } from './CompleteCoursePlayerModal';
 import { InstantPracticeModal } from './InstantPracticeModal';
+import { GuideInSituEditor } from './GuideInSituEditor';
+import { GuideInteractiveBlocks } from './GuideInteractiveBlocks';
+import { deleteSupabaseGuide } from '../../services/supabaseService';
+import { useAuth } from '../../hooks/useAuth';
 import { activateMissionFromGuide,
   activateAllMissionsFromGuide, getProposedMissionsFromGuide, saveSingleMission,
   completeDailyMission, 
@@ -74,7 +80,8 @@ import { GuideItem,
   ViewMode, 
   InstantPracticeItem,
   JournalEntry,
-  CompleteCourse 
+  CompleteCourse,
+  UserProfileData 
 } from '../../types';
 
 const CATEGORY_CHIPS = [
@@ -93,12 +100,23 @@ const CATEGORY_CHIPS = [
 interface LearnModuleProps {
   onNavigate?: (view: ViewMode) => void;
   initialGuideId?: string;
+  userProfile?: UserProfileData;
 }
 
-export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGuideId }) => {
+export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGuideId, userProfile }) => {
   const { warning, success, info } = useToast();
   const navigate = useNavigate();
   const { slug: routeSlug } = useParams<{ slug?: string }>();
+  const { user } = useAuth();
+
+  // Permiso de administrador: rol 'admin' en perfil o auth
+  const isAdmin = Boolean(
+    userProfile?.role === 'admin' ||
+    user?.user_metadata?.role === 'admin' ||
+    user?.app_metadata?.role === 'admin' ||
+    user?.email?.toLowerCase().includes('admin') ||
+    userProfile?.email?.toLowerCase().includes('admin')
+  );
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('todos');
@@ -106,6 +124,12 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
   const [activeTab, setActiveTab] = useState<'todas' | 'guias' | 'practicas' | 'videos' | 'tests'>('todas');
   const [showFiltersModal, setShowFiltersModal] = useState(false);
   const [showCategoriesModal, setShowCategoriesModal] = useState(false);
+
+  // Estados del Editor In-Situ y Eliminación de Guías para Administradores
+  const [showInSituEditor, setShowInSituEditor] = useState(false);
+  const [guideToEdit, setGuideToEdit] = useState<GuideItem | null>(null);
+  const [guideToDelete, setGuideToDelete] = useState<GuideItem | null>(null);
+  const [isDeletingGuide, setIsDeletingGuide] = useState(false);
   
   // Dynamic Supabase guides + local custom guides
   const [dynamicGuides, setDynamicGuides] = useState<GuideItem[]>(() => {
@@ -116,6 +140,58 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
       return [];
     }
   });
+
+  const handleOpenCreateGuide = () => {
+    setGuideToEdit(null);
+    setShowInSituEditor(true);
+  };
+
+  const handleOpenEditGuide = (guide: GuideItem, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setGuideToEdit(guide);
+    setShowInSituEditor(true);
+  };
+
+  const handleConfirmDeleteGuide = async () => {
+    if (!guideToDelete) return;
+    setIsDeletingGuide(true);
+    try {
+      const successResult = await deleteSupabaseGuide(guideToDelete.id);
+      if (successResult) {
+        setDynamicGuides(prev => prev.filter(g => g.id !== guideToDelete.id && g.slug !== guideToDelete.slug));
+        success('Guía eliminada', `La guía "${guideToDelete.title}" fue eliminada de Supabase y de la plataforma.`);
+        if (activeGuide?.id === guideToDelete.id || activeGuide?.slug === guideToDelete.slug) {
+          setActiveGuide(null);
+          navigate('/explora');
+        }
+      } else {
+        warning('Aviso al eliminar', 'Se actualizó tu catálogo local.');
+        setDynamicGuides(prev => prev.filter(g => g.id !== guideToDelete.id && g.slug !== guideToDelete.slug));
+      }
+    } catch (err: any) {
+      warning('Error al eliminar', err?.message || 'No se pudo eliminar la guía.');
+    } finally {
+      setIsDeletingGuide(false);
+      setGuideToDelete(null);
+    }
+  };
+
+  const handleGuideSaved = (savedGuide: GuideItem) => {
+    setDynamicGuides(prev => {
+      const exists = prev.findIndex(g => g.id === savedGuide.id || g.slug === savedGuide.slug);
+      if (exists >= 0) {
+        const copy = [...prev];
+        copy[exists] = savedGuide;
+        return copy;
+      }
+      return [savedGuide, ...prev];
+    });
+    setShowInSituEditor(false);
+    setGuideToEdit(null);
+    if (activeGuide && (activeGuide.id === savedGuide.id || activeGuide.slug === savedGuide.slug)) {
+      setActiveGuide(savedGuide);
+    }
+  };
 
   // Tutorial modal state
   const [showGuideTutorial, setShowGuideTutorial] = useState(false);
@@ -573,16 +649,25 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
 
     recordLearningActivity();
 
-    // Generate proposed missions instead of automatically activating them
-    const proposed = getProposedMissionsFromGuide(guide);
-    setUnlockedMissions(proposed);
+    // Activar dinámicamente los 3 retos en el panel de misiones diarias del usuario
+    const activated = activateAllMissionsFromGuide(guide);
+    setUnlockedMissions(activated);
+
+    const initialDecisions: Record<string, { status: 'accepted' | 'rejected'; scheduledTime?: string }> = {};
+    activated.forEach(m => {
+      initialDecisions[m.id] = { status: 'accepted', scheduledTime: '' };
+    });
+    setMissionDecisions(initialDecisions);
 
     confetti({
       particleCount: 90,
       spread: 80,
       origin: { y: 0.6 }
     });
-    success('¡Lectura completada con éxito! 🎉', 'Revisa estas misiones propuestas y decide cuáles aceptar.');
+    success(
+      '¡Lectura completada con éxito! 🎉', 
+      'Tus 3 retos prácticos asociados se han activado dinámicamente en tu panel de misiones diarias.'
+    );
   };
 
   // String normalizer for accent-free search
@@ -764,9 +849,18 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
             )}
           </button>
 
-          {/* Center Brand Logo */}
+          {/* Center Brand Logo / Admin Action */}
           <div className="flex items-center gap-2">
-            
+            {isAdmin && (
+              <button
+                id="admin-create-guide-header-btn"
+                onClick={handleOpenCreateGuide}
+                className="px-4 py-2 min-h-[44px] rounded-full text-xs sm:text-sm font-bold text-white bg-[#5F927B] hover:bg-[#4d7864] shadow-sm transition-all flex items-center gap-2 cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>+ Crear Nueva Guía</span>
+              </button>
+            )}
           </div>
 
           {/* Right Pill: Categorías */}
@@ -1199,8 +1293,31 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
                           </span>
                         </div>
 
-                        {/* Top Right Action Buttons (Share & Favorite) */}
+                        {/* Top Right Action Buttons (Share, Favorite, and Admin Controls) */}
                         <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5">
+                          {isAdmin && (
+                            <>
+                              <button
+                                onClick={(e) => handleOpenEditGuide(guide, e)}
+                                className="w-8 h-8 rounded-full bg-stone-900/90 text-stone-200 hover:text-white shadow-sm flex items-center justify-center hover:scale-110 transition-transform cursor-pointer border border-stone-700"
+                                title="Editar guía in-situ"
+                                aria-label="Editar guía"
+                              >
+                                <Edit3 className="w-3.5 h-3.5 text-[#5F927B]" />
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setGuideToDelete(guide);
+                                }}
+                                className="w-8 h-8 rounded-full bg-white/95 shadow-sm flex items-center justify-center hover:scale-110 text-stone-400 hover:text-rose-600 hover:bg-rose-50 transition-all cursor-pointer border border-stone-200/80"
+                                title="Eliminar guía"
+                                aria-label="Eliminar guía"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </>
+                          )}
                           <button
                             onClick={(e) => handleShareGuide(guide, e)}
                             className="w-8 h-8 rounded-full bg-white/95 shadow-sm flex items-center justify-center hover:scale-110 text-stone-600 hover:text-stone-900 transition-transform cursor-pointer border border-stone-200/80"
@@ -1570,9 +1687,25 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
               </div>
             </div>
 
-            {/* Top Reader Actions (Audio, Share, Favorite, Help, Close) */}
+            {/* Top Reader Actions (In-Situ Edit, Audio, Share, Favorite, Help, Close) */}
             <div className="flex items-center gap-2">
               
+              {isAdmin && (
+                <button
+                  id="admin-edit-insitu-reader-btn"
+                  onClick={() => {
+                    setGuideToEdit(activeGuide);
+                    setShowInSituEditor(true);
+                  }}
+                  className="px-3.5 py-1.5 rounded-full bg-stone-900 text-white hover:bg-stone-800 transition-all cursor-pointer flex items-center gap-1.5 text-xs font-bold shadow-xs border border-stone-700"
+                  title="Editar esta guía in-situ"
+                >
+                  <Edit3 className="w-3.5 h-3.5 text-[#5F927B]" />
+                  <span className="hidden sm:inline">Editar In-Situ</span>
+                  <span className="sm:hidden">Editar</span>
+                </button>
+              )}
+
               {/* Share Button */}
               <button
                 onClick={(e) => handleShareGuide(activeGuide, e)}
@@ -1791,61 +1924,88 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
               </p>
             </div>
 
-            {/* Step 2: Aviso Transparente de Contenido IA */}
-            {activeGuide.isDemoContent && (
-              <div className="mb-8 p-4 sm:p-5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-950 text-xs sm:text-sm flex items-start gap-3 shadow-2xs">
-                <Sparkles className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                <div className="leading-relaxed">
-                  <p className="font-bold text-amber-900 mb-0.5">Aviso de Contenido Demostrativo:</p>
-                  <p className="text-amber-800 text-xs">
-                    {activeGuide.demoNotice || AI_DEMO_NOTICE_TEXT}
-                  </p>
-                </div>
+            {/* Step 2: Aviso de Contenido y Salud Mental / Descargo de Responsabilidad */}
+            <div className="mb-8 p-4 sm:p-5 rounded-2xl bg-amber-50/95 border border-amber-200 text-amber-950 text-xs sm:text-sm flex items-start gap-3 shadow-2xs">
+              <ShieldCheck className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <div className="leading-relaxed">
+                <p className="font-bold text-amber-900 mb-0.5">Aviso de Contenido y Salud Mental:</p>
+                <p className="text-amber-800 text-xs">
+                  {activeGuide.demoNotice || 'Este contenido está diseñado con propósitos psicoeducativos y de aprendizaje sobre bienestar integral. No sustituye la valoración clínica, diagnóstico o tratamiento de un profesional de la salud mental.'}
+                </p>
+              </div>
+            </div>
+
+            {/* Step 3: Contenido Didáctico con Bloques Interactivos de FluxGlow */}
+            {activeGuide.blocks && activeGuide.blocks.length > 0 ? (
+              <div className="mb-10">
+                <GuideInteractiveBlocks
+                  guide={activeGuide}
+                  onClaimXp={(_xp, _reason) => {
+                    recordLearningActivity();
+                  }}
+                  onAcceptMission={(m) => {
+                    try {
+                      saveSingleMission({
+                        id: `mission-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+                        missionId: m.id,
+                        guideId: activeGuide.id,
+                        guideTitle: activeGuide.title,
+                        title: m.title,
+                        description: m.description,
+                        category: activeGuide.category || 'Bienestar',
+                        xp: m.xp || 30,
+                        timeEstimate: m.timeEstimate || '5 min',
+                        status: 'pending',
+                        createdAt: new Date().toISOString()
+                      });
+                      success('Misión activada', `"${m.title}" fue agregada a tus misiones de hoy.`);
+                    } catch {}
+                  }}
+                />
+              </div>
+            ) : (
+              <div className="space-y-8 text-stone-800 text-base leading-relaxed mb-10">
+                {activeGuide.explainedContent.map((section, idx) => (
+                  <div 
+                    key={idx} 
+                    id={`guide-sec-${idx}`}
+                    onClick={() => updateSectionProgress(activeGuide.id, idx)}
+                    className="bg-white p-6 sm:p-8 rounded-3xl border border-stone-200/90 shadow-xs transition-all hover:border-[#548c71]/40"
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-serif font-bold text-stone-900 text-xl sm:text-2xl">
+                        {section.heading}
+                      </h3>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          updateSectionProgress(activeGuide.id, idx);
+                          success('Punto de lectura guardado', `Se guardó tu avance en la sección ${idx + 1}.`);
+                        }}
+                        className="text-stone-300 hover:text-amber-600 p-1 cursor-pointer transition-colors"
+                        title="Guardar marcador aquí"
+                      >
+                        <BookmarkCheck className={`w-5 h-5 ${readingProgress[activeGuide.id]?.sectionIndex === idx ? 'text-amber-600' : ''}`} />
+                      </button>
+                    </div>
+
+                    <p className="text-stone-700 text-sm sm:text-base leading-relaxed">
+                      {section.text}
+                    </p>
+                    {section.bulletPoints && section.bulletPoints.length > 0 && (
+                      <div className="mt-4 pt-4 border-t border-stone-100 space-y-2.5">
+                        {section.bulletPoints.map((bp, bIdx) => (
+                          <div key={bIdx} className="text-xs sm:text-sm text-stone-700 flex items-start gap-2.5">
+                            <span className="w-2 h-2 rounded-full bg-[#548c71] shrink-0 mt-1.5"></span>
+                            <span className="leading-relaxed">{bp}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             )}
-
-            {/* Step 3: Contenido Explicado en Detalle */}
-            <div className="space-y-8 text-stone-800 text-base leading-relaxed mb-10">
-              {activeGuide.explainedContent.map((section, idx) => (
-                <div 
-                  key={idx} 
-                  id={`guide-sec-${idx}`}
-                  onClick={() => updateSectionProgress(activeGuide.id, idx)}
-                  className="bg-white p-6 sm:p-8 rounded-3xl border border-stone-200/90 shadow-xs transition-all hover:border-[#548c71]/40"
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-serif font-bold text-stone-900 text-xl sm:text-2xl">
-                      {section.heading}
-                    </h3>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        updateSectionProgress(activeGuide.id, idx);
-                        success('Punto de lectura guardado', `Se guardó tu avance en la sección ${idx + 1}.`);
-                      }}
-                      className="text-stone-300 hover:text-amber-600 p-1 cursor-pointer transition-colors"
-                      title="Guardar marcador aquí"
-                    >
-                      <BookmarkCheck className={`w-5 h-5 ${readingProgress[activeGuide.id]?.sectionIndex === idx ? 'text-amber-600' : ''}`} />
-                    </button>
-                  </div>
-
-                  <p className="text-stone-700 text-sm sm:text-base leading-relaxed">
-                    {section.text}
-                  </p>
-                  {section.bulletPoints && section.bulletPoints.length > 0 && (
-                    <div className="mt-4 pt-4 border-t border-stone-100 space-y-2.5">
-                      {section.bulletPoints.map((bp, bIdx) => (
-                        <div key={bIdx} className="text-xs sm:text-sm text-stone-700 flex items-start gap-2.5">
-                          <span className="w-2 h-2 rounded-full bg-[#548c71] shrink-0 mt-1.5"></span>
-                          <span className="leading-relaxed">{bp}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
 
             {/* Glosario de Términos */}
             {activeGuide.glossary && activeGuide.glossary.length > 0 && (
@@ -2483,6 +2643,76 @@ export const LearnModule: React.FC<LearnModuleProps> = ({ onNavigate, initialGui
         isOpen={showGuideTutorial}
         onClose={() => setShowGuideTutorial(false)}
       />
+
+      {/* Floating Button "+ Crear Nueva Guía" (visible solo para administradores) */}
+      {isAdmin && !showInSituEditor && (
+        <button
+          id="floating-admin-create-guide"
+          onClick={handleOpenCreateGuide}
+          className="fixed bottom-6 right-6 z-40 bg-[#3E6855] hover:bg-[#2d4f40] text-white px-5 py-3.5 rounded-full shadow-2xl font-bold text-xs sm:text-sm flex items-center gap-2.5 transition-all hover:scale-105 active:scale-95 cursor-pointer border border-[#C5DDD0]/50"
+          title="Crear Nueva Guía Didáctica (Admin)"
+        >
+          <Plus className="w-5 h-5 stroke-[2.5]" />
+          <span>+ Crear Nueva Guía</span>
+        </button>
+      )}
+
+      {/* Modal de Confirmación para Eliminar Guía */}
+      {guideToDelete && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-stone-200 animate-in zoom-in-95 duration-150 space-y-4">
+            <div className="flex items-center gap-3 text-rose-600">
+              <div className="w-10 h-10 rounded-2xl bg-rose-50 flex items-center justify-center shrink-0">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-bold text-stone-900 text-base">¿Eliminar Guía Didáctica?</h3>
+                <p className="text-xs text-stone-500">Esta acción no se puede deshacer.</p>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200 text-xs text-stone-700 space-y-1">
+              <p className="font-bold text-stone-900">{guideToDelete.title}</p>
+              <p className="text-stone-500">Categoría: {guideToDelete.category} • {guideToDelete.readTime}</p>
+            </div>
+
+            <p className="text-xs text-stone-600 leading-relaxed">
+              Estás a punto de eliminar esta guía y todos sus bloques interactivos asociados tanto en Supabase como en el catálogo de la plataforma. ¿Deseas continuar?
+            </p>
+
+            <div className="pt-2 flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => setGuideToDelete(null)}
+                disabled={isDeletingGuide}
+                className="px-4 py-2 rounded-full text-xs font-semibold text-stone-600 hover:bg-stone-100 transition-colors cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDeleteGuide}
+                disabled={isDeletingGuide}
+                className="px-5 py-2 rounded-full text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 shadow-xs transition-colors cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+              >
+                {isDeletingGuide ? 'Eliminando...' : 'Sí, Eliminar Guía'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Admin In-Situ Guide Editor Modal */}
+      {showInSituEditor && (
+        <GuideInSituEditor
+          initialGuide={guideToEdit}
+          onClose={() => {
+            setShowInSituEditor(false);
+            setGuideToEdit(null);
+          }}
+          onSaved={handleGuideSaved}
+        />
+      )}
 
       </div>
   );
