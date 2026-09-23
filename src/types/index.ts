@@ -282,6 +282,7 @@ export interface PsychologicalTest {
 
 export interface CommunityPost {
   id: string;
+  userId?: string;
   author: string;
   authorRole?: string;
   authorAvatar?: string;
@@ -295,6 +296,7 @@ export interface CommunityPost {
   commentsCount?: number;
   comments: {
     id: string;
+    userId?: string;
     author: string;
     text: string;
     timeAgo: string;

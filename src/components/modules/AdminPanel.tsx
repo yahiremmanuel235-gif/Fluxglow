@@ -15,12 +15,17 @@ import {
   Layers,
   Clock,
   Tag,
-  FileText
+  FileText,
+  Edit3,
+  Target,
+  CheckCircle
 } from 'lucide-react';
 import { Button } from '../common/Button';
 import { useToast } from '../common/Toast';
+import { GuideInSituEditor } from './GuideInSituEditor';
 import { 
-  createSupabaseGuide, 
+  createSupabaseGuide,
+  saveOrUpdateSupabaseGuide,
   fetchSupabaseGuides, 
   deleteSupabaseGuide, 
   uploadGuideCoverImage,
@@ -62,6 +67,45 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ userProfile, onNavigate 
     { heading: '1. Introducción y Fundamentos', text: '', bulletPoints: [''] }
   ]);
 
+  // Bloques Fijos y Obligatorios FluxGlow
+  const [contentDisclaimer, setContentDisclaimer] = useState(
+    'Aviso de Contenido: El material proporcionado en esta guía es de carácter psicoeducativo y preventivo. No reemplaza el diagnóstico, psicoterapia ni la intervención clínica de un profesional de la salud mental colegiado. Si estás experimentando una crisis aguda, contacta con tu línea de emergencia local.'
+  );
+
+  const [formMissions, setFormMissions] = useState<Array<{
+    title: string;
+    description: string;
+    xp: number;
+    timeEstimate: string;
+  }>>([
+    {
+      title: 'Respiración Diafragmática 4-7-8',
+      description: 'Realiza 4 ciclos de inhalación profunda en 4s, retención en 7s y exhalación sonora en 8s antes de dormir.',
+      xp: 35,
+      timeEstimate: '3 min'
+    },
+    {
+      title: 'Diario de Descarga Emocional',
+      description: 'Escribe sin filtro 3 pensamientos intrusivos y reformúlalos en una frase de autocompasión.',
+      xp: 40,
+      timeEstimate: '5 min'
+    },
+    {
+      title: 'Pausa de Anclaje Sensorial 5-4-3-2-1',
+      description: 'Conecta con tu entorno identificando 5 cosas que ves, 4 que tocas, 3 que oyes, 2 que hueles y 1 que saboreas.',
+      xp: 45,
+      timeEstimate: '4 min'
+    }
+  ]);
+
+  const updateFormMission = (idx: number, field: string, val: any) => {
+    setFormMissions(prev => {
+      const copy = [...prev];
+      copy[idx] = { ...copy[idx], [field]: val };
+      return copy;
+    });
+  };
+
   // Loading & upload states
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -69,6 +113,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ userProfile, onNavigate 
   // Managed Guides State
   const [dbGuides, setDbGuides] = useState<GuideItem[]>([]);
   const [isLoadingGuides, setIsLoadingGuides] = useState(false);
+  const [guideToEdit, setGuideToEdit] = useState<GuideItem | null>(null);
+  const [showInSituEditor, setShowInSituEditor] = useState(false);
 
   // Moderation state
   const [posts, setPosts] = useState<CommunityPost[]>([]);
@@ -205,9 +251,42 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ userProfile, onNavigate 
     const defaultCover = 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&auto=format&fit=crop&q=80';
     const finalImage = imageUrl.trim() || defaultCover;
 
+    const formattedMissions = formMissions.map((m, idx) => ({
+      id: `mission-${slug.trim()}-${idx + 1}`,
+      title: m.title.trim() || `Reto ${idx + 1}`,
+      description: m.description.trim() || 'Completa esta acción reflexiva.',
+      xp: Number(m.xp) || 30,
+      timeEstimate: m.timeEstimate.trim() || '5 min'
+    }));
+
+    // Estructurar los bloques estandarizados FluxGlow
+    const assembledBlocks: any[] = [
+      {
+        id: `block-disclaimer-${Date.now()}`,
+        type: 'callout',
+        calloutType: 'warning',
+        calloutTitle: 'Aviso de Contenido y Descargo de Responsabilidad',
+        calloutText: contentDisclaimer.trim()
+      },
+      ...cleanedSections.map((s, idx) => ({
+        id: `block-sec-${idx + 1}`,
+        type: 'text',
+        heading: s.heading,
+        content: s.text,
+        listItems: s.bulletPoints
+      })),
+      {
+        id: `block-unlocked-missions-${Date.now()}`,
+        type: 'unlocked_missions',
+        triggerLabel: 'He terminado de leer la guía',
+        rewardXp: 50,
+        missions: formattedMissions
+      }
+    ];
+
     setIsSubmitting(true);
     try {
-      const res = await createSupabaseGuide({
+      const res = await saveOrUpdateSupabaseGuide({
         title: title.trim(),
         slug: slug.trim(),
         category,
@@ -216,11 +295,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ userProfile, onNavigate 
         imageUrl: finalImage,
         description: description.trim(),
         author: author.trim() || 'FluxGlow Editorial',
-        sections: cleanedSections
+        sections: cleanedSections,
+        blocks: assembledBlocks,
+        dailyMissions: formattedMissions
       });
 
       if (res.success) {
-        success('¡Guía Creada Exitosamente!', `Tu guía ya está disponible en /explora/${slug}`);
+        success('¡Guía Creada Exitosamente!', `Tu guía con estructura FluxGlow ya está disponible en /explora/${slug}`);
         // Reset form
         setTitle('');
         setSlug('');
@@ -242,10 +323,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ userProfile, onNavigate 
           readTime,
           isDemoContent: false,
           simpleSummary: description.trim(),
+          demoNotice: contentDisclaimer.trim(),
           explainedContent: cleanedSections,
           glossary: [],
           extraTips: ['Aplica estos conceptos paso a paso.'],
-          dailyMissions: []
+          dailyMissions: formattedMissions,
+          blocks: assembledBlocks
         };
 
         try {
@@ -433,7 +516,36 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ userProfile, onNavigate 
 
       {/* TAB 1: FORMULARIO CREAR NUEVA GUÍA */}
       {activeTab === 'create-guide' && (
-        <form onSubmit={handleSubmitGuide} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="space-y-6">
+          {/* Banner de Acceso al Editor de Estructura Visual Estricta FluxGlow */}
+          <div className="p-5 rounded-3xl bg-gradient-to-r from-[#EBF1EA] via-[#F4EFE6] to-[#FBF9F5] border-2 border-[#5F927B]/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-[#5F927B] text-white flex items-center justify-center shrink-0 shadow-xs">
+                <Sparkles className="w-6 h-6 text-amber-300" />
+              </div>
+              <div>
+                <h3 className="text-sm sm:text-base font-bold text-stone-900">
+                  Creador Oficial In-Situ FluxGlow (Estructura Estricta)
+                </h3>
+                <p className="text-xs text-stone-600 leading-snug">
+                  Respeta los 5 bloques obligatorios (Encabezado, Resumen, Descargo, Asimilación y 3 Retos Prácticos) con vista previa real y secciones intermedias ampliables.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setGuideToEdit(null);
+                setShowInSituEditor(true);
+              }}
+              className="px-5 py-3 rounded-2xl bg-[#5F927B] hover:bg-[#4d7864] text-white text-xs font-black shadow-md flex items-center gap-2 cursor-pointer transition-all shrink-0 hover:scale-105 active:scale-95"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>Abrir Creador de Guías</span>
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmitGuide} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           {/* Columna Principal: Contenido y Secciones (2 cols) */}
           <div className="lg:col-span-2 space-y-6">
@@ -502,17 +614,38 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ userProfile, onNavigate 
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
-                  Resumen Corto / Síntesis (Meta Descripción) *
+                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                  <span>Bloque Resumen Ejecutivo Simple *</span>
+                  <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md">Bloque Fijo Obligatorio</span>
                 </label>
                 <textarea
                   rows={3}
                   required
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Explica en 2 o 3 oraciones de qué trata esta guía y qué beneficio concreto obtendrá la persona..."
-                  className="w-full px-4 py-3 rounded-2xl bg-stone-50 border border-stone-200 text-stone-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#5F927B] focus:bg-white transition-all resize-none"
+                  placeholder="Síntesis rápida del tema: Explica en 2 o 3 oraciones de qué trata esta guía y qué beneficio concreto obtendrá la persona..."
+                  className="w-full px-4 py-3 rounded-2xl bg-amber-50/40 border border-amber-200 text-stone-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#5F927B] focus:bg-white transition-all resize-none"
                 />
+              </div>
+
+              {/* Bloque Fijo: Aviso de Contenido y Descargo de Responsabilidad */}
+              <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs font-bold text-amber-900">
+                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span>Bloque Aviso de Contenido / Descargo de Responsabilidad</span>
+                  </div>
+                  <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md">Fijo</span>
+                </div>
+                <textarea
+                  rows={2}
+                  value={contentDisclaimer}
+                  onChange={(e) => setContentDisclaimer(e.target.value)}
+                  className="w-full p-2.5 rounded-xl bg-white border border-amber-200 text-xs text-stone-700 leading-relaxed focus:outline-none focus:ring-1 focus:ring-amber-400"
+                />
+                <p className="text-[10px] text-stone-500">
+                  Aviso predeterminado sobre validez del contenido y salud mental obligatorio en toda guía.
+                </p>
               </div>
             </div>
 
@@ -621,6 +754,130 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ userProfile, onNavigate 
                             </div>
                           ))}
                         </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* BLOQUE FIJO 4: BLOQUE FINAL DE ASIMILACIÓN */}
+            <div className="bg-gradient-to-r from-[#EBF1EA] to-[#F5EFE6] rounded-3xl p-6 sm:p-7 border border-[#5F927B]/30 shadow-sm space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <CheckCircle className="w-5 h-5 text-[#3E6855]" />
+                  <h3 className="text-sm sm:text-base font-bold text-stone-900">
+                    Bloque Final de Asimilación (Obligatorio)
+                  </h3>
+                </div>
+                <span className="text-[10px] font-bold text-[#3E6855] bg-white px-2 py-0.5 rounded-md border border-[#5F927B]/20">
+                  Bloque Fijo
+                </span>
+              </div>
+              <p className="text-xs text-stone-600 leading-relaxed">
+                Este bloque renderiza el botón interactivo de cierre en la guía del usuario:
+              </p>
+              <div className="p-4 rounded-2xl bg-white border border-[#5F927B]/30 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-[#5F927B]/10 flex items-center justify-center text-[#5F927B] shrink-0">
+                    <Sparkles className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-stone-900">"He terminado de leer la guía"</div>
+                    <div className="text-[11px] text-stone-500">Otorga +50 XP y desbloquea inmediatamente los 3 Retos Prácticos Diarios</div>
+                  </div>
+                </div>
+                <div className="px-4 py-2 rounded-xl bg-[#5F927B] text-white text-xs font-bold shadow-xs pointer-events-none opacity-90">
+                  Vista Previa del Botón
+                </div>
+              </div>
+            </div>
+
+            {/* BLOQUE FIJO 5: BLOQUE DE MISIONES DESBLOQUEADAS (3 RETOS PRÁCTICOS) */}
+            <div className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-amber-200 shadow-sm space-y-6">
+              <div className="flex items-center justify-between pb-3 border-b border-stone-100 flex-wrap gap-2">
+                <div className="flex items-center gap-2.5">
+                  <Target className="w-5 h-5 text-amber-600" />
+                  <div>
+                    <h3 className="text-base font-bold text-stone-900">
+                      Bloque de Misiones Desbloqueadas (3 Retos Prácticos)
+                    </h3>
+                    <p className="text-xs text-stone-500">
+                      Los 3 micro-retos asociados a esta guía que se activan al completar la asimilación.
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2.5 py-1 rounded-md">
+                  Fijo: Exactamente 3 Retos
+                </span>
+              </div>
+
+              <div className="space-y-4">
+                {formMissions.map((mission, mIdx) => (
+                  <div 
+                    key={mIdx}
+                    className="bg-stone-50/80 rounded-2xl p-4 sm:p-5 border border-amber-200/80 space-y-3"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-amber-100 text-amber-900">
+                        Reto Práctico #{mIdx + 1}
+                      </span>
+                      <div className="flex items-center gap-3 text-xs">
+                        <span className="font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md">
+                          +{mission.xp} XP
+                        </span>
+                        <span className="font-semibold text-stone-500 bg-stone-100 px-2 py-0.5 rounded-md">
+                          {mission.timeEstimate}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-stone-700 mb-1">
+                        Título del Reto #{mIdx + 1}: *
+                      </label>
+                      <input
+                        type="text"
+                        value={mission.title}
+                        onChange={(e) => updateFormMission(mIdx, 'title', e.target.value)}
+                        placeholder={`Ej. Reto ${mIdx + 1}: Acción concreta`}
+                        className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-stone-700 mb-1">
+                        Descripción Corta de la Acción Diaria: *
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={mission.description}
+                        onChange={(e) => updateFormMission(mIdx, 'description', e.target.value)}
+                        placeholder="Indica qué debe hacer exactamente el usuario en su día a día..."
+                        className="w-full bg-white border border-stone-200 rounded-xl p-2.5 text-xs text-stone-800 leading-relaxed focus:outline-none focus:ring-2 focus:ring-amber-400"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[10px] font-bold text-stone-600 mb-1">Tiempo Estimado:</label>
+                        <input
+                          type="text"
+                          value={mission.timeEstimate}
+                          onChange={(e) => updateFormMission(mIdx, 'timeEstimate', e.target.value)}
+                          placeholder="3 min"
+                          className="w-full bg-white border border-stone-200 rounded-lg px-2.5 py-1.5 text-xs text-stone-800 focus:outline-none focus:ring-1 focus:ring-amber-400"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-stone-600 mb-1">Recompensa (XP):</label>
+                        <input
+                          type="number"
+                          value={mission.xp}
+                          onChange={(e) => updateFormMission(mIdx, 'xp', Number(e.target.value))}
+                          placeholder="30"
+                          className="w-full bg-white border border-stone-200 rounded-lg px-2.5 py-1.5 text-xs text-stone-800 focus:outline-none focus:ring-1 focus:ring-amber-400"
+                        />
                       </div>
                     </div>
                   </div>
@@ -759,6 +1016,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ userProfile, onNavigate 
           </div>
 
         </form>
+        </div>
       )}
 
       {/* TAB 2: GESTIONAR GUÍAS EXISTENTES */}
@@ -824,14 +1082,28 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ userProfile, onNavigate 
                     </div>
 
                     <div className="p-4 pt-2 border-t border-stone-100 flex items-center justify-between gap-2">
-                      <a
-                        href={`/explora/${guideSlug}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 text-xs font-bold text-[#3E6855] hover:underline"
-                      >
-                        <Eye className="w-3.5 h-3.5" /> Ver Guía
-                      </a>
+                      <div className="flex items-center gap-2">
+                        <a
+                          href={`/explora/${guideSlug}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 text-xs font-bold text-[#3E6855] hover:underline"
+                        >
+                          <Eye className="w-3.5 h-3.5" /> Ver
+                        </a>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setGuideToEdit(guide);
+                            setShowInSituEditor(true);
+                          }}
+                          className="inline-flex items-center gap-1 text-xs font-bold text-stone-700 hover:text-[#5F927B] px-2 py-1 rounded-lg hover:bg-stone-100 transition-colors cursor-pointer"
+                          title="Editar en el creador oficial"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" /> Editar
+                        </button>
+                      </div>
 
                       {guide.id.startsWith('guide-') ? (
                         <span className="text-[10px] text-stone-400 italic">Preinstalada</span>
@@ -937,6 +1209,23 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ userProfile, onNavigate 
             </div>
           )}
         </div>
+      )}
+
+      {/* MODAL DEL CREADOR/EDITOR OFICIAL DE GUÍAS DE FLUXGLOW */}
+      {showInSituEditor && (
+        <GuideInSituEditor
+          initialGuide={guideToEdit}
+          onClose={() => {
+            setShowInSituEditor(false);
+            setGuideToEdit(null);
+          }}
+          onSaved={(savedGuide) => {
+            setShowInSituEditor(false);
+            setGuideToEdit(null);
+            loadGuides();
+            success('Guía guardada', `La guía "${savedGuide.title}" ha sido procesada correctamente.`);
+          }}
+        />
       )}
 
     </div>

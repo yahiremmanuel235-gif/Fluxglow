@@ -4,6 +4,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { fetchSupabaseGuides, generateSlug } from '../../services/supabaseService';
+import { supabase } from '../../lib/supabaseClient';
 import { Search, 
   Sparkles, 
   Heart, 

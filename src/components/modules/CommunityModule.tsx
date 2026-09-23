@@ -26,7 +26,11 @@ import {
   Clock,
   Filter,
   RefreshCw,
-  Database
+  Database,
+  MoreVertical,
+  Trash2,
+  UserX,
+  ShieldAlert
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { CommunityGroup, CommunityPost, UserProfileData } from '../../types';
@@ -41,7 +45,10 @@ import {
   toggleSupabasePostLike,
   fetchUserLikedPostIds,
   subscribeToCommunityPostsRealtime,
-  mapSupabasePostToCommunityPost
+  mapSupabasePostToCommunityPost,
+  adminDeleteCommunityPost,
+  adminSuspendUser,
+  adminBanUser
 } from '../../services/supabaseService';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -105,6 +112,24 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
   // Comment input per post: { [postId: string]: string }
   const [commentInputs, setCommentInputs] = useState<{ [postId: string]: string }>({});
   const [openCommentsPostId, setOpenCommentsPostId] = useState<string | null>(null);
+
+  // Estados de Moderación en tiempo real para Administradores
+  const isAdmin = userProfile?.role === 'admin';
+  const [activeMenuPostId, setActiveMenuPostId] = useState<string | null>(null);
+  const [activeMenuCommentId, setActiveMenuCommentId] = useState<string | null>(null);
+  const [isDeletingItem, setIsDeletingItem] = useState(false);
+
+  // Modal de Sanción / Moderación de Usuario
+  const [userToModerate, setUserToModerate] = useState<{
+    userId: string;
+    userName: string;
+    sourceType: 'post' | 'comment';
+    itemId: string;
+  } | null>(null);
+  const [moderationAction, setModerationAction] = useState<'suspend' | 'ban'>('suspend');
+  const [suspensionDays, setSuspensionDays] = useState<number>(7);
+  const [moderationReason, setModerationReason] = useState<string>('');
+  const [isSubmittingModeration, setIsSubmittingModeration] = useState<boolean>(false);
 
   const FEELING_OPTIONS = [
     '🌿 En calma',
@@ -395,6 +420,124 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
 
     setCommentInputs(prev => ({ ...prev, [postId]: '' }));
     success('Comentario añadido', 'Tu respuesta empática ha sido compartida.');
+  };
+
+  // =========================================================================
+  // FUNCIONES DE MODERACIÓN ADMIN EN TIEMPO REAL
+  // =========================================================================
+
+  /**
+   * Elimina una publicación directamente de Supabase y de la memoria local
+   */
+  const handleAdminDeletePost = async (postId: string) => {
+    if (!isAdmin) return;
+    if (!window.confirm('¿Confirmas que deseas eliminar esta publicación de la comunidad de forma permanente?')) {
+      return;
+    }
+
+    setIsDeletingItem(true);
+    setActiveMenuPostId(null);
+    try {
+      await adminDeleteCommunityPost(postId);
+      const updated = posts.filter(p => p.id !== postId);
+      setPosts(updated);
+      try {
+        localStorage.setItem(STORAGE_KEYS.COMMUNITY_POSTS, JSON.stringify(updated));
+      } catch (err) {}
+      success('Publicación eliminada', 'La publicación ha sido removida de la comunidad por moderación.');
+    } catch (err: any) {
+      console.error('Error eliminando publicación:', err);
+      showErrorToast('Error de moderación', 'No se pudo eliminar la publicación.');
+    } finally {
+      setIsDeletingItem(false);
+    }
+  };
+
+  /**
+   * Elimina un comentario específico de una publicación
+   */
+  const handleAdminDeleteComment = async (postId: string, commentId: string) => {
+    if (!isAdmin) return;
+    if (!window.confirm('¿Deseas eliminar este comentario de la conversación?')) {
+      return;
+    }
+
+    setActiveMenuCommentId(null);
+    const updated = posts.map(p => {
+      if (p.id === postId) {
+        const filteredComments = (p.comments || []).filter(c => c.id !== commentId);
+        return {
+          ...p,
+          commentsCount: filteredComments.length,
+          comments: filteredComments
+        };
+      }
+      return p;
+    });
+
+    setPosts(updated);
+    try {
+      localStorage.setItem(STORAGE_KEYS.COMMUNITY_POSTS, JSON.stringify(updated));
+    } catch (err) {}
+    success('Comentario eliminado', 'El comentario ha sido removido con éxito.');
+  };
+
+  /**
+   * Abre el modal de sanción con los datos del usuario infractor
+   */
+  const handleOpenModerateUser = (params: {
+    userId: string;
+    userName: string;
+    sourceType: 'post' | 'comment';
+    itemId: string;
+  }) => {
+    setActiveMenuPostId(null);
+    setActiveMenuCommentId(null);
+    setUserToModerate(params);
+    setModerationAction('suspend');
+    setSuspensionDays(7);
+    setModerationReason('');
+  };
+
+  /**
+   * Ejecuta la sanción (suspensión temporal o baneo permanente) contra el usuario
+   */
+  const handleConfirmModeration = async () => {
+    if (!userToModerate || !isAdmin) return;
+
+    setIsSubmittingModeration(true);
+    try {
+      const targetUserId = userToModerate.userId;
+      const targetName = userToModerate.userName;
+
+      if (moderationAction === 'suspend') {
+        const res = await adminSuspendUser(
+          targetUserId,
+          suspensionDays,
+          moderationReason.trim() || `Infracción a las normas de convivencia (${suspensionDays} días)`
+        );
+        success(
+          'Usuario suspendido',
+          `Se ha suspendido temporalmente a ${targetName} por ${suspensionDays} días.`
+        );
+      } else {
+        await adminBanUser(
+          targetUserId,
+          moderationReason.trim() || 'Infracción grave a las normas de la comunidad'
+        );
+        warning(
+          'Baneo definitivo aplicado',
+          `El usuario ${targetName} ha sido expulsado y bloqueado permanentemente de la plataforma.`
+        );
+      }
+
+      setUserToModerate(null);
+    } catch (err: any) {
+      console.error('Error aplicando sanción:', err);
+      showErrorToast('Error al sancionar', 'Ocurrió un problema al procesar la acción.');
+    } finally {
+      setIsSubmittingModeration(false);
+    }
   };
 
   // Filtered groups
@@ -777,7 +920,7 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
                     className="bg-white rounded-3xl p-5 sm:p-6 border border-stone-200 shadow-xs space-y-4 hover:border-stone-300 transition-all"
                   >
                     {/* Post Header */}
-                    <div className="flex items-start justify-between">
+                    <div className="flex items-start justify-between relative">
                       <div className="flex items-center gap-3">
                         <img
                           src={post.authorAvatar || '/user.png'}
@@ -807,6 +950,58 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
                           </div>
                         </div>
                       </div>
+
+                      {/* Admin Moderation Action Menu */}
+                      {isAdmin && (
+                        <div className="relative">
+                          <button
+                            type="button"
+                            title="Herramientas de Moderación (Admin)"
+                            onClick={() => setActiveMenuPostId(activeMenuPostId === post.id ? null : post.id)}
+                            className="p-1.5 rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors cursor-pointer"
+                          >
+                            <MoreVertical className="w-4 h-4" />
+                          </button>
+
+                          {activeMenuPostId === post.id && (
+                            <>
+                              <div
+                                className="fixed inset-0 z-20"
+                                onClick={() => setActiveMenuPostId(null)}
+                              />
+                              <div className="absolute right-0 top-8 z-30 w-52 bg-white rounded-2xl shadow-xl border border-stone-200 py-1.5 animate-fadeIn">
+                                <div className="px-3 py-1.5 border-b border-stone-100 mb-1 flex items-center justify-between">
+                                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-700 flex items-center gap-1">
+                                    <ShieldAlert className="w-3 h-3" /> Moderación Admin
+                                  </span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => handleAdminDeletePost(post.id)}
+                                  disabled={isDeletingItem}
+                                  className="w-full text-left px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors cursor-pointer disabled:opacity-50"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                  <span>Eliminar Publicación</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenModerateUser({
+                                    userId: post.userId || post.author,
+                                    userName: post.author,
+                                    sourceType: 'post',
+                                    itemId: post.id
+                                  })}
+                                  className="w-full text-left px-3 py-2 text-xs font-semibold text-stone-700 hover:bg-amber-50 hover:text-amber-900 flex items-center gap-2 transition-colors cursor-pointer"
+                                >
+                                  <UserX className="w-3.5 h-3.5 text-amber-600" />
+                                  <span>Sancionar / Moderar Usuario</span>
+                                </button>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* Post Content */}
@@ -890,10 +1085,58 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
                         <div className="space-y-2 max-h-48 overflow-y-auto pr-1 scrollbar-thin">
                           {(post.comments && post.comments.length > 0) ? (
                             post.comments.map((comment) => (
-                              <div key={comment.id} className="bg-white p-3 rounded-xl border border-stone-200 text-xs">
+                              <div key={comment.id} className="bg-white p-3 rounded-xl border border-stone-200 text-xs relative">
                                 <div className="flex items-center justify-between mb-1">
-                                  <span className="font-bold text-stone-900">{comment.author}</span>
-                                  <span className="text-[10px] text-stone-400">{formatFluxDate(comment.timeAgo)}</span>
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-bold text-stone-900">{comment.author}</span>
+                                    <span className="text-[10px] text-stone-400">{formatFluxDate(comment.timeAgo)}</span>
+                                  </div>
+
+                                  {/* Admin Comment Moderation Menu */}
+                                  {isAdmin && (
+                                    <div className="relative">
+                                      <button
+                                        type="button"
+                                        title="Opciones de moderación de comentario"
+                                        onClick={() => setActiveMenuCommentId(activeMenuCommentId === comment.id ? null : comment.id)}
+                                        className="p-1 rounded text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors cursor-pointer"
+                                      >
+                                        <MoreVertical className="w-3 h-3" />
+                                      </button>
+
+                                      {activeMenuCommentId === comment.id && (
+                                        <>
+                                          <div
+                                            className="fixed inset-0 z-20"
+                                            onClick={() => setActiveMenuCommentId(null)}
+                                          />
+                                          <div className="absolute right-0 top-6 z-30 w-48 bg-white rounded-xl shadow-lg border border-stone-200 py-1 animate-fadeIn text-[11px]">
+                                            <button
+                                              type="button"
+                                              onClick={() => handleAdminDeleteComment(post.id, comment.id)}
+                                              className="w-full text-left px-2.5 py-1.5 font-semibold text-red-600 hover:bg-red-50 flex items-center gap-1.5 transition-colors cursor-pointer"
+                                            >
+                                              <Trash2 className="w-3 h-3" />
+                                              <span>Eliminar Comentario</span>
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={() => handleOpenModerateUser({
+                                                userId: comment.userId || comment.author,
+                                                userName: comment.author,
+                                                sourceType: 'comment',
+                                                itemId: comment.id
+                                              })}
+                                              className="w-full text-left px-2.5 py-1.5 font-semibold text-stone-700 hover:bg-amber-50 hover:text-amber-900 flex items-center gap-1.5 transition-colors cursor-pointer"
+                                            >
+                                              <UserX className="w-3 h-3 text-amber-600" />
+                                              <span>Sancionar Usuario</span>
+                                            </button>
+                                          </div>
+                                        </>
+                                      )}
+                                    </div>
+                                  )}
                                 </div>
                                 <p className="text-stone-700 leading-snug">{comment.text}</p>
                               </div>
@@ -1136,6 +1379,177 @@ export const CommunityModule: React.FC<CommunityModuleProps> = ({ userProfile })
                   Ver Feed de este Grupo <ArrowRight className="w-3.5 h-3.5 ml-1" />
                 </Button>
               </div>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* MODAL DE SANCIÓN / MODERACIÓN DE USUARIO (ROL ADMIN)    */}
+      {/* ======================================================== */}
+      {userToModerate && isAdmin && (
+        <div className="fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-stone-200 animate-scaleUp">
+            
+            {/* Header */}
+            <div className="p-5 sm:p-6 bg-stone-900 text-white flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center">
+                  <ShieldAlert className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">Sancionar / Moderar Usuario</h3>
+                  <p className="text-xs text-stone-300">
+                    Acción disciplinaria para <strong className="text-white">@{userToModerate.userName}</strong>
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setUserToModerate(null)}
+                className="w-8 h-8 rounded-full bg-stone-800 text-stone-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Form Body */}
+            <div className="p-5 sm:p-6 space-y-5 text-stone-800">
+              {/* Selector de tipo de sanción */}
+              <div>
+                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-2">
+                  Tipo de Medida
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setModerationAction('suspend')}
+                    className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                      moderationAction === 'suspend'
+                        ? 'border-amber-500 bg-amber-50/60 ring-2 ring-amber-500/30'
+                        : 'border-stone-200 bg-white hover:border-stone-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <Clock className="w-4 h-4 text-amber-600" />
+                      <span className="text-xs font-bold text-stone-900">Suspender Temporal</span>
+                    </div>
+                    <p className="text-[11px] text-stone-500 leading-snug">
+                      Deshabilita la participación durante un período determinado.
+                    </p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setModerationAction('ban')}
+                    className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                      moderationAction === 'ban'
+                        ? 'border-red-500 bg-red-50/60 ring-2 ring-red-500/30'
+                        : 'border-stone-200 bg-white hover:border-stone-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <UserX className="w-4 h-4 text-red-600" />
+                      <span className="text-xs font-bold text-red-950">Baneo Definitivo</span>
+                    </div>
+                    <p className="text-[11px] text-stone-500 leading-snug">
+                      Expulsión permanente y bloqueo irrevocable del usuario.
+                    </p>
+                  </button>
+                </div>
+              </div>
+
+              {/* Opción A: Duración si es suspensión temporal */}
+              {moderationAction === 'suspend' && (
+                <div className="animate-fadeIn">
+                  <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-2">
+                    Duración de la Suspensión
+                  </label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {[
+                      { label: '24 Horas', days: 1 },
+                      { label: '3 Días', days: 3 },
+                      { label: '7 Días', days: 7 },
+                      { label: '30 Días', days: 30 }
+                    ].map(period => (
+                      <button
+                        key={period.days}
+                        type="button"
+                        onClick={() => setSuspensionDays(period.days)}
+                        className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all cursor-pointer text-center ${
+                          suspensionDays === period.days
+                            ? 'border-amber-600 bg-amber-500 text-white shadow-xs'
+                            : 'border-stone-200 bg-white text-stone-700 hover:bg-stone-50'
+                        }`}
+                      >
+                        {period.label}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-[11px] text-stone-500 mt-1.5 flex items-center gap-1">
+                    <Info className="w-3 h-3 text-amber-600 shrink-0" />
+                    El usuario no podrá publicar ni comentar durante los próximos {suspensionDays} días.
+                  </p>
+                </div>
+              )}
+
+              {/* Opción B: Advertencia si es baneo definitivo */}
+              {moderationAction === 'ban' && (
+                <div className="p-3.5 rounded-2xl bg-red-50 border border-red-200 text-xs text-red-900 space-y-1 animate-fadeIn">
+                  <div className="font-bold flex items-center gap-1.5 text-red-800">
+                    <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
+                    <span>Acción Irreversible</span>
+                  </div>
+                  <p className="text-[11px] text-red-700 leading-relaxed">
+                    Esta acción marcará el perfil de <strong>@{userToModerate.userName}</strong> con baneo permanente en Supabase. Se revocarán todos los privilegios de participación en la comunidad.
+                  </p>
+                </div>
+              )}
+
+              {/* Motivo o justificación */}
+              <div>
+                <label className="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-2">
+                  Motivo de la Sanción (Opcional)
+                </label>
+                <textarea
+                  value={moderationReason}
+                  onChange={(e) => setModerationReason(e.target.value)}
+                  placeholder="Describe la falta o norma infringida (ej. lenguaje ofensivo, spam, acoso)..."
+                  rows={3}
+                  className="w-full px-3.5 py-2.5 text-xs bg-stone-50 rounded-2xl border border-stone-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5F927B]"
+                />
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 sm:p-5 bg-stone-50 border-t border-stone-200 flex items-center justify-end gap-2.5">
+              <Button
+                variant="ghost"
+                onClick={() => setUserToModerate(null)}
+                disabled={isSubmittingModeration}
+                className="px-4 py-2 text-xs font-bold text-stone-600"
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleConfirmModeration}
+                disabled={isSubmittingModeration}
+                variant="primary"
+                className={`px-5 py-2 text-xs font-bold text-white shadow-xs ${
+                  moderationAction === 'ban' 
+                    ? 'bg-red-600 hover:bg-red-700' 
+                    : 'bg-amber-600 hover:bg-amber-700'
+                }`}
+              >
+                {isSubmittingModeration ? (
+                  'Aplicando...'
+                ) : moderationAction === 'ban' ? (
+                  'Confirmar Baneo Definitivo'
+                ) : (
+                  `Suspender por ${suspensionDays} Días`
+                )}
+              </Button>
             </div>
 
           </div>

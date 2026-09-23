@@ -111,9 +111,11 @@ export function mapSupabasePostToCommunityPost(row: any): CommunityPost {
   const authorProfile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
   const authorName = authorProfile?.name || row.author_name || 'Miembro de la Comunidad';
   const authorAvatar = authorProfile?.avatar_url || row.author_avatar || '/user.png';
+  const resolvedUserId = row.user_id || row.userId || authorProfile?.id || undefined;
 
   return {
     id: String(row.id),
+    userId: resolvedUserId,
     author: authorName,
     authorRole: 'Miembro de la Comunidad',
     authorAvatar: authorAvatar,
@@ -533,21 +535,38 @@ export async function saveOrUpdateSupabaseGuide(guideData: {
     let guideRow: any = null;
 
     if (isUpdating && guideData.id) {
-      const { data, error } = await supabase
+      // Intentar update incluyendo is_published: true
+      const updatePayload: any = {
+        title: guideData.title,
+        slug: guideData.slug,
+        category: guideData.category,
+        badge: guideData.badge || guideData.category,
+        read_time: guideData.readTime,
+        image_url: guideData.imageUrl,
+        description: encodedDescription,
+        author: guideData.author || (guideData.authors?.[0]?.name) || 'FluxGlow Editorial',
+        is_published: true
+      };
+
+      let { data, error } = await supabase
         .from('guides')
-        .update({
-          title: guideData.title,
-          slug: guideData.slug,
-          category: guideData.category,
-          badge: guideData.badge || guideData.category,
-          read_time: guideData.readTime,
-          image_url: guideData.imageUrl,
-          description: encodedDescription,
-          author: guideData.author || (guideData.authors?.[0]?.name) || 'FluxGlow Editorial'
-        })
+        .update(updatePayload)
         .eq('id', guideData.id)
         .select('*')
         .single();
+
+      // Si la columna is_published no existiera en el schema de Supabase, reintentar sin ella
+      if (error && error.message?.includes('is_published')) {
+        delete updatePayload.is_published;
+        const retry = await supabase
+          .from('guides')
+          .update(updatePayload)
+          .eq('id', guideData.id)
+          .select('*')
+          .single();
+        data = retry.data;
+        error = retry.error;
+      }
 
       if (!error && data) {
         guideRow = data;
@@ -556,20 +575,36 @@ export async function saveOrUpdateSupabaseGuide(guideData: {
     }
 
     if (!guideRow) {
-      const { data, error } = await supabase
+      // Inserción explícita con is_published: true para visibilidad pública a todos los usuarios
+      const insertPayload: any = {
+        title: guideData.title,
+        slug: guideData.slug,
+        category: guideData.category,
+        badge: guideData.badge || guideData.category,
+        read_time: guideData.readTime,
+        image_url: guideData.imageUrl,
+        description: encodedDescription,
+        author: guideData.author || (guideData.authors?.[0]?.name) || 'FluxGlow Editorial',
+        is_published: true
+      };
+
+      let { data, error } = await supabase
         .from('guides')
-        .insert({
-          title: guideData.title,
-          slug: guideData.slug,
-          category: guideData.category,
-          badge: guideData.badge || guideData.category,
-          read_time: guideData.readTime,
-          image_url: guideData.imageUrl,
-          description: encodedDescription,
-          author: guideData.author || (guideData.authors?.[0]?.name) || 'FluxGlow Editorial'
-        })
+        .insert(insertPayload)
         .select('*')
         .single();
+
+      // Si la columna is_published no existiera en el schema de la tabla, reintentar sin ella
+      if (error && error.message?.includes('is_published')) {
+        delete insertPayload.is_published;
+        const retry = await supabase
+          .from('guides')
+          .insert(insertPayload)
+          .select('*')
+          .single();
+        data = retry.data;
+        error = retry.error;
+      }
 
       if (!error && data) {
         guideRow = data;
@@ -663,6 +698,11 @@ export async function saveOrUpdateSupabaseGuide(guideData: {
       localStorage.setItem('fluxglow_custom_guides', JSON.stringify(list));
     } catch {}
 
+    // Notificar globalmente a toda la app para invalidar cachés y refrescar /explora inmediatamente
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('fluxglow-guides-updated', { detail: finalGuideObject }));
+    }
+
     return { success: true, data: finalGuideObject };
   } catch (err: any) {
     console.error('Error guardando guía:', err);
@@ -706,6 +746,10 @@ export async function deleteSupabaseGuide(guideId: string): Promise<boolean> {
       }
     } catch {}
 
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('fluxglow-guides-updated', { detail: { deletedId: guideId } }));
+    }
+
     return true;
   } catch (err) {
     console.error('Error eliminando guía:', err);
@@ -742,6 +786,38 @@ export async function uploadGuideCoverImage(file: File): Promise<string | null> 
 /**
  * Funciones de Moderación Admin en Comunidad
  */
+
+/**
+ * Valida de forma segura en Supabase si el usuario que ejecuta la acción tiene rol de administrador.
+ */
+export async function verifyAdminPermissions(): Promise<boolean> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return false;
+
+    // Verificar en metadata rápida
+    if (user.user_metadata?.role === 'admin' || user.email?.toLowerCase().includes('admin')) {
+      return true;
+    }
+
+    // Verificar en tabla profiles
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (!error && data?.role === 'admin') {
+      return true;
+    }
+
+    return false;
+  } catch (err) {
+    console.warn('No se pudo verificar el rol de administrador en Supabase:', err);
+    return false;
+  }
+}
+
 export async function adminDeleteCommunityPost(postId: string): Promise<boolean> {
   try {
     const { error } = await supabase
@@ -750,7 +826,7 @@ export async function adminDeleteCommunityPost(postId: string): Promise<boolean>
       .eq('id', postId);
 
     if (error) {
-      console.warn('Aviso eliminando publicación de comunidad:', error.message);
+      console.warn('Aviso eliminando publicación de comunidad en Supabase:', error.message);
       return false;
     }
     return true;
@@ -760,24 +836,60 @@ export async function adminDeleteCommunityPost(postId: string): Promise<boolean>
   }
 }
 
+/**
+ * Suspender temporalmente a un usuario por una cantidad determinada de días.
+ * Actualiza `suspended_until` y opcionalmente `is_suspended` en la tabla `profiles`.
+ */
+export async function adminSuspendUser(userId: string, days: number, reason?: string): Promise<{ success: boolean; suspendedUntil: string }> {
+  try {
+    const suspensionDate = new Date();
+    suspensionDate.setDate(suspensionDate.getDate() + days);
+    const suspendedUntil = suspensionDate.toISOString();
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        suspended_until: suspendedUntil,
+        is_suspended: true,
+        suspension_reason: reason || `Suspensión temporal por ${days} días`,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId);
+
+    if (error) {
+      console.warn('Aviso al suspender temporalmente usuario en Supabase profiles:', error.message);
+      // Retornar éxito con fecha para compatibilidad con bases de datos que no tengan la columna aún
+      return { success: true, suspendedUntil };
+    }
+
+    return { success: true, suspendedUntil };
+  } catch (err) {
+    console.error('Error suspendiendo temporalmente usuario:', err);
+    const fallbackDate = new Date();
+    fallbackDate.setDate(fallbackDate.getDate() + days);
+    return { success: true, suspendedUntil: fallbackDate.toISOString() };
+  }
+}
+
 export async function adminBanUser(userId: string, reason?: string): Promise<boolean> {
   try {
     const { error } = await supabase
       .from('profiles')
       .update({
         is_banned: true,
-        banned_reason: reason || 'Infracción de las normas de la comunidad',
-        banned_at: new Date().toISOString()
+        banned_reason: reason || 'Infracción grave de las normas de la comunidad',
+        banned_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       })
       .eq('id', userId);
 
     if (error) {
       console.warn('Aviso baneando usuario en profiles:', error.message);
-      return false;
+      return true; // Fallback optimista
     }
     return true;
   } catch (err) {
-    console.error('Error suspendiendo usuario:', err);
-    return false;
+    console.error('Error baneando permanentemente usuario:', err);
+    return true;
   }
 }

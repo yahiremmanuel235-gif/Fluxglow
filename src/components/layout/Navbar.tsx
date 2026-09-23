@@ -288,18 +288,17 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Right helper tools: Admin (if role === admin) + Profile + SignOut button + Mobile Menu Toggle */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 pl-1">
             {isAdmin && (
-              <NavLink
-                to="/admin"
-                title="Panel de Administración"
-                className={({ isActive }) => `flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer shadow-2xs border ${
-                  isActive
-                    ? 'border-[#5F927B] bg-[#5F927B] text-white'
-                    : 'border-stone-800 bg-stone-900 text-stone-200 hover:text-white hover:bg-stone-800'
-                }`}
+              <div
+                title="Rol verificado: Administrador de FluxGlow"
+                aria-label="Indicador de Administrador"
+                aria-disabled="true"
+                tabIndex={-1}
+                className="pointer-events-none select-none flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border border-stone-800 bg-stone-900 text-stone-200 shadow-2xs opacity-95 cursor-default"
               >
                 <ShieldCheck className="w-3.5 h-3.5 text-[#5F927B]" />
-                <span className="hidden md:inline">Admin</span>
-              </NavLink>
+                <span className="hidden sm:inline">Administrador</span>
+                <span className="sm:hidden">Admin</span>
+              </div>
             )}
 
             <NavLink
@@ -364,25 +363,20 @@ export const Navbar: React.FC<NavbarProps> = ({
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
             {isAdmin && (
-              <NavLink
-                to="/admin"
+              <div
                 id="mobile-nav-admin"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  setMoreMenuOpen(false);
-                }}
-                className={({ isActive }) => `relative flex items-center justify-between px-3.5 py-3 min-h-[44px] rounded-xl text-sm font-semibold transition-all cursor-pointer bg-stone-900 text-white ${
-                  isActive ? 'ring-2 ring-[#5F927B]' : ''
-                }`}
+                aria-disabled="true"
+                tabIndex={-1}
+                className="pointer-events-none select-none relative flex items-center justify-between px-3.5 py-3 min-h-[44px] rounded-xl text-sm font-semibold bg-stone-900 text-white border border-stone-800 shadow-2xs opacity-95 cursor-default"
               >
                 <div className="flex items-center gap-2.5">
                   <ShieldCheck className="w-4 h-4 text-[#5F927B]" />
-                  <span>Panel de Administración</span>
+                  <span>Administrador</span>
                 </div>
                 <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-[#5F927B] text-white">
-                  ADMIN
+                  MODO ADMIN
                 </span>
-              </NavLink>
+              </div>
             )}
             {allDrawerLinks.map((link) => (
               <NavLink
